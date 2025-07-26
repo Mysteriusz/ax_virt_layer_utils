@@ -4,7 +4,7 @@
 #error "No target operating system defined for the build"
 #endif
 
-#ifndef AX_UTILITY
+#if !defined(AX_UTILITY)
 #define AX_UTILITY
 
 #define AX_OUT
@@ -15,8 +15,19 @@
 #define AX_INVALID_COMMAND	 	0x00000001
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
-#define AX_ERROR(code)			(code != AX_SUCCESS)
+#define AX_STATUS_LRESULT 		0x80000000
+
+// Native error check
+#define AX_NERROR       (code)		(code & AX_STATUS_LRESULT)
+// Error check
+#define AX_ERROR	(code)		(code != AX_SUCCESS)
 typedef unsigned int AXSTATUS;
+
+#if defined(AX_WINDOWS)
+// Data location on WINDOWS is in the registry
+#define AX_DATA_ROOT_HKEY HKEY_LOCAL_MACHINE
+#define AX_DATA_ROOT_PATH "SOFTWARE\\AX_VIRTUALIZATION"
+#endif
 
 typedef enum {
 	DIRECTORY,
@@ -30,7 +41,7 @@ typedef enum {
 	IMPORTANT NOTICE:
 
 	If type is equal to DIRECTORY location is CHAR*
-	If type is equal to REGISTRY location is HKEY* 
+	If type is equal to REGISTRY location is HKEY 
 */
 typedef struct {
 	void* location;
@@ -50,6 +61,16 @@ typedef struct {
 	unsigned char regType;	
 #endif
 } AX_DATA_NODE;
+
+#if defined(AX_WINDOWS) 
+#define AX_DATA_NODE_DIR (AX_DATA_NODE){ \
+	.name="base_directory", \
+	.value=NULL, \
+	.valueSize=0, \
+	.regType=REG_SZ, \
+}
+#endif
+
 AXSTATUS ax_get_data(
 	AX_IN AX_DATA_ROOT* root,
 	AX_IN_OUT AX_DATA_NODE* node

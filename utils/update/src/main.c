@@ -5,7 +5,8 @@ int main(){
    	int arg_count = 0;
     	LPWSTR* arg_list = CommandLineToArgvW(GetCommandLineW(), &arg_count);
 
-	printf("%i", ax_get_data_root(NULL));
+	AX_DATA_ROOT root;
+	printf("%i", ax_get_data_root(&root));
 
 	while(1);	
     	return 0;
