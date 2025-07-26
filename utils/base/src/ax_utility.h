@@ -41,7 +41,7 @@ typedef enum {
 	IMPORTANT NOTICE:
 
 	If type is equal to DIRECTORY location is CHAR*
-	If type is equal to REGISTRY location is HKEY 
+	If type is equal to REGISTRY location is HKEY* 
 */
 typedef struct {
 	void* location;
@@ -62,9 +62,24 @@ typedef struct {
 #endif
 } AX_DATA_NODE;
 
-#if defined(AX_WINDOWS) 
-#define AX_DATA_NODE_DIR (AX_DATA_NODE){ \
+#if defined(AX_WINDOWS)
+// Base directory Windows registry key
+#define AX_DATA_NODE_BSD (AX_DATA_NODE){ \
 	.name="base_directory", \
+	.value=NULL, \
+	.valueSize=0, \
+	.regType=REG_SZ, \
+}
+// Driver path Windows registry key
+#define AX_DATA_NODE_DVP (AX_DATA_NODE){ \
+	.name="driver_path", \
+	.value=NULL, \
+	.valueSize=0, \
+	.regType=REG_SZ, \
+}
+// Update directory Windows registry key
+#define AX_DATA_NODE_UPD (AX_DATA_NODE){ \
+	.name="update_directory", \
 	.value=NULL, \
 	.valueSize=0, \
 	.regType=REG_SZ, \
@@ -77,6 +92,11 @@ AXSTATUS ax_get_data(
 );
 AXSTATUS ax_set_data(
 	AX_IN AX_DATA_ROOT* root,
+	AX_IN AX_DATA_NODE* node,
+	AX_IN void* buffer,
+	AX_IN unsigned int bufferSize
+);
+void ax_free_data(
 	AX_IN AX_DATA_NODE* node
 );
 
