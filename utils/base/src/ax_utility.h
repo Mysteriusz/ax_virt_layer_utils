@@ -31,7 +31,7 @@ typedef unsigned int AXSTATUS;
 
 typedef enum {
 	DIRECTORY,
-	// REGISTRY type is windows specific
+	// REGISTRY type is Windows specific
 	REGISTRY
 } AX_DATA_LOCATION_TYPE;
 
@@ -64,27 +64,34 @@ typedef struct {
 
 #if defined(AX_WINDOWS)
 // Base directory Windows registry key
-#define AX_DATA_NODE_BSD (AX_DATA_NODE){ \
-	.name="base_directory", \
-	.value=NULL, \
-	.valueSize=0, \
-	.regType=REG_SZ, \
+#define AX_DATA_NODE_BSD { \
+	"base_directory", \
+	NULL, \
+	0, \
+	REG_SZ, \
 }
 // Driver path Windows registry key
-#define AX_DATA_NODE_DVP (AX_DATA_NODE){ \
-	.name="driver_path", \
-	.value=NULL, \
-	.valueSize=0, \
-	.regType=REG_SZ, \
+#define AX_DATA_NODE_DVP { \
+	"driver_path", \
+	NULL, \
+	0, \
+	REG_SZ, \
 }
 // Update directory Windows registry key
-#define AX_DATA_NODE_UPD (AX_DATA_NODE){ \
-	.name="update_directory", \
-	.value=NULL, \
-	.valueSize=0, \
-	.regType=REG_SZ, \
+#define AX_DATA_NODE_UPD { \
+	"update_directory", \
+	NULL, \
+	0, \
+	REG_SZ, \
 }
 #endif
+
+#define AX_DEFAULT_DATA_NODE_COUNT 3
+static AX_DATA_NODE ax_default_data_nodes[AX_DEFAULT_DATA_NODE_COUNT] = {
+	AX_DATA_NODE_BSD,
+	AX_DATA_NODE_DVP,
+	AX_DATA_NODE_UPD
+};
 
 AXSTATUS ax_get_data(
 	AX_IN AX_DATA_ROOT* root,
