@@ -1,3 +1,16 @@
+/*
+
+ 	BUILD Version 0001 --- Increment on update.
+
+	Module Name:
+		ax_utility.h
+
+	Abstract:
+		This module defines default AX Project`s types, constants and functions 
+		that are used for interacting with the driver as well as utilities.
+
+*/
+
 #if defined(AX_WINDOWS)
 #include "windows.h"
 #else 
@@ -11,10 +24,15 @@
 #define AX_IN
 #define AX_IN_OUT
 
+#define AX_OUT_OPT
+#define AX_IN_OPT
+#define AX_IN_OUT_OPT
+
 #define AX_SUCCESS 			0x00000000
 #define AX_INVALID_COMMAND	 	0x00000001
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
+// Flag indicating if value is windows LRESULT
 #define AX_STATUS_LRESULT 		0x80000000
 
 // Native error check
@@ -28,6 +46,9 @@ typedef unsigned int AXSTATUS;
 #define AX_UPDATE_PATH "\\update"
 
 #if defined(AX_WINDOWS)
+#define AX_SERVICE_NAME "AX_VIRTUALIZATION_DRIVER"
+#define AX_SERVICE_CMD "sc.exe create\x20" AX_SERVICE_NAME "\x20type= kernel start= demand error= normal binPath=\x20"
+
 // Data location on WINDOWS is in the registry
 #define AX_DATA_ROOT_HKEY HKEY_LOCAL_MACHINE
 #define AX_DATA_ROOT_PATH "SOFTWARE\\AX_VIRTUALIZATION"
@@ -127,7 +148,8 @@ AXSTATUS ax_set_data(
 	AX_IN AX_DATA_NODE* node
 );
 void ax_free_data(
-	AX_IN AX_DATA_NODE* node);
+	AX_IN AX_DATA_NODE* node
+);
 
 #endif
 

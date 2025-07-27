@@ -1,0 +1,15 @@
+=========================================================================
+			       AX_WINDOWS
+=========================================================================
+This macro tells the compiler to target windows headers and logic.
+
+=========================================================================
+			       AX_UM
+=========================================================================
+This macro makes sure that header includes all User-Mode methods that are used for example in utilities. 
+
+=========================================================================
+			       AX_KM
+=========================================================================
+This macro makes sure that header includes all Kernel-Mode methods that are used for example in the driver. 
+
