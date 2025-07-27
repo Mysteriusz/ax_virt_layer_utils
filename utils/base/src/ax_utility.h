@@ -32,8 +32,10 @@
 #define AX_INVALID_COMMAND	 	0x00000001
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
-// Flag indicating if value is windows LRESULT
+// Flag indicating if value is Windows LRESULT
 #define AX_STATUS_LRESULT 		0x80000000
+// Flag indicating if value is Windows GetLastError()
+#define AX_STATUS_LERROR 		0x40000000
 
 // Native error check
 #define AX_NERROR       (code)		(code & AX_STATUS_LRESULT)
@@ -47,7 +49,10 @@ typedef unsigned int AXSTATUS;
 
 #if defined(AX_WINDOWS)
 #define AX_SERVICE_NAME "AX_VIRTUALIZATION_DRIVER"
-#define AX_SERVICE_CMD "sc.exe create\x20" AX_SERVICE_NAME "\x20type= kernel start= demand error= normal binPath=\x20"
+#define AX_SERVICE_DISPLAY_NAME "AX_VIRTUALIZATION_PLATFORM"
+#define AX_SERVICE_ACCESS GENERIC_ALL 
+#define AX_SERVICE_TYPE SERVICE_KERNEL_DRIVER
+#define AX_SERVICE_START SERVICE_DEMAND_START
 
 // Data location on WINDOWS is in the registry
 #define AX_DATA_ROOT_HKEY HKEY_LOCAL_MACHINE

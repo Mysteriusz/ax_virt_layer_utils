@@ -11,7 +11,20 @@ AXSTATUS ax_setup_i(
 	AX_IN_OPT AX_DATA_NODE* config_values,
 	AX_IN unsigned int config_values_count
 );
+
+typedef struct{
+	char* name;
+	char* bin_path;
+	// Windows service data
+#if defined(AX_WINDOWS)
+	char* sc_display_name;
+	unsigned long sc_access;
+	unsigned long sc_type;
+	unsigned long sc_start;
+#endif
+} AX_DRIVER_I_DATA;
+
 AXSTATUS ax_driver_i(
-	AX_IN char* cmd
+	AX_IN AX_DRIVER_I_DATA* data_i	
 );
 
