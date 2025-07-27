@@ -1,5 +1,21 @@
 #include "ax_utility.h"
 
+AX_DATA_NODE* ax_get_default_data_nodes(
+	void
+){
+	static AX_DATA_NODE ax_default_data_nodes[AX_DEFAULT_DATA_NODE_COUNT] = {0};
+	static int init = 0;
+
+	if (init != 1){
+		ax_default_data_nodes[0] = (AX_DATA_NODE)AX_DATA_NODE_BSD;
+		ax_default_data_nodes[1] = (AX_DATA_NODE)AX_DATA_NODE_DVP;
+		ax_default_data_nodes[2] = (AX_DATA_NODE)AX_DATA_NODE_UPD;
+	}
+	init = 1;
+
+	return ax_default_data_nodes;
+}
+
 AXSTATUS ax_get_data_root(
 	AX_OUT AX_DATA_ROOT* root	
 ){
@@ -53,20 +69,18 @@ AXSTATUS ax_get_data(
 }
 AXSTATUS ax_set_data(
 	AX_IN AX_DATA_ROOT* root,
-	AX_IN AX_DATA_NODE* node,
-	AX_IN void* buffer,
-	AX_IN unsigned int bufferSize
+	AX_IN AX_DATA_NODE* node
 ){
 	if (root == NULL 
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
+#if defined(AX_WINDOWS)
 	LRESULT result = 0;
 
-	result = RegSetValueExA(root->location, node->name, 0, node->regType, buffer, bufferSize); 
-
-	if (result != ERROR_SUCCESS){
+	result = RegSetValueExA(root->location, node->name, 0, node->regType, node->value, node->valueSize); if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
+#endif
 
 	return AX_SUCCESS; 
 }

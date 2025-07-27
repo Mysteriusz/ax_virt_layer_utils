@@ -23,6 +23,10 @@
 #define AX_ERROR	(code)		(code != AX_SUCCESS)
 typedef unsigned int AXSTATUS;
 
+#define AX_DRIVER_FULLNAME "\\ax_virt_layer.sys"
+#define AX_DRIVER_BASENAME "ax_virt_layer"
+#define AX_UPDATE_PATH "\\update"
+
 #if defined(AX_WINDOWS)
 // Data location on WINDOWS is in the registry
 #define AX_DATA_ROOT_HKEY HKEY_LOCAL_MACHINE
@@ -62,36 +66,57 @@ typedef struct {
 #endif
 } AX_DATA_NODE;
 
+#define AX_DEFAULT_DATA_NODE_COUNT 3
+AX_DATA_NODE* ax_get_default_data_nodes(
+	void
+);
+
 #if defined(AX_WINDOWS)
+/*
+	Methods below are default directory getters for easy modifications 
+	They are to be used with extreme caution given they allocate memory (_strdup)
+*/
+static char* get_cached_dir(){
+	static char dir[MAX_PATH];
+	memset(dir, 0, MAX_PATH);
+	GetCurrentDirectoryA(MAX_PATH, dir);	
+	return _strdup(dir);
+}
+static char* cat_cached_dir(char* a, char* b){
+	static char dir[MAX_PATH];
+	memset(dir, 0, MAX_PATH);
+	strcpy_s(dir, MAX_PATH, a); 
+	strcat_s(dir, MAX_PATH, b); 
+	return _strdup(dir);
+}
+
 // Base directory Windows registry key
+#define AX_DATA_NODE_BSD_V get_cached_dir()
 #define AX_DATA_NODE_BSD { \
 	"base_directory", \
-	NULL, \
-	0, \
+	AX_DATA_NODE_BSD_V, \
+	MAX_PATH, \
 	REG_SZ, \
 }
+
 // Driver path Windows registry key
+#define AX_DATA_NODE_DVP_V cat_cached_dir(get_cached_dir(), AX_DRIVER_FULLNAME)
 #define AX_DATA_NODE_DVP { \
 	"driver_path", \
-	NULL, \
-	0, \
+	AX_DATA_NODE_DVP_V, \
+	MAX_PATH, \
 	REG_SZ, \
 }
+
 // Update directory Windows registry key
+#define AX_DATA_NODE_UPD_V cat_cached_dir(get_cached_dir(), AX_UPDATE_PATH)
 #define AX_DATA_NODE_UPD { \
 	"update_directory", \
-	NULL, \
-	0, \
+	AX_DATA_NODE_UPD_V, \
+	MAX_PATH, \
 	REG_SZ, \
 }
 #endif
-
-#define AX_DEFAULT_DATA_NODE_COUNT 3
-static AX_DATA_NODE ax_default_data_nodes[AX_DEFAULT_DATA_NODE_COUNT] = {
-	AX_DATA_NODE_BSD,
-	AX_DATA_NODE_DVP,
-	AX_DATA_NODE_UPD
-};
 
 AXSTATUS ax_get_data(
 	AX_IN AX_DATA_ROOT* root,
@@ -99,13 +124,10 @@ AXSTATUS ax_get_data(
 );
 AXSTATUS ax_set_data(
 	AX_IN AX_DATA_ROOT* root,
-	AX_IN AX_DATA_NODE* node,
-	AX_IN void* buffer,
-	AX_IN unsigned int bufferSize
-);
-void ax_free_data(
 	AX_IN AX_DATA_NODE* node
 );
+void ax_free_data(
+	AX_IN AX_DATA_NODE* node);
 
 #endif
 
