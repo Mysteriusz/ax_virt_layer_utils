@@ -1,8 +1,10 @@
 # Base utilities are still under development.
 
-### Each utility relies on a shared library:
+## All the AX Project`s utilities and applications as well as the driver itself rely on the base library below.
+
+### Default AX method shared library:
 ```ax_utility.lib``` 
-### as well as it`s corresponding header: 
+### It`s corresponding header: 
 ```ax_utility.h``` 
 ### located in: 
 ```ax_virt_layer_utils/utils/base/build/```
