@@ -13,11 +13,11 @@ AXSTATUS ax_setup_i(
 );
 
 typedef struct{
-	char* name;
-	char* bin_path;
+	wchar_t* name;
+	wchar_t* bin_path;
 	// Windows service data
 #if defined(AX_WINDOWS)
-	char* sc_display_name;
+	wchar_t* sc_display_name;
 	unsigned long sc_access;
 	unsigned long sc_type;
 	unsigned long sc_start;

@@ -42,16 +42,12 @@ AXSTATUS ax_driver_i(
 	if (data_i == NULL) return AX_INVALID_ARGUMENT; 
 
 #if defined(AX_WINDOWS)
-	SC_HANDLE sch = OpenSCManagerA(NULL, NULL, SC_MANAGER_CREATE_SERVICE); 
+	SC_HANDLE sch = OpenSCManagerW(NULL, NULL, SC_MANAGER_CREATE_SERVICE); 
 	if (sch == NULL){
 		return GetLastError() | AX_STATUS_LERROR;
 	}
 
-	sch = CreateServiceA(sch, data_i->name, data_i->sc_display_name, data_i->sc_access, data_i->sc_type, data_i->sc_start, SERVICE_ERROR_CRITICAL, data_i->bin_path, NULL, NULL, NULL, NULL, NULL);
-
-	if (sch == NULL){
-		return GetLastError() | AX_STATUS_LERROR;
-	}
+	sch = CreateServiceW(sch, data_i->name, data_i->sc_display_name, data_i->sc_access, data_i->sc_type, data_i->sc_start, SERVICE_ERROR_CRITICAL, data_i->bin_path, NULL, NULL, NULL, NULL, NULL);
 
 	CloseServiceHandle(sch);
 #endif

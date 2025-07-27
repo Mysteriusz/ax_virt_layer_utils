@@ -23,7 +23,7 @@ AXSTATUS ax_get_data_root(
 
 #if defined (AX_WINDOWS)
 	HKEY buffer;
-	LRESULT result = RegOpenKeyExA(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_PATH, 0, KEY_ALL_ACCESS, &buffer);
+	LRESULT result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_PATH, 0, KEY_ALL_ACCESS, &buffer);
 
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
@@ -44,7 +44,7 @@ AXSTATUS ax_get_data(
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined(AX_WINDOWS)
-	char* buffer = NULL;
+	wchar_t* buffer = NULL;
 	unsigned int bufferSize = 0;
 
 	LRESULT result = 0;
@@ -52,11 +52,11 @@ AXSTATUS ax_get_data(
 	if (node->name == NULL 
 	|| root->location == NULL) return AX_INVALID_ARGUMENT;
 
-	result = RegQueryValueExA(root->location, node->name, NULL, NULL, buffer, &bufferSize); 		
+	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, &bufferSize); 		
 	
 	buffer = malloc(bufferSize);
 
-	result = RegQueryValueExA(root->location, node->name, NULL, NULL, buffer, &bufferSize); 			
+	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, &bufferSize); 			
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
@@ -75,9 +75,9 @@ AXSTATUS ax_set_data(
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined(AX_WINDOWS)
-	LRESULT result = 0;
+	LRESULT result = RegSetValueExW(root->location, node->name, 0, node->regType, node->value, node->valueSize); 
 
-	result = RegSetValueExA(root->location, node->name, 0, node->regType, node->value, node->valueSize); if (result != ERROR_SUCCESS){
+	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
 #endif
