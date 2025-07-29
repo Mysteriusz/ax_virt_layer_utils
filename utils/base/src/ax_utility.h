@@ -7,7 +7,7 @@
 
 	Abstract:
 		This module defines default AX Project`s types, constants and functions 
-		that are used for interacting with the driver as well as utilities.
+		that provide an interface for programming and interacting with AX environment.
 
 */
 
@@ -16,6 +16,8 @@
 #else 
 #error "No target operating system defined for the build"
 #endif
+
+#include "stdint.h"
 
 #if !defined(AX_UTILITY)
 #define AX_UTILITY
@@ -28,41 +30,61 @@
 #define AX_IN_OPT
 #define AX_IN_OUT_OPT
 
+// Error check
+#define AX_ERROR	(code)		((code != AX_SUCCESS))
+typedef uint32_t AXSTATUS;
+
 #define AX_SUCCESS 			0x00000000
 #define AX_INVALID_COMMAND	 	0x00000001
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
+
+#if defined(AX_WINDOWS)
+
 // Flag indicating if value is Windows LRESULT
 #define AX_STATUS_LRESULT 		0x80000000
 // Flag indicating if value is Windows GetLastError()
 #define AX_STATUS_LERROR 		0x40000000
 
 // Native error check
-#define AX_NERROR       (code)		(code & AX_STATUS_LRESULT)
-// Error check
-#define AX_ERROR	(code)		(code != AX_SUCCESS)
-typedef unsigned int AXSTATUS;
+#define AX_NERROR       (code)		((code & AX_STATUS_LRESULT) || (code & AX_STATUS_LERROR))
 
-#define AX_DRIVER_FULLNAME L"\\ax_virt_layer.sys"
-#define AX_DRIVER_BASENAME L"ax_virt_layer"
-#define AX_UPDATE_PATH L"\\update"
+// Windows names for driver and controller
+#define AX_DRIVER_FULLNAME 		L"\\ax_virt_layer.sys"
+#define AX_DRIVER_BASENAME 		L"ax_virt_layer"
+#define AX_CONTROL_FULLNAME 		L"\\ax_virt_control.exe"
+#define AX_CONTROL_BASENAME 		L"ax_virt_control"
 
-#if defined(AX_WINDOWS)
-#define AX_SERVICE_NAME L"AX_VIRTUALIZATION_DRIVER"
-#define AX_SERVICE_DISPLAY_NAME L"AX_VIRTUALIZATION_PLATFORM"
-#define AX_SERVICE_ACCESS GENERIC_ALL 
-#define AX_SERVICE_TYPE SERVICE_KERNEL_DRIVER
-#define AX_SERVICE_START SERVICE_DEMAND_START
+// AX Virtualization service
+#define AX_SERVICE_NAME 		L"AX_VIRTUALIZATION_DRIVER"
+#define AX_SERVICE_DISPLAY_NAME 	L"AX_VIRTUALIZATION_PLATFORM"
+#define AX_SERVICE_ACCESS 		GENERIC_ALL 
+#define AX_SERVICE_TYPE 		SERVICE_KERNEL_DRIVER
+#define AX_SERVICE_START 		SERVICE_DEMAND_START
 
-// Data location on WINDOWS is in the registry
-#define AX_DATA_ROOT_HKEY HKEY_LOCAL_MACHINE
-#define AX_DATA_ROOT_PATH L"SOFTWARE\\AX_VIRTUALIZATION"
+// AX Control service
+#define AX_CSERVICE_NAME 		L"AX_VIRTUALIZATION_CONTROL"
+#define AX_CSERVICE_DISPLAY_NAME 	L"AX_VIRTUALIZATION_PLATORM_CONTROL"
+#define AX_CSERVICE_ACCESS 		GENERIC_ALL 
+#define AX_CSERVICE_TYPE 		SERVICE_WIN32_OWN_PROCESS
+#define AX_CSERVICE_START 		SERVICE_AUTO_START
+
+// Data location on Windows is in the registry
+#define AX_DATA_ROOT_HKEY 		HKEY_LOCAL_MACHINE
+#define AX_DATA_ROOT_PATH 		L"SOFTWARE\\AX_VIRTUALIZATION"
+
 #endif
+
+#define AX_CACHE_SIZE			0x200
+#define AX_UPDATE_PATH 			L"\\update"
 
 typedef enum {
 	DIRECTORY,
-	// REGISTRY type is Windows specific
-	REGISTRY
+
+#if defined(AX_WINDOWS)
+	REGISTRY,
+#endif
+
 } AX_DATA_LOCATION_TYPE;
 
 /*
@@ -74,87 +96,96 @@ typedef enum {
 	If type is equal to REGISTRY location is HKEY* 
 */
 typedef struct {
-	void* location;
-	unsigned int locationSize;
-	AX_DATA_LOCATION_TYPE type;	
+	void 			*location;
+	size_t 			location_size;
+	AX_DATA_LOCATION_TYPE 	type;	
 } AX_DATA_ROOT;
 
 AXSTATUS ax_get_data_root(
-	AX_OUT AX_DATA_ROOT* root	
+	AX_DATA_ROOT 				*root	AX_OUT	
 );
 
 typedef struct {
-	wchar_t* name;
-	void* value;
-	unsigned int valueSize;
+	wchar_t 		*name;
+	void 			*value;
+	size_t 			value_size;
+
 #if defined(AX_WINDOWS)
-	unsigned char regType;	
+	uint32_t 		reg_type; // Windows registry value type	
 #endif
+
 } AX_DATA_NODE;
 
-#define AX_DEFAULT_DATA_NODE_COUNT 3
-AX_DATA_NODE* ax_get_default_data_nodes(
+#define AX_DATA_NODE_COUNT_D 		0x04
+#define AX_DATA_NODE_SIZE_D		AX_CACHE_SIZE * 2 
+AX_DATA_NODE *ax_get_data_node_d(
 	void
 );
 
 #if defined(AX_WINDOWS)
-/*
-	Methods below are default directory getters for easy modifications 
-	They are to be used with extreme caution given they allocate memory (_strdup)
-*/
-static wchar_t* get_cached_dir(){
-	static wchar_t dir[MAX_PATH];
-	memset(dir, 0, MAX_PATH);
-	GetCurrentDirectoryW(MAX_PATH, dir);	
-	return _wcsdup(dir);
-}
-static wchar_t* cat_cached_dir(wchar_t* a, wchar_t* b){
-	static wchar_t dir[MAX_PATH];
-	memset(dir, 0, MAX_PATH);
-	wcscpy_s(dir, MAX_PATH, a); 
-	wcscat_s(dir, MAX_PATH, b); 
-	return _wcsdup(dir);
-}
 
-// Base directory Windows registry key
-#define AX_DATA_NODE_BSD_V get_cached_dir()
-#define AX_DATA_NODE_BSD { \
-	L"base_directory", \
-	AX_DATA_NODE_BSD_V, \
-	MAX_PATH, \
-	REG_SZ, \
-}
+// Base directory Windows registry key 
+#define AX_DATA_NODE_BSD(v)					\
+	(AX_DATA_NODE){ 					\
+		.name=			L"base_directory",	\
+		.value=			(wchar_t*)v, 		\
+		.value_size= 		AX_DATA_NODE_SIZE_D, 	\
+		.reg_type=		REG_SZ, 		\
+	}
 
-// Driver path Windows registry key
-#define AX_DATA_NODE_DVP_V cat_cached_dir(get_cached_dir(), AX_DRIVER_FULLNAME)
-#define AX_DATA_NODE_DVP { \
-	L"driver_path", \
-	AX_DATA_NODE_DVP_V, \
-	MAX_PATH, \
-	REG_SZ, \
-}
+// Driver path Windows registry key 
+#define AX_DATA_NODE_DVP(v)					\
+	(AX_DATA_NODE){ 					\
+		.name=			L"driver_path",		\
+		.value=			(wchar_t*)v, 		\
+		.value_size= 		AX_DATA_NODE_SIZE_D, 	\
+		.reg_type=		REG_SZ, 		\
+	}
+
+// Controller path Windows registry key 
+#define AX_DATA_NODE_CTP(v)					\
+	(AX_DATA_NODE){ 					\
+		.name=			L"controller_path",	\
+		.value=			(wchar_t*)v, 		\
+		.value_size= 		AX_DATA_NODE_SIZE_D, 	\
+		.reg_type=		REG_SZ, 		\
+	}
 
 // Update directory Windows registry key
-#define AX_DATA_NODE_UPD_V cat_cached_dir(get_cached_dir(), AX_UPDATE_PATH)
-#define AX_DATA_NODE_UPD { \
-	L"update_directory", \
-	AX_DATA_NODE_UPD_V, \
-	MAX_PATH, \
-	REG_SZ, \
-}
+#define AX_DATA_NODE_UPD(v)					\
+	(AX_DATA_NODE){ 					\
+		.name=			L"update_directory",	\
+		.value=			(wchar_t*)v, 		\
+		.value_size= 		AX_DATA_NODE_SIZE_D, 	\
+		.reg_type=		REG_SZ, 		\
+	}
+
 #endif
 
 AXSTATUS ax_get_data(
-	AX_IN AX_DATA_ROOT* root,
-	AX_IN_OUT AX_DATA_NODE* node
+	AX_DATA_ROOT 				*root,	AX_IN
+	AX_DATA_NODE				*node	AX_IN_OUT
 );
 AXSTATUS ax_set_data(
-	AX_IN AX_DATA_ROOT* root,
-	AX_IN AX_DATA_NODE* node
+	AX_DATA_ROOT 				*root, 	AX_IN
+	AX_DATA_NODE 				*node 	AX_IN
 );
 void ax_free_data(
-	AX_IN AX_DATA_NODE* node
+	AX_DATA_NODE 				*node	AX_IN
 );
 
+#if defined(_MSC_VER)
+	#define AX_NORETURN __declspec(noreturn)	
+#elif defined(__GNUC__) || (__clang__) 
+	#define AX_NORETURN __attribute__(noreturn)	
 #endif
+
+AX_NORETURN static void AX_CRASH(
+	void
+){
+	printf("KURWA");
+	abort();
+}
+
+#endif // AX_UTIL
 

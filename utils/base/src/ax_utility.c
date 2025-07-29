@@ -1,27 +1,12 @@
 #include "ax_utility.h"
 
-AX_DATA_NODE* ax_get_default_data_nodes(
-	void
-){
-	static AX_DATA_NODE ax_default_data_nodes[AX_DEFAULT_DATA_NODE_COUNT] = {0};
-	static int init = 0;
-
-	if (init != 1){
-		ax_default_data_nodes[0] = (AX_DATA_NODE)AX_DATA_NODE_BSD;
-		ax_default_data_nodes[1] = (AX_DATA_NODE)AX_DATA_NODE_DVP;
-		ax_default_data_nodes[2] = (AX_DATA_NODE)AX_DATA_NODE_UPD;
-	}
-	init = 1;
-
-	return ax_default_data_nodes;
-}
-
 AXSTATUS ax_get_data_root(
-	AX_OUT AX_DATA_ROOT* root	
+	AX_DATA_ROOT 				*root	AX_IN	
 ){
 	if (root == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined (AX_WINDOWS)
+
 	HKEY buffer;
 	LRESULT result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_PATH, 0, KEY_ALL_ACCESS, &buffer);
 
@@ -30,39 +15,88 @@ AXSTATUS ax_get_data_root(
 	}
 
 	root->location = buffer;
-	root->locationSize = sizeof(HKEY);
+	root->location_size = sizeof(HKEY);
 	root->type = REGISTRY;
+
 #endif
 	return AX_SUCCESS; 
 }
- 
+
+AX_DATA_NODE *ax_get_data_node_d(
+	void
+){
+	static wchar_t cached_dir[AX_CACHE_SIZE];
+	memset(cached_dir, 0, AX_CACHE_SIZE);
+	
+#if defined(AX_WINDOWS)
+
+	uint32_t dcs = 0;
+	wchar_t *dcb = NULL;
+	dcs = GetCurrentDirectoryW(0, NULL);
+	printf("%i\n", dcs);
+	dcb = malloc(dcs);
+	GetCurrentDirectoryW(dcs, dcb);
+	printf("%ls\n", dcb);
+	wcscpy_s(cached_dir, AX_CACHE_SIZE, dcb);
+	free(dcb);
+
+#endif
+	static wchar_t bsd[AX_DATA_NODE_SIZE_D];
+	wcscpy_s(bsd, AX_DATA_NODE_SIZE_D, cached_dir);
+
+	static wchar_t dvp[AX_DATA_NODE_SIZE_D];
+	wcscpy_s(dvp, AX_DATA_NODE_SIZE_D, cached_dir);
+	wcscat_s(dvp, AX_DATA_NODE_SIZE_D, AX_DRIVER_FULLNAME);
+
+	static wchar_t ctp[AX_DATA_NODE_SIZE_D];
+	wcscpy_s(ctp, AX_DATA_NODE_SIZE_D, cached_dir);
+	wcscat_s(ctp, AX_DATA_NODE_SIZE_D, AX_CONTROL_FULLNAME);
+
+	static wchar_t upd[AX_DATA_NODE_SIZE_D];
+	wcscpy_s(upd, AX_DATA_NODE_SIZE_D, cached_dir);
+	wcscat_s(upd, AX_DATA_NODE_SIZE_D, AX_UPDATE_PATH);
+
+	static AX_DATA_NODE default_nodes[AX_DATA_NODE_COUNT_D];
+	default_nodes[0] = AX_DATA_NODE_BSD(bsd);
+	default_nodes[1] = AX_DATA_NODE_DVP(dvp);
+	default_nodes[2] = AX_DATA_NODE_CTP(ctp);
+	default_nodes[3] = AX_DATA_NODE_UPD(upd);
+
+	printf("%ls", ctp);
+
+	return default_nodes;
+}
+
 AXSTATUS ax_get_data(
-	AX_IN AX_DATA_ROOT* root,
-	AX_IN_OUT AX_DATA_NODE* node
+	AX_DATA_ROOT 				*root,	AX_IN
+	AX_DATA_NODE				*node	AX_IN_OUT
 ){
 	if (root == NULL 
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined(AX_WINDOWS)
+
 	wchar_t* buffer = NULL;
-	unsigned int bufferSize = 0;
+	size_t buffer_size = 0;
 
 	LRESULT result = 0;
 
 	if (node->name == NULL 
 	|| root->location == NULL) return AX_INVALID_ARGUMENT;
 
-	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, &bufferSize); 		
+	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, (uint32_t*)&buffer_size); 		
 	
-	buffer = malloc(bufferSize);
+	buffer = malloc(buffer_size);
 
-	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, &bufferSize); 			
+	result = RegQueryValueExW(root->location, node->name, NULL, NULL, (char*)buffer, (uint32_t*)&buffer_size); 			
+
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
 
 	node->value = buffer;
-	node->valueSize = bufferSize;
+	node->value_size = buffer_size;
+
 #endif
 
 	return AX_SUCCESS; 
@@ -75,7 +109,7 @@ AXSTATUS ax_set_data(
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined(AX_WINDOWS)
-	LRESULT result = RegSetValueExW(root->location, node->name, 0, node->regType, node->value, node->valueSize); 
+	LRESULT result = RegSetValueExW(root->location, node->name, 0, node->reg_type, node->value, node->value_size); 
 
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
@@ -86,7 +120,7 @@ AXSTATUS ax_set_data(
 }
 
 void ax_free_data(
-	AX_IN AX_DATA_NODE* node
+	AX_DATA_NODE 				*node	AX_IN
 ){
 	free(node->value);
 }
