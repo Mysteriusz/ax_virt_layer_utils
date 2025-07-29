@@ -183,7 +183,6 @@ void ax_free_data(
 AX_NORETURN static void AX_CRASH(
 	void
 ){
-	printf("KURWA");
 	abort();
 }
 
