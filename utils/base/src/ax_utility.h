@@ -18,6 +18,7 @@
 #endif
 
 #include "stdint.h"
+#include "stdio.h"
 
 #if !defined(AX_UTILITY)
 #define AX_UTILITY
@@ -30,14 +31,27 @@
 #define AX_IN_OPT
 #define AX_IN_OUT_OPT
 
-// Error check
-#define AX_ERROR	(code)		((code != AX_SUCCESS))
 typedef uint32_t AXSTATUS;
 
 #define AX_SUCCESS 			0x00000000
 #define AX_INVALID_COMMAND	 	0x00000001
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
+// Flag indicating if value is Windows LRESULT
+#define AX_STATUS_LRESULT 		0x80000000
+// Flag indicating if value is Windows GetLastError()
+#define AX_STATUS_LERROR 		0x40000000
+
+// Error checking
+#define AX_ERROR(code)			((code != AX_SUCCESS))
+#if defined(AX_WINDOWS) && defined(AX_UM)
+static void ax_print_error(AXSTATUS code, void* address){
+	printf("\n%ls %u \n%ls %p", L"Error with code:", code, L"Recorded at:", address);
+	printf("\n%ls\n", L"Metadata:"); 
+	printf("\t%ls %u\n", L"LRESULT", (code & AX_STATUS_LRESULT) == 0 ? 0 : code & ~AX_STATUS_LRESULT); 
+	printf("\t%ls %u\n", L"LERROR", (code & AX_STATUS_LERROR) == 0 ? 0 : code & ~AX_STATUS_LERROR); 
+}
+#endif
 
 #define AX_DRIVER_NAME 			L"ax_virt_layer"
 #define AX_CONTROL_NAME  		L"ax_virt_control" 
@@ -47,13 +61,8 @@ typedef uint32_t AXSTATUS;
 
 #if defined(AX_WINDOWS)
 
-// Flag indicating if value is Windows LRESULT
-#define AX_STATUS_LRESULT 		0x80000000
-// Flag indicating if value is Windows GetLastError()
-#define AX_STATUS_LERROR 		0x40000000
-
 // Native error check
-#define AX_NERROR       (code)		((code & AX_STATUS_LRESULT) || (code & AX_STATUS_LERROR))
+#define AX_NERROR(code)		((code & AX_STATUS_LRESULT) || (code & AX_STATUS_LERROR))
 
 // Windows names for driver and controller
 #define AX_DRIVER_FULLNAME 		L"\\" AX_DRIVER_NAME L".sys"

@@ -1,5 +1,4 @@
 #include "ax_utility.h"
-#include "stdio.h"
 
 AXSTATUS ax_get_data_root(
 	AX_IN_OUT AX_DATA_ROOT 		*root	
@@ -11,16 +10,16 @@ AXSTATUS ax_get_data_root(
 	LRESULT result = 0;
 	HKEY buffer;
 
-	result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_SUBKEY, 0, KEY_ALL_ACCESS, &buffer);
+	result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_SUBKEY, 0, KEY_CREATE_SUB_KEY, &buffer);
 
 	if (result != ERROR_SUCCESS){
-		return result;
+		return result | AX_STATUS_LRESULT;
 	}
 
-	result = RegCreateKeyExW(buffer, AX_DATA_ROOT_NAME, 0, NULL, 0, KEY_CREATE_SUB_KEY, NULL, &buffer, NULL);
+	result = RegCreateKeyExW(buffer, AX_DATA_ROOT_NAME, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &buffer, NULL);
 
 	if (result != ERROR_SUCCESS){
-		return result;
+		return result | AX_STATUS_LRESULT;
 	}
 
 	root->location = buffer;

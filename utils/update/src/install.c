@@ -1,12 +1,14 @@
 #include "install.h"
-#include "stdio.h"
 
 AXSTATUS ax_setup_i(
 	AX_IN_OPT AX_DATA_NODE 		*config_values,
 	AX_IN uint32_t 			config_value_count
 ){
 	AX_DATA_ROOT config_root;
-	ax_get_data_root(&config_root);
+	AXSTATUS status = 0;
+
+	status = ax_get_data_root(&config_root);
+	if (AX_ERROR(status)) return status;
 
 	if (config_values == NULL){
 		config_values = ax_get_data_node_d();
@@ -22,8 +24,10 @@ AXSTATUS ax_setup_i(
 	AX_DATA_NODE ctp = AX_DATA_NODE_CTP(NULL);   
 	ax_get_data(&config_root, &ctp);
 	
-	ax_driver_i(&AX_VIRT_LAYER_DATA_I(dvp.value));
-	ax_driver_i(&AX_CONTROL_DATA_I(ctp.value));
+	status = ax_driver_i(&AX_VIRT_LAYER_DATA_I(dvp.value));
+	if (AX_ERROR(status)) return status;
+	status = ax_driver_i(&AX_CONTROL_DATA_I(ctp.value));
+	if (AX_ERROR(status)) return status;
 
 	ax_free_data(&dvp);
 	ax_free_data(&ctp);
