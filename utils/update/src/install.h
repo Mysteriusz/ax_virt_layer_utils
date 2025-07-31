@@ -21,8 +21,8 @@
 	If config_values is NULL setup will use default nodes defined in ax_utility.h
 */
 AXSTATUS ax_setup_i(
-	AX_DATA_NODE 	*config_values, AX_IN_OPT
-	uint32_t 	config_count AX_IN
+	AX_IN_OPT AX_DATA_NODE 		*config_values,
+	AX_IN uint32_t 			config_count 
 );
 
 typedef struct{
@@ -68,6 +68,6 @@ typedef struct{
  	Function used for handling the setup of default runtime of the driver and updater.
 */
 AXSTATUS ax_driver_i(
-	AX_DRIVER_DATA_I *data_i AX_IN	
+	AX_IN AX_DRIVER_DATA_I 		*data_i	
 );
 

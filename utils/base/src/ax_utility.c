@@ -1,17 +1,26 @@
 #include "ax_utility.h"
+#include "stdio.h"
 
 AXSTATUS ax_get_data_root(
-	AX_DATA_ROOT 				*root	AX_IN	
+	AX_IN_OUT AX_DATA_ROOT 		*root	
 ){
 	if (root == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined (AX_WINDOWS)
 
+	LRESULT result = 0;
 	HKEY buffer;
-	LRESULT result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_PATH, 0, KEY_ALL_ACCESS, &buffer);
+
+	result = RegOpenKeyExW(AX_DATA_ROOT_HKEY, AX_DATA_ROOT_SUBKEY, 0, KEY_ALL_ACCESS, &buffer);
 
 	if (result != ERROR_SUCCESS){
-		return result | AX_STATUS_LRESULT;
+		return result;
+	}
+
+	result = RegCreateKeyExW(buffer, AX_DATA_ROOT_NAME, 0, NULL, 0, KEY_CREATE_SUB_KEY, NULL, &buffer, NULL);
+
+	if (result != ERROR_SUCCESS){
+		return result;
 	}
 
 	root->location = buffer;
@@ -30,13 +39,16 @@ AX_DATA_NODE *ax_get_data_node_d(
 	
 #if defined(AX_WINDOWS)
 
+	// Allocate local buffer for current directory and copy cached_dir.
+	// This prevents STATUS_STACK_BUFFER_OVERRUN which appears to be returned when buffer is too big.
+
 	uint32_t dcs = 0;
 	wchar_t *dcb = NULL;
+
 	dcs = GetCurrentDirectoryW(0, NULL);
-	printf("%i\n", dcs);
 	dcb = malloc(dcs);
-	GetCurrentDirectoryW(dcs, dcb);
-	printf("%ls\n", dcb);
+	dcs = GetCurrentDirectoryW(dcs, dcb);
+
 	wcscpy_s(cached_dir, AX_CACHE_SIZE, dcb);
 	free(dcb);
 
@@ -62,14 +74,12 @@ AX_DATA_NODE *ax_get_data_node_d(
 	default_nodes[2] = AX_DATA_NODE_CTP(ctp);
 	default_nodes[3] = AX_DATA_NODE_UPD(upd);
 
-	printf("%ls", ctp);
-
 	return default_nodes;
 }
 
 AXSTATUS ax_get_data(
-	AX_DATA_ROOT 				*root,	AX_IN
-	AX_DATA_NODE				*node	AX_IN_OUT
+	AX_IN const AX_DATA_ROOT	*root,
+	AX_IN_OUT AX_DATA_NODE		*node
 ){
 	if (root == NULL 
 	|| node == NULL) return AX_INVALID_ARGUMENT;
@@ -102,25 +112,27 @@ AXSTATUS ax_get_data(
 	return AX_SUCCESS; 
 }
 AXSTATUS ax_set_data(
-	AX_IN AX_DATA_ROOT* root,
-	AX_IN AX_DATA_NODE* node
+	AX_IN const AX_DATA_ROOT	*root,
+	AX_IN const AX_DATA_NODE	*node
 ){
 	if (root == NULL 
 	|| node == NULL) return AX_INVALID_ARGUMENT;
 
 #if defined(AX_WINDOWS)
+
 	LRESULT result = RegSetValueExW(root->location, node->name, 0, node->reg_type, node->value, node->value_size); 
 
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
+
 #endif
 
 	return AX_SUCCESS; 
 }
 
 void ax_free_data(
-	AX_DATA_NODE 				*node	AX_IN
+	AX_IN AX_DATA_NODE 		*node
 ){
 	free(node->value);
 }

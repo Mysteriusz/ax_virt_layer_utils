@@ -2,8 +2,8 @@
 #include "stdio.h"
 
 AXSTATUS ax_setup_i(
-	AX_DATA_NODE *config_values,
-	uint32_t config_value_count
+	AX_IN_OPT AX_DATA_NODE 		*config_values,
+	AX_IN uint32_t 			config_value_count
 ){
 	AX_DATA_ROOT config_root;
 	ax_get_data_root(&config_root);
@@ -31,7 +31,7 @@ AXSTATUS ax_setup_i(
 }
 
 AXSTATUS ax_driver_i(
-	AX_IN AX_DRIVER_DATA_I *data_i	
+	AX_IN AX_DRIVER_DATA_I 		*data_i
 ){
 	if (data_i == NULL) return AX_INVALID_ARGUMENT; 
 

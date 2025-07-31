@@ -39,6 +39,12 @@ typedef uint32_t AXSTATUS;
 #define AX_MEMORY_ERROR 		0x00000002
 #define AX_INVALID_ARGUMENT		0x00000003
 
+#define AX_DRIVER_NAME 			L"ax_virt_layer"
+#define AX_CONTROL_NAME  		L"ax_virt_control" 
+
+#define AX_CACHE_SIZE			0x200
+#define AX_UPDATE_PATH 			L"\\update"
+
 #if defined(AX_WINDOWS)
 
 // Flag indicating if value is Windows LRESULT
@@ -50,10 +56,8 @@ typedef uint32_t AXSTATUS;
 #define AX_NERROR       (code)		((code & AX_STATUS_LRESULT) || (code & AX_STATUS_LERROR))
 
 // Windows names for driver and controller
-#define AX_DRIVER_FULLNAME 		L"\\ax_virt_layer.sys"
-#define AX_DRIVER_BASENAME 		L"ax_virt_layer"
-#define AX_CONTROL_FULLNAME 		L"\\ax_virt_control.exe"
-#define AX_CONTROL_BASENAME 		L"ax_virt_control"
+#define AX_DRIVER_FULLNAME 		L"\\" AX_DRIVER_NAME L".sys"
+#define AX_CONTROL_FULLNAME 		L"\\" AX_CONTROL_NAME L".exe"
 
 // AX Virtualization service
 #define AX_SERVICE_NAME 		L"AX_VIRTUALIZATION_DRIVER"
@@ -71,12 +75,15 @@ typedef uint32_t AXSTATUS;
 
 // Data location on Windows is in the registry
 #define AX_DATA_ROOT_HKEY 		HKEY_LOCAL_MACHINE
-#define AX_DATA_ROOT_PATH 		L"SOFTWARE\\AX_VIRTUALIZATION"
+#define AX_DATA_ROOT_SUBKEY 		L"SOFTWARE"
+// Data is located in the registry at: 
+//
+// HKEY_LOCAL_MACHINE\\SOFTWARE\\AX_VIRTUALIZATION
+//
+
+#define AX_DATA_ROOT_NAME 		L"AX_VIRTUALIZATION"
 
 #endif
-
-#define AX_CACHE_SIZE			0x200
-#define AX_UPDATE_PATH 			L"\\update"
 
 typedef enum {
 	DIRECTORY,
@@ -102,7 +109,7 @@ typedef struct {
 } AX_DATA_ROOT;
 
 AXSTATUS ax_get_data_root(
-	AX_DATA_ROOT 				*root	AX_OUT	
+	AX_IN_OUT AX_DATA_ROOT 		*root	
 );
 
 typedef struct {
@@ -114,7 +121,7 @@ typedef struct {
 	uint32_t 		reg_type; // Windows registry value type	
 #endif
 
-} AX_DATA_NODE;
+} AX_DATA_NODE; 
 
 #define AX_DATA_NODE_COUNT_D 		0x04
 #define AX_DATA_NODE_SIZE_D		AX_CACHE_SIZE * 2 
@@ -160,18 +167,18 @@ AX_DATA_NODE *ax_get_data_node_d(
 		.reg_type=		REG_SZ, 		\
 	}
 
-#endif
+#endif // AX_WINDOWS
 
 AXSTATUS ax_get_data(
-	AX_DATA_ROOT 				*root,	AX_IN
-	AX_DATA_NODE				*node	AX_IN_OUT
+	AX_IN const AX_DATA_ROOT	*root,
+	AX_IN_OUT AX_DATA_NODE		*node
 );
 AXSTATUS ax_set_data(
-	AX_DATA_ROOT 				*root, 	AX_IN
-	AX_DATA_NODE 				*node 	AX_IN
+	AX_IN const AX_DATA_ROOT	*root,
+	AX_IN const AX_DATA_NODE	*node
 );
 void ax_free_data(
-	AX_DATA_NODE 				*node	AX_IN
+	AX_IN AX_DATA_NODE 		*node
 );
 
 #if defined(_MSC_VER)
