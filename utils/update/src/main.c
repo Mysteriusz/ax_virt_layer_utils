@@ -9,9 +9,9 @@ int main(){
 		if (wcscmp(arg_list[i], L"-install") == 0){
 			AXSTATUS res = ax_setup_i(NULL, 0);
 			if (AX_ERROR(res)) ax_print_error(res, (void*)ax_setup_i);
+			while(1);
 		}
 	}
 
-	while(1);	
     	return 0;
 }

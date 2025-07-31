@@ -109,7 +109,7 @@ typedef enum {
 	IMPORTANT NOTICE:
 
 	If type is equal to DIRECTORY location is CHAR*
-	If type is equal to REGISTRY location is HKEY* 
+	If type is equal to REGISTRY location is HANDLE* (HKEY) 
 */
 typedef struct {
 	void 			*location;
@@ -185,6 +185,10 @@ AXSTATUS ax_get_data(
 AXSTATUS ax_set_data(
 	AX_IN const AX_DATA_ROOT	*root,
 	AX_IN const AX_DATA_NODE	*node
+);
+
+void ax_free_root(
+	AX_IN_OUT AX_DATA_ROOT		*root
 );
 void ax_free_data(
 	AX_IN AX_DATA_NODE 		*node

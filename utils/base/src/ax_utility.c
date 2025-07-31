@@ -16,13 +16,16 @@ AXSTATUS ax_get_data_root(
 		return result | AX_STATUS_LRESULT;
 	}
 
-	result = RegCreateKeyExW(buffer, AX_DATA_ROOT_NAME, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &buffer, NULL);
+	HKEY lbuffer;
+	result = RegCreateKeyExW(buffer, AX_DATA_ROOT_NAME, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &lbuffer, NULL);
 
 	if (result != ERROR_SUCCESS){
 		return result | AX_STATUS_LRESULT;
 	}
 
-	root->location = buffer;
+	RegCloseKey(buffer);
+
+	root->location = lbuffer;
 	root->location_size = sizeof(HKEY);
 	root->type = REGISTRY;
 
@@ -130,6 +133,14 @@ AXSTATUS ax_set_data(
 	return AX_SUCCESS; 
 }
 
+void ax_free_root(
+	AX_IN_OUT AX_DATA_ROOT		*root
+){
+#if defined(AX_WINDOWS)
+	RegCloseKey(root->location);
+#endif
+	memset(root, 0, sizeof(AX_DATA_ROOT));
+}
 void ax_free_data(
 	AX_IN AX_DATA_NODE 		*node
 ){
