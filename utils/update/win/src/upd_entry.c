@@ -15,7 +15,18 @@ int main(){
 	ax_control_setup_i();
 	ax_driver_setup_i();
 
-	while(1);
+	uint32_t arg_count = 0; 
+	wchar_t** args = CommandLineToArgvW(GetCommandLineW(), &arg_count);
+
+	// No arguments passed to commandline -> ax_update.exe
+	if (arg_count == 1){
+		return 0;
+	}
+	
+	UPD_COMMAND_TOKEN token;
+	upd_token_parse(args[1], wcslen(args[1]), &token);
+
+	getchar();
 	return 0;
 }
 
