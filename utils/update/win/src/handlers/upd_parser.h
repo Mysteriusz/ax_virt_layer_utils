@@ -66,9 +66,9 @@ AXSTATUS upd_execute_expression(
 	L'\0'  \
 }
 
-#define UPD_SKIP_FLAG_FO 			0x0000 // Return on first occurence
-#define UPD_SKIP_FLAG_LO 			0x0001 // Return on last occurence
-#define UPD_SKIP_FLAG_ALL			0x0002 // Return after skipping all characters in the skip_set
+#define UPD_SKIP_FLAG_FO 		0x0000 // Return on first occurence
+#define UPD_SKIP_FLAG_LO 		0x0001 // Return on last occurence
+#define UPD_SKIP_FLAG_ALL		0x0002 // Return after skipping all characters in the skip_set
 
 const wchar_t* upd_skip(
 	AX_IN const wchar_t*		string,

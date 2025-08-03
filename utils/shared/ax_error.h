@@ -35,15 +35,47 @@ typedef uint64_t AXSTATUS;
 
 #if defined(AX_UM)
 
-static void ax_print_error(AXSTATUS code, void* address){
-	printf("\n%ls %llu \n%ls %p", L"Error with code:", code, L"Recorded at:", address);
-	printf("\n%ls\n", L"Metadata:"); 
-	printf("\t%ls %llu\n", L"LRESULT", (code & AX_STATUS_LRESULT) == 0 ? 0 : code & ~AX_STATUS_LRESULT); 
-	printf("\t%ls %llu\n", L"LERROR", (code & AX_STATUS_LERROR) == 0 ? 0 : code & ~AX_STATUS_LERROR); 
+static void ax_log_status(
+	AX_IN AXSTATUS 			status,
+	AX_IN_OPT uint8_t		metadata,
+	AX_IN_OPT const void*		location,
+	AX_IN_OPT const wchar_t*	message
+){
+	static wchar_t meta_buffer[AX_CACHE_SIZE];
+	memset(meta_buffer, 0, AX_CACHE_SIZE);
+
+	static wchar_t address_buffer[AX_CACHE_SIZE];
+	memset(address_buffer, 0, AX_CACHE_SIZE);
+
+	if (metadata){
+		uint64_t lresult = status & ~AX_STATUS_LRESULT;  
+		uint64_t lerror = status & ~AX_STATUS_LERROR;  
+
+		swprintf_s(meta_buffer, AX_CACHE_SIZE,
+			L"\t%ls --> %llu\n"
+			L"\t%ls --> %llu\n",
+			L"LRESULT", lresult,
+			L"LERROR", lerror
+		);
+	}
+	if (location != NULL){
+		swprintf_s(address_buffer, AX_CACHE_SIZE,
+			L"%ls --> %p\n",
+			L"Error at", location
+		);
+	}
+
+	// Print status
+	printf("%ls: %llu\n %ls%ls%ls",
+		L"AXSTATUS Status", status,
+		meta_buffer,
+		address_buffer,
+		message == NULL ? L"No message." : message
+	);
 }
 
 #if defined(_MSC_VER)
-	#define AX_NORETURN __declspec(noreturn)	
+	#define AX_NORETURN __declspec(noreturn)
 #elif defined(__GNUC__) || (__clang__) 
 	#define AX_NORETURN __attribute__(noreturn)	
 #endif 

@@ -52,6 +52,11 @@ AXSTATUS upd_token_parse(
 			wchar_t* expression = malloc(expression_size);
 			memcpy(expression, expression_start, expression_size * sizeof(wchar_t));
 
+			AXSTATUS expression_status = upd_execute_expression(expression, &token_value_size, &token_value);
+			if (AX_ERROR(expression_status)){
+				ax_log_status(expression_status, 1, NULL, NULL);
+			}
+
 			free(expression);
 
 			printf("%llu\n", expression_size);

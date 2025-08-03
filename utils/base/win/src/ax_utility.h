@@ -27,8 +27,6 @@
 #define AX_WINDOWS
 #endif
 
-#include "ax_error.h"
-
 #define AX_OUT
 #define AX_IN
 #define AX_IN_OUT
@@ -39,6 +37,8 @@
 
 #define AX_CACHE_SIZE			0x200
 #define AX_UPDATE_PATH 			L"\\update"
+
+#include "ax_error.h"
 
 /*
 	

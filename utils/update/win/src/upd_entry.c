@@ -23,8 +23,10 @@ int main(){
 		return 0;
 	}
 	
+	ax_log_status(2, 1, _ReturnAddress(), NULL);
+
 	UPD_COMMAND_TOKEN token;
-	upd_token_parse(args[1], wcslen(args[1]), &token);
+	//upd_token_parse(args[1], wcslen(args[1]), &token);
 
 	getchar();
 	return 0;
