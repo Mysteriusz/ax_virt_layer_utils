@@ -19,6 +19,9 @@ typedef uint64_t AXSTATUS;
 #define AX_INVALID_COMMAND	 	0x0000000000000001
 #define AX_MEMORY_ERROR 		0x0000000000000002
 #define AX_INVALID_ARGUMENT		0x0000000000000003
+#define AX_INVALID_DATA			0x0000000000000004
+#define AX_EXECUTION_ERROR		0x0000000000000005
+#define AX_NOT_IMPLEMENTED		0x00000000ffffffff
 // AX Error check 
 #define AX_ERROR(code)			((code != AX_SUCCESS))
 
@@ -48,12 +51,12 @@ static void ax_log_status(
 	memset(address_buffer, 0, AX_CACHE_SIZE);
 
 	if (metadata){
-		uint64_t lresult = status & ~AX_STATUS_LRESULT;  
-		uint64_t lerror = status & ~AX_STATUS_LERROR;  
+		wchar_t* lresult = status & AX_STATUS_LRESULT ? L"TRUE" : L"FALSE";  
+		wchar_t* lerror = status & AX_STATUS_LERROR ? L"TRUE" : L"FALSE";  
 
 		swprintf_s(meta_buffer, AX_CACHE_SIZE,
-			L"\t%ls --> %llu\n"
-			L"\t%ls --> %llu\n",
+			L"\t%ls --> %ls\n"
+			L"\t%ls --> %ls\n",
 			L"LRESULT", lresult,
 			L"LERROR", lerror
 		);

@@ -26,7 +26,7 @@ int main(){
 	UPD_COMMAND_TOKEN* token = NULL;
 	upd_token_parse(args[1], wcslen(args[1]), &token);
 
-	printf("%i\n", *(char*)token->value);
+	printf("%ls\n", (wchar_t*)token->value);
 
 	getchar();
 	return 0;

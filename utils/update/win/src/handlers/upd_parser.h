@@ -4,6 +4,7 @@ typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
 enum{
 	SWITCH = 0,
 	VALUE = 1,
+	EXPRESSION = 2,
 };
 
 typedef struct{
@@ -23,8 +24,6 @@ AXSTATUS upd_command_parse(
 	AX_OUT UPD_COMMAND**		command
 );
 
-#define UPD_ALLOWED_TOKEN_COUNT
-#define UPD_ALLOWED_TOKENS {L"--install", L"--update"} 
 AXSTATUS upd_token_parse(
 	AX_IN const wchar_t* 		value,
 	AX_IN const uint32_t		value_length,
@@ -33,6 +32,18 @@ AXSTATUS upd_token_parse(
 
 AXSTATUS upd_execute_expression(
 	AX_IN const wchar_t* 		expression,
+	AX_OUT size_t*			buffer_size,
+	AX_OUT void**			buffer
+);
+
+typedef uint64_t 			UPD_SWITCH; 	
+
+#define UPD_SWITCH_INSTALL		0x0000000000000000
+#define UPD_SWITCH_INSTALL_STR		L"--install"
+#define UPD_SWITCH_UPDATE		0x0000000000000001
+#define UPD_SWITCH_UPDATE_STR		L"--update"
+AXSTATUS upd_execute_switch(
+	AX_IN const wchar_t* 		string,
 	AX_OUT size_t*			buffer_size,
 	AX_OUT void**			buffer
 );
@@ -47,21 +58,37 @@ AXSTATUS upd_execute_expression(
 	L'\x00a0', \
 	L'\0'  \
 }
+
+// (
 #define UPD_TOKEN_START_SKIP_SET (const wchar_t[]){ \
 	L'\x0028', \
 	L'\0'  \
 }
+
+// )
 #define UPD_TOKEN_END_SKIP_SET (const wchar_t[]){ \
 	L'\x0029', \
 	L'\0'  \
 }
 
+// <
 #define UPD_EXPRESSION_START_SKIP_SET (const wchar_t[]){ \
 	L'\x003c', \
 	L'\0'  \
 }
+// >
 #define UPD_EXPRESSION_END_SKIP_SET (const wchar_t[]){ \
 	L'\x003e', \
+	L'\0'  \
+}
+
+// -
+#define UPD_SWITCH_START_SKIP_SET (const wchar_t[]){ \
+	L'\x002d', \
+	L'\0'  \
+}
+#define UPD_SWITCH_END_SKIP_SET (const wchar_t[]){ \
+	L'\x0020', \
 	L'\0'  \
 }
 
@@ -69,6 +96,12 @@ AXSTATUS upd_execute_expression(
 #define UPD_SKIP_FLAG_LO 		0x0001 // Return on last occurence
 #define UPD_SKIP_FLAG_ALL		0x0002 // Return after skipping all characters in the skip_set
 
+const wchar_t* upd_range(
+	AX_IN const wchar_t*		from,
+	AX_IN const wchar_t 		skip_set[], // Array of characters that stop range lookup
+	AX_IN uint16_t 			skip_flag,
+	AX_OUT size_t*			range_size 			
+);
 const wchar_t* upd_skip(
 	AX_IN const wchar_t*		string,
 	AX_IN const wchar_t 		skip_set[], // Array of characters to skip
