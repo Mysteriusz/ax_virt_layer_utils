@@ -19,40 +19,46 @@ AXSTATUS upd_token_parse(
 	}
 
 	const wchar_t* current = value;
-	const wchar_t* skip;
+	const wchar_t* skip = NULL;
 
-	skip = upd_skip(current, UPD_EMPTY_SKIP_SET);
+	skip = upd_skip(current, UPD_EMPTY_SKIP_SET, UPD_SKIP_FLAG_ALL);
 	if (skip != NULL) current = skip;
 		
 	void* token_value = NULL;
 	size_t token_value_size = 0;
 	UPD_COMMAND_TOKEN_TYPE token_type = SWITCH; 
 
-	while(*current != '\x0000'){
-		skip = upd_skip(current, UPD_TOKEN_START_SKIP_SET);
+	while(*current != '\0'){
+		skip = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
 		if (skip != NULL) current = skip;
 
-		printf("%ls: %ls\n", L"TOKEN", current);
-	
-		skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET);
-		// Execute expression
+		skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET, UPD_SKIP_FLAG_FO);
 		if (skip != NULL){
 			current = skip;
-			token_type = EXPRESSION;
-			printf("%ls: %ls\n", L"EXPRESSION", current);
-			
-			skip = upd_skip(current, UPD_EXPRESSION_END_SKIP_SET);
-			// Find expression ending
-			if (skip == NULL){
+		
+			const wchar_t* expression_start = current; 
+
+			skip = upd_skip(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO);
+			if (skip != NULL){
+				current = skip;
+			}
+			else{
 				printf("%ls", L"Syntax error: Expression not ended");
-				break;
 			}
 
-			current = skip;
+			const wchar_t* expression_end = current; 
+
+			size_t expression_size = expression_end - expression_start;
+			wchar_t* expression = malloc(expression_size);
+			memcpy(expression, expression_start, expression_size * sizeof(wchar_t));
+
+			free(expression);
+
+			printf("%llu\n", expression_size);
+			printf("%ls: %ls\n", L"EXP", expression);
 		}
-		
+
 		current++;
-		if (wcschr(UPD_TOKEN_END_SKIP_SET, *current)) break;
 	}
 
 	token = malloc(sizeof(UPD_COMMAND_TOKEN));
@@ -63,9 +69,18 @@ AXSTATUS upd_token_parse(
 	return AX_SUCCESS;
 }
 
+AXSTATUS upd_execute_expression(
+	AX_IN const wchar_t* 		expression,
+	AX_OUT size_t*			buffer_size,
+	AX_OUT void**			buffer
+){
+	return AX_SUCCESS;
+}
+
 const wchar_t* upd_skip(
 	AX_IN const wchar_t*		string,
-	AX_IN const wchar_t 		skip_set[] // Array of characters to skip
+	AX_IN const wchar_t 		skip_set[], // Array of characters to skip
+	AX_IN uint16_t 			skip_flag
 ){
 	if (string == NULL ||
 		skip_set == NULL){
@@ -73,13 +88,40 @@ const wchar_t* upd_skip(
 	}
 
 	const wchar_t* current = string;
+	const wchar_t* occurence = NULL;
 
-	wchar_t* found = NULL;
-	while (*current != L'\x0000' && found == NULL){
-		found = wcschr(skip_set, *current);
-		current++;
+	switch (skip_flag){
+	case UPD_SKIP_FLAG_FO:{
+		while(*current != L'\0'){
+			occurence = wcschr(skip_set, *current);
+			current++;
+			if (occurence != NULL) break; 
+		}
+		break;
+	}
+	case UPD_SKIP_FLAG_LO:{
+		const wchar_t* last_occurence = NULL;
+		while(*current != L'\0'){
+			occurence = wcschr(skip_set, *current);
+			if (occurence != NULL) last_occurence = current; 
+			current++;
+		}
+		current = last_occurence;
+		break;
+	}
+	case UPD_SKIP_FLAG_ALL:{
+		while(*current != L'\0'){
+			occurence = wcschr(skip_set, *current);
+			if (occurence == NULL) break; 
+			current++;
+		}
+		break;
+	}
+	default:
+		break;
 	}
 
-	return found == NULL ? NULL : current;
+
+	return current;
 }
 
