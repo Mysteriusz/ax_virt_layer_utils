@@ -3,7 +3,7 @@
 AXSTATUS upd_command_parse(
 	AX_IN const wchar_t** 	 	args,
 	AX_IN const uint32_t		arg_count,
-	AX_OUT UPD_COMMAND*		command
+	AX_OUT UPD_COMMAND**		command
 ){
 	return AX_SUCCESS;
 }
@@ -11,7 +11,7 @@ AXSTATUS upd_command_parse(
 AXSTATUS upd_token_parse(
 	AX_IN const wchar_t*	 	value,
 	AX_IN const uint32_t		value_length,
-	AX_OUT UPD_COMMAND_TOKEN*	token
+	AX_OUT UPD_COMMAND_TOKEN**	token
 ){
 	if (value == NULL || 
 		token == NULL){
@@ -28,48 +28,51 @@ AXSTATUS upd_token_parse(
 	size_t token_value_size = 0;
 	UPD_COMMAND_TOKEN_TYPE token_type = SWITCH; 
 
-	while(*current != '\0'){
-		skip = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
-		if (skip != NULL) current = skip;
+	skip = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
+	if (skip != NULL) current = skip;
 
-		skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET, UPD_SKIP_FLAG_FO);
+	skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET, UPD_SKIP_FLAG_FO);
+	// token_type = VALUE
+	if (skip != NULL){
+		current = skip;
+
+		const wchar_t* expression_start = current; 
+
+		skip = upd_skip(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO);
 		if (skip != NULL){
 			current = skip;
-		
-			const wchar_t* expression_start = current; 
-
-			skip = upd_skip(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO);
-			if (skip != NULL){
-				current = skip;
-			}
-			else{
-				printf("%ls", L"Syntax error: Expression not ended");
-			}
-
-			const wchar_t* expression_end = current; 
-
-			size_t expression_size = expression_end - expression_start;
-			wchar_t* expression = malloc(expression_size);
-			memcpy(expression, expression_start, expression_size * sizeof(wchar_t));
-
-			AXSTATUS expression_status = upd_execute_expression(expression, &token_value_size, &token_value);
-			if (AX_ERROR(expression_status)){
-				ax_log_status(expression_status, 1, NULL, NULL);
-			}
-
-			free(expression);
-
-			printf("%llu\n", expression_size);
-			printf("%ls: %ls\n", L"EXP", expression);
+		}
+		else{
+			printf("%ls", L"Syntax error: Expression not ended");
 		}
 
-		current++;
+		const wchar_t* expression_end = current; 
+
+		size_t expression_size = expression_end - expression_start;
+		wchar_t* expression = malloc(expression_size);
+		memcpy(expression, expression_start, expression_size * sizeof(wchar_t));
+
+		AXSTATUS expression_status = upd_execute_expression(expression, &token_value_size, &token_value);
+		free(expression);
+
+		if (AX_ERROR(expression_status)){
+			ax_log_status(expression_status, 1, NULL, NULL);
+		}
+
+		token_type = VALUE;
+	}
+	// token_type = SWITCH 
+	else {
+		token_type = SWITCH;
+		token_value_size = sizeof(char);
+		token_value = malloc(token_value_size);
+		*(char*)token_value = 1;
 	}
 
-	token = malloc(sizeof(UPD_COMMAND_TOKEN));
-	token->value = token_value;
-	token->value_size = token_value_size;
-	token->token_type = token_type;
+	*token = malloc(sizeof(UPD_COMMAND_TOKEN));
+	(*token)->value = token_value;
+	(*token)->value_size = token_value_size;
+	(*token)->token_type = token_type;
 
 	return AX_SUCCESS;
 }
@@ -95,6 +98,8 @@ const wchar_t* upd_skip(
 	const wchar_t* current = string;
 	const wchar_t* occurence = NULL;
 
+	uint8_t null_out = 0;
+
 	switch (skip_flag){
 	case UPD_SKIP_FLAG_FO:{
 		while(*current != L'\0'){
@@ -102,6 +107,8 @@ const wchar_t* upd_skip(
 			current++;
 			if (occurence != NULL) break; 
 		}
+
+		if (occurence == NULL) null_out = 1;
 		break;
 	}
 	case UPD_SKIP_FLAG_LO:{
@@ -111,7 +118,9 @@ const wchar_t* upd_skip(
 			if (occurence != NULL) last_occurence = current; 
 			current++;
 		}
-		current = last_occurence;
+
+		if (last_occurence == NULL) null_out = 1;
+		else current = last_occurence;
 		break;
 	}
 	case UPD_SKIP_FLAG_ALL:{
@@ -120,6 +129,7 @@ const wchar_t* upd_skip(
 			if (occurence == NULL) break; 
 			current++;
 		}
+
 		break;
 	}
 	default:
@@ -127,6 +137,6 @@ const wchar_t* upd_skip(
 	}
 
 
-	return current;
+	return null_out ? NULL : current;
 }
 

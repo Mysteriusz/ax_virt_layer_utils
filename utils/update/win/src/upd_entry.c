@@ -23,12 +23,14 @@ int main(){
 		return 0;
 	}
 	
-	ax_log_status(2, 1, _ReturnAddress(), NULL);
+	UPD_COMMAND_TOKEN* token = NULL;
+	upd_token_parse(args[1], wcslen(args[1]), &token);
 
-	UPD_COMMAND_TOKEN token;
-	//upd_token_parse(args[1], wcslen(args[1]), &token);
+	printf("%i\n", *(char*)token->value);
 
 	getchar();
 	return 0;
 }
+
+
 

@@ -4,7 +4,6 @@ typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
 enum{
 	SWITCH = 0,
 	VALUE = 1,
-	EXPRESSION = 2,
 };
 
 typedef struct{
@@ -21,7 +20,7 @@ typedef struct{
 AXSTATUS upd_command_parse(
 	AX_IN const wchar_t** 		args,
 	AX_IN const uint32_t		arg_count,
-	AX_OUT UPD_COMMAND*		command
+	AX_OUT UPD_COMMAND**		command
 );
 
 #define UPD_ALLOWED_TOKEN_COUNT
@@ -29,7 +28,7 @@ AXSTATUS upd_command_parse(
 AXSTATUS upd_token_parse(
 	AX_IN const wchar_t* 		value,
 	AX_IN const uint32_t		value_length,
-	AX_OUT UPD_COMMAND_TOKEN*	token
+	AX_OUT UPD_COMMAND_TOKEN**	token
 );
 
 AXSTATUS upd_execute_expression(
