@@ -50,6 +50,7 @@ AXSTATUS upd_token_parse(
 
 	// token_type = EXPRESSION
 	if (exp_skip != NULL){
+		printf("%ls\n", L"expression");
 		current = exp_skip;
 
 		token_value = upd_range(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
@@ -62,6 +63,7 @@ AXSTATUS upd_token_parse(
 	}
 	// token_type = SWITCH 
 	else if (switch_skip != NULL){
+		printf("%ls\n", L"switch");
 		current = switch_skip;
 
 		token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, &token_value_size);
@@ -74,6 +76,7 @@ AXSTATUS upd_token_parse(
 	}
 	// token_type = VALUE 
 	else {
+		printf("%ls\n", L"value");
 		token_type = VALUE;
 	}
 
@@ -191,12 +194,15 @@ const wchar_t* upd_skip(
 		break;
 	}
 	case UPD_SKIP_FLAG_ALL:{
+		uint32_t skipped = 0;
 		while(*current != L'\0'){
 			occurence = wcschr(skip_set, *current);
 			if (occurence == NULL) break; 
+			skipped++;
 			current++;
 		}
 
+		if (skipped == 0) null_out = 1;
 		break;
 	}
 	default:
