@@ -103,9 +103,10 @@ AXSTATUS upd_execute_switch(
 #define UPD_SKIP_FLAG_FO 		0x0000 // Return on first occurence
 #define UPD_SKIP_FLAG_LO 		0x0001 // Return on last occurence
 #define UPD_SKIP_FLAG_ALL		0x0002 // Return after skipping all characters in the skip_set
-#define UPD_SKIP_FLAG_ALWAYS_RET	0x8000 // Specify if value should point back at the begining if found
+#define UPD_SKIP_FLAG_IF_FOUND		0x4000 // Specify if value should point back at the begining if not found
+#define UPD_SKIP_FLAG_ALWAYS_RET	0x8000 // Specify if value should point back at the begining if not found
 
-const wchar_t* upd_range(
+wchar_t* upd_range(
 	AX_IN const wchar_t*		from,
 	AX_IN const wchar_t 		skip_set[], // Array of characters that stop range lookup
 	AX_IN uint16_t 			skip_flag,

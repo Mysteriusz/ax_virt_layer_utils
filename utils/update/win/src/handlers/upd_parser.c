@@ -30,8 +30,18 @@ AXSTATUS upd_token_parse(
 	UPD_COMMAND_TOKEN_TYPE token_type = SWITCH; 
 
 	// Skip all leading token entry characters
-	skip = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
-	if (skip != NULL) current = skip;
+	size_t token_size = 0;
+	const wchar_t* token_start = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_FO);
+
+	// Token is starting with its start characters meaning there has to be an end
+	if (token_start != NULL){
+		current = upd_range(token_start, UPD_TOKEN_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_size); 
+		if (current == NULL){
+			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Token not ended.");
+			return AX_INVALID_DATA;
+		}
+	}
+	printf("%ls\n", current);
 
 	// Skip first expression character (if found)
 	const wchar_t* exp_skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET, UPD_SKIP_FLAG_FO);
@@ -42,7 +52,7 @@ AXSTATUS upd_token_parse(
 	if (exp_skip != NULL){
 		current = exp_skip;
 
-		(const wchar_t*)token_value = upd_range(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
+		token_value = upd_range(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
 		if (token_value == NULL) {
 			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Expression not ended.");
 			return AX_INVALID_DATA;
@@ -54,7 +64,7 @@ AXSTATUS upd_token_parse(
 	else if (switch_skip != NULL){
 		current = switch_skip;
 
-		(const wchar_t*)token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, &token_value_size);
+		token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, &token_value_size);
 		if (token_value == NULL) {
 			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Switch not ended.");
 			return AX_INVALID_DATA;
@@ -112,7 +122,7 @@ AXSTATUS upd_execute_switch(
 	return AX_SUCCESS;
 }
 
-const wchar_t* upd_range(
+wchar_t* upd_range(
 	AX_IN const wchar_t*		from,
 	AX_IN const wchar_t 		skip_set[], // Array of characters that stop range lookup
 	AX_IN uint16_t 			skip_flag,
@@ -126,7 +136,6 @@ const wchar_t* upd_range(
 
 	const wchar_t* current = from;
 	const wchar_t* start = from;
-	const wchar_t* occurence;
 
 	current = upd_skip(start, skip_set, skip_flag);
 
