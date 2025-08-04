@@ -89,12 +89,21 @@ AXSTATUS upd_execute_switch(
 }
 #define UPD_SWITCH_END_SKIP_SET (const wchar_t[]){ \
 	L'\x0020', \
+	L'\n', \
+	L'\r', \
 	L'\0'  \
 }
+
+// Lower 8 bits of the skip flag are reserved for the value.
+// Higher 8 bits of the skip flag are reserved for the bit flags
+
+#define UPD_SKIP_FLAG_LOWER(skip_flag)  (skip_flag & 0x00ff)
+#define UPD_SKIP_FLAG_UPPER(skip_flag) 	(skip_flag & 0xff00)
 
 #define UPD_SKIP_FLAG_FO 		0x0000 // Return on first occurence
 #define UPD_SKIP_FLAG_LO 		0x0001 // Return on last occurence
 #define UPD_SKIP_FLAG_ALL		0x0002 // Return after skipping all characters in the skip_set
+#define UPD_SKIP_FLAG_ALWAYS_RET	0x8000 // Specify if value should point back at the begining if found
 
 const wchar_t* upd_range(
 	AX_IN const wchar_t*		from,

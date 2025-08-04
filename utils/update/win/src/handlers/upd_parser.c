@@ -38,13 +38,13 @@ AXSTATUS upd_token_parse(
 	// Skip all switch character (if found)
 	const wchar_t* switch_skip = upd_skip(current, UPD_SWITCH_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
 
-	// token_type = VALUE
+	// token_type = EXPRESSION
 	if (exp_skip != NULL){
 		current = exp_skip;
 
 		(const wchar_t*)token_value = upd_range(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
 		if (token_value == NULL) {
-			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Expression not ended");
+			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Expression not ended.");
 			return AX_INVALID_DATA;
 		}
 
@@ -54,7 +54,11 @@ AXSTATUS upd_token_parse(
 	else if (switch_skip != NULL){
 		current = switch_skip;
 
-		(const wchar_t*)token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
+		(const wchar_t*)token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, &token_value_size);
+		if (token_value == NULL) {
+			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Switch not ended.");
+			return AX_INVALID_DATA;
+		}
 
 		token_type = SWITCH;
 	}
@@ -154,7 +158,7 @@ const wchar_t* upd_skip(
 
 	uint8_t null_out = 0;
 
-	switch (skip_flag){
+	switch (UPD_SKIP_FLAG_LOWER(skip_flag)){
 	case UPD_SKIP_FLAG_FO:{
 		while(*current != L'\0'){
 			occurence = wcschr(skip_set, *current);
@@ -190,6 +194,10 @@ const wchar_t* upd_skip(
 		break;
 	}
 
+	uint16_t skip_flag_bits = UPD_SKIP_FLAG_UPPER(skip_flag);
+	if ((skip_flag_bits & UPD_SKIP_FLAG_ALWAYS_RET) != 0){
+		return current == NULL ? NULL : current;
+	}
 
 	return null_out ? NULL : current;
 }
