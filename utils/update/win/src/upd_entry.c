@@ -22,11 +22,9 @@ int main(){
 	if (arg_count == 1){
 		return 0;
 	}
-	
-	UPD_COMMAND_TOKEN* token = NULL;
-	upd_token_parse(args[1], wcslen(args[1]), &token);
 
-	printf("%ls\n", (wchar_t*)token->value);
+	UPD_COMMAND* command = NULL;
+	upd_command_parse(args, arg_count, &command);
 
 	getchar();
 	return 0;

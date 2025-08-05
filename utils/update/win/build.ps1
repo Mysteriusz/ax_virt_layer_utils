@@ -2,7 +2,7 @@ $FILE_C = gci "$(Get-Location)\src" -recurse -file -filter "*.c"
 $FILE_H = gci "$(Get-Location)\src" -recurse -file -filter "*.h"
 
 $INCLUDE = @(
-	"/IC:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\full"
+	$("/I"+$env:AX_VIRT_LAYER_INCLUDE)
 	$($FILE_H | select -expandproperty DirectoryName | foreach {"/I"+$_})
 	$("/I"+$env:AX_VIRT_H)
 )

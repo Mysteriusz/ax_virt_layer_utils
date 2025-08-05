@@ -2,19 +2,41 @@
 
 AXSTATUS upd_command_parse(
 	AX_IN const wchar_t** 	 	args,
-	AX_IN const uint32_t		arg_count,
+	AX_IN uint32_t			arg_count,
 	AX_OUT UPD_COMMAND**		command
 ){
+	if (args == NULL 
+		|| command == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	UPD_COMMAND* command_buffer = malloc(sizeof(UPD_COMMAND));
+	command_buffer->tokens = malloc(sizeof(UPD_COMMAND_TOKEN*) * arg_count);
+	command_buffer->token_count = arg_count;
+
+	for (uint32_t i = 0; i < arg_count; i++){
+		UPD_COMMAND_TOKEN* token = NULL;
+		AXSTATUS token_status = upd_token_parse(args[i], &token);
+
+		if (AX_ERROR(token_status)){
+			upd_command_free(command_buffer);
+			return AX_EXECUTION_ERROR;
+		}
+
+		command_buffer->tokens[i] = token;
+	}
+
+	*command = command_buffer;
+
 	return AX_SUCCESS;
 }
 
 AXSTATUS upd_token_parse(
 	AX_IN const wchar_t*	 	value,
-	AX_IN const uint32_t		value_length,
 	AX_OUT UPD_COMMAND_TOKEN**	token
 ){
-	if (value == NULL || 
-		token == NULL){
+	if (value == NULL 
+		|| token == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
@@ -22,7 +44,12 @@ AXSTATUS upd_token_parse(
 	const wchar_t* skip = NULL;
 
 	// Skip all leading white spaces
-	skip = upd_skip(current, UPD_EMPTY_SKIP_SET, UPD_SKIP_FLAG_ALL);
+	skip = upd_skip(
+		current, 
+		UPD_EMPTY_SKIP_SET, 
+		UPD_SKIP_FLAG_ALL
+	);
+
 	if (skip != NULL) current = skip;
 		
 	void* token_value = NULL;
@@ -31,31 +58,62 @@ AXSTATUS upd_token_parse(
 
 	// Skip all leading token entry characters
 	size_t token_size = 0;
-	const wchar_t* token_start = upd_skip(current, UPD_TOKEN_START_SKIP_SET, UPD_SKIP_FLAG_FO);
+	const wchar_t* token_start = upd_skip(
+		current, 
+		UPD_TOKEN_START_SKIP_SET, 
+		UPD_SKIP_FLAG_FO
+	);
 
 	// Token is starting with its start characters meaning there has to be an end
 	if (token_start != NULL){
-		current = upd_range(token_start, UPD_TOKEN_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_size); 
+		current = upd_range(
+			token_start, 
+			UPD_TOKEN_END_SKIP_SET, 
+			UPD_SKIP_FLAG_LO, 
+			&token_size
+		); 
 		if (current == NULL){
-			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Token not ended.");
+			ax_log_status(
+				AX_INVALID_DATA, 
+				1, 
+				NULL, 
+				L"Syntax Error: Token not ended."
+			);
 			return AX_INVALID_DATA;
 		}
 	}
-	printf("%ls\n", current);
+	//printf("%ls\n", current);
 
 	// Skip first expression character (if found)
-	const wchar_t* exp_skip = upd_skip(current, UPD_EXPRESSION_START_SKIP_SET, UPD_SKIP_FLAG_FO);
+	const wchar_t* exp_skip = upd_skip(
+		current, 
+		UPD_EXPRESSION_START_SKIP_SET, 
+		UPD_SKIP_FLAG_FO
+	);
 	// Skip all switch character (if found)
-	const wchar_t* switch_skip = upd_skip(current, UPD_SWITCH_START_SKIP_SET, UPD_SKIP_FLAG_ALL);
+	const wchar_t* switch_skip = upd_skip(
+		current, 
+		UPD_SWITCH_START_SKIP_SET, 
+		UPD_SKIP_FLAG_ALL
+	);
 
 	// token_type = EXPRESSION
 	if (exp_skip != NULL){
-		printf("%ls\n", L"expression");
 		current = exp_skip;
 
-		token_value = upd_range(current, UPD_EXPRESSION_END_SKIP_SET, UPD_SKIP_FLAG_LO, &token_value_size);
+		token_value = upd_range(
+			current, 
+			UPD_EXPRESSION_END_SKIP_SET, 
+			UPD_SKIP_FLAG_LO, 
+			&token_value_size
+		);
 		if (token_value == NULL) {
-			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Expression not ended.");
+			ax_log_status(
+				AX_INVALID_DATA, 
+				1, 
+				NULL, 
+				L"Syntax Error: Expression not ended."
+			);
 			return AX_INVALID_DATA;
 		}
 
@@ -63,12 +121,22 @@ AXSTATUS upd_token_parse(
 	}
 	// token_type = SWITCH 
 	else if (switch_skip != NULL){
-		printf("%ls\n", L"switch");
+		//printf("%ls\n", L"switch");
 		current = switch_skip;
 
-		token_value = upd_range(current, UPD_SWITCH_END_SKIP_SET, UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, &token_value_size);
+		token_value = upd_range(
+			current,
+			UPD_SWITCH_END_SKIP_SET, 
+			UPD_SKIP_FLAG_LO | UPD_SKIP_FLAG_ALWAYS_RET, 
+			&token_value_size
+		);
 		if (token_value == NULL) {
-			ax_log_status(AX_INVALID_DATA, 1, NULL, L"Syntax Error: Switch not ended.");
+			ax_log_status(
+				AX_INVALID_DATA, 
+				1, 
+				NULL, 
+				L"Syntax Error: Switch not ended."
+			);
 			return AX_INVALID_DATA;
 		}
 
@@ -76,7 +144,13 @@ AXSTATUS upd_token_parse(
 	}
 	// token_type = VALUE 
 	else {
-		printf("%ls\n", L"value");
+		//printf("%ls\n", L"value");
+		token_value = upd_range(
+			current,
+			(const wchar_t[]){'\0'}, 
+			UPD_SKIP_FLAG_FO | UPD_SKIP_FLAG_ALWAYS_RET, 
+			&token_value_size
+		);
 		token_type = VALUE;
 	}
 
@@ -88,41 +162,25 @@ AXSTATUS upd_token_parse(
 	return AX_SUCCESS;
 }
 
-AXSTATUS upd_execute_expression(
-	AX_IN const wchar_t* 		expression,
-	AX_OUT size_t*			buffer_size,
-	AX_OUT void**			buffer
+void upd_command_free(
+	AX_IN_OUT UPD_COMMAND*		command
 ){
-	return AX_SUCCESS;
+	if (command == NULL) return;
+
+	for (uint32_t i = 0; i < command->token_count; i++){
+		upd_token_free(command->tokens[i]);	
+	}
+	memset(command, 0, sizeof(UPD_COMMAND));
+	free(command);
 }
-AXSTATUS upd_execute_switch(
-	AX_IN const wchar_t* 		string,
-	AX_OUT size_t*			buffer_size,
-	AX_OUT void**			buffer
+void upd_token_free(
+	AX_IN_OUT UPD_COMMAND_TOKEN*	token
 ){
-	if (string == NULL ||
-		buffer_size == NULL ||
-		buffer == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
+	if (token == NULL) return;
 
-	UPD_SWITCH switch_value = 0;
-	
-	if (wcscmp(string, UPD_SWITCH_INSTALL_STR) == 0){
-		switch_value = UPD_SWITCH_INSTALL;	
-	}
-	else if (wcscmp(string, UPD_SWITCH_UPDATE_STR) == 0){
-		switch_value = UPD_SWITCH_UPDATE;	
-	}
-	else{
-		return AX_INVALID_DATA;
-	}
-
-	*buffer_size = sizeof(UPD_SWITCH);
-	*buffer = malloc(*buffer_size);
-	*(UPD_SWITCH*)(*buffer) = switch_value;
-
-	return AX_SUCCESS;
+	free(token->value);
+	memset(token, 0, sizeof(UPD_COMMAND_TOKEN));
+	free(token);
 }
 
 wchar_t* upd_range(
@@ -131,9 +189,9 @@ wchar_t* upd_range(
 	AX_IN uint16_t 			skip_flag,
 	AX_OUT size_t*			range_size 			
 ){
-	if (from == NULL ||
-		skip_set == NULL ||
-		range_size == NULL){
+	if (from == NULL 
+		|| skip_set == NULL 
+		|| range_size == NULL){
 		return NULL;
 	}
 
@@ -160,8 +218,8 @@ const wchar_t* upd_skip(
 	AX_IN const wchar_t 		skip_set[], // Array of characters to skip
 	AX_IN uint16_t 			skip_flag
 ){
-	if (string == NULL ||
-		skip_set == NULL){
+	if (string == NULL 
+		|| skip_set == NULL){
 		return NULL;
 	}
 

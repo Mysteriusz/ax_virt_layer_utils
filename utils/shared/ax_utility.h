@@ -11,8 +11,8 @@
 
 */
 
-#if !defined(AX_UTILITY)
-#define AX_UTILITY
+#if !defined(AX_UTILITY_INT)
+#define AX_UTILITY_INT
 
 #if defined(AX_UM) 
 #include "windows.h"
@@ -148,5 +148,5 @@ void ax_free_data(
 	AX_IN AX_DATA_NODE* 		node
 );
 
-#endif // AX_UTIL
+#endif // !defined(AX_UTILITY_INT)
 

@@ -1,51 +1,24 @@
-#include "ax_utility.h"
+#if !defined(UPD_PARSER_INT)
+#define UPD_PARSER_INT
 
-typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
-enum{
-	SWITCH = 0,
-	VALUE = 1,
-	EXPRESSION = 2,
-};
-
-typedef struct{
-	void*			value;
-	size_t 			value_size;
-	UPD_COMMAND_TOKEN_TYPE 	token_type;
-} UPD_COMMAND_TOKEN;
-
-typedef struct{
-	UPD_COMMAND_TOKEN*	tokens;
-	uint32_t		token_count;
-} UPD_COMMAND;
+#include "upd_utility.h"
 
 AXSTATUS upd_command_parse(
 	AX_IN const wchar_t** 		args,
-	AX_IN const uint32_t		arg_count,
+	AX_IN uint32_t			arg_count,
 	AX_OUT UPD_COMMAND**		command
 );
 
 AXSTATUS upd_token_parse(
 	AX_IN const wchar_t* 		value,
-	AX_IN const uint32_t		value_length,
 	AX_OUT UPD_COMMAND_TOKEN**	token
 );
 
-AXSTATUS upd_execute_expression(
-	AX_IN const wchar_t* 		expression,
-	AX_OUT size_t*			buffer_size,
-	AX_OUT void**			buffer
+void upd_command_free(
+	AX_IN_OUT UPD_COMMAND*		command
 );
-
-typedef uint64_t 			UPD_SWITCH; 	
-
-#define UPD_SWITCH_INSTALL		0x0000000000000000
-#define UPD_SWITCH_INSTALL_STR		L"--install"
-#define UPD_SWITCH_UPDATE		0x0000000000000001
-#define UPD_SWITCH_UPDATE_STR		L"--update"
-AXSTATUS upd_execute_switch(
-	AX_IN const wchar_t* 		string,
-	AX_OUT size_t*			buffer_size,
-	AX_OUT void**			buffer
+void upd_token_free(
+	AX_IN_OUT UPD_COMMAND_TOKEN*	token
 );
 
 #define UPD_EMPTY_SKIP_SET (const wchar_t[]){ \
@@ -117,10 +90,5 @@ const wchar_t* upd_skip(
 	AX_IN uint16_t 			skip_flag
 );
 
-void upd_command_free(
-	AX_IN_OUT UPD_COMMAND*		command
-);
-void upd_token_free(
-	AX_IN_OUT UPD_COMMAND_TOKEN*	token
-);
+#endif // !defined(UPD_PARSER_INT)
 
