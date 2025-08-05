@@ -26,6 +26,10 @@ int main(){
 	UPD_COMMAND* command = NULL;
 	upd_command_parse(args, arg_count, &command);
 
+	AXSTATUS install_status = 100;
+	AXSTATUS exec_status = upd_execute_switch(L"inds", NULL, 0, &install_status);
+	printf("EXEC: %llu\nINSTALL: %llu\n", exec_status, install_status);
+
 	getchar();
 	return 0;
 }

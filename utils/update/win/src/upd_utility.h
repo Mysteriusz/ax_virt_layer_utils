@@ -2,6 +2,7 @@
 #define UPD_UTILITY_INT
 
 #include "ax_utility.h"
+#include "upd_action.h"
 
 typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
 enum{
@@ -24,7 +25,7 @@ typedef struct{
 #define UPD_SWITCH_PRIORITY_VERY_HIGH	0x0000000000000010
 #define UPD_SWITCH_PRIORITY_MAIN	0x0000000000000020
 
-#define UPD_SWITCH_DATA			0x0000000100000000
+#define UPD_SWITCH_ACTION_STACK		0x0000000100000000
 typedef struct{
 	UPD_COMMAND_TOKEN**	tokens;
 	uint32_t		token_count;
@@ -33,26 +34,26 @@ typedef struct{
 
 typedef struct {
 	wchar_t*		switch_string;
-	uint64_t		exclusion_flags; // Tells what other switch flags are not able to execute with this one	
+	uint64_t		exclusion_flags; // Tells what other switch flags are not able to execute with this switch	
 	uint64_t		switch_flags; // Tells what flags this switch has
-	size_t			data_size; // if switch_flags & UPD_SWITCH_DATA
-	void*			data; // if switch_flags & UPD_SWITCH_DATA
+	size_t			action_stack_size; // if switch_flags & UPD_SWITCH_ACTION_STACK
+	UPD_ACTION		action;
 } UPD_SWITCH_DESCRIPTOR;
 
-#define UPD_SWITCH_DEFAULT (const UPD_SWITCH_DESCRIPTOR[]){ \
+#define UPD_SWITCH_TABLE (const UPD_SWITCH_DESCRIPTOR[]){ \
 	(UPD_SWITCH_DESCRIPTOR){ \
 		.switch_string = 	L"install", \
 		.exclusion_flags = 	UPD_SWITCH_ALL, \
 		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.data_size = 		0, \
-		.data = 		NULL, \
+		.action_stack_size = 	UPD_ACTION_INSTALL_STACK_SIZE, \
+		.action = 		upd_action_install, \
 	}, \
 	(UPD_SWITCH_DESCRIPTOR){ \
 		.switch_string = 	L"update", \
 		.exclusion_flags = 	UPD_SWITCH_ALL, \
 		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.data_size = 		0, \
-		.data = 		NULL, \
+		.action_stack_size = 	UPD_ACTION_UPDATE_STACK_SIZE, \
+		.action = 		upd_action_update, \
 	}, \
 }
 
