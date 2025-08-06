@@ -13,7 +13,8 @@ int main(){
 
 	UPD_COMMAND* command = NULL;
 	upd_command_parse((const wchar_t**)args, arg_count, &command);
-	upd_execute_command(command, 1, NULL, NULL);
+	AXSTATUS exec_status = 0;
+	AXSTATUS status = upd_execute_command(command, 1, &exec_status, NULL);
 
 	getchar();
 	return 0;

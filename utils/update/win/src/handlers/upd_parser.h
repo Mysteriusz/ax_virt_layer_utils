@@ -2,6 +2,7 @@
 #define UPD_PARSER_INT
 
 #include "upd_utility.h"
+#include "upd_executor.h" 
 
 AXSTATUS upd_command_parse(
 	AX_IN const wchar_t** 		args,
@@ -19,6 +20,17 @@ void upd_command_free(
 );
 void upd_token_free(
 	AX_IN_OUT UPD_COMMAND_TOKEN*	token
+);
+
+AXSTATUS upd_command_validate(
+	AX_IN const UPD_COMMAND*		command,
+	AX_IN uint32_t				start_index
+);
+AXSTATUS upd_token_validate(
+	AX_IN const UPD_COMMAND_TOKEN*	token,
+	AX_IN_OUT uint64_t*		exclusion_flags,
+	AX_IN_OPT void* 		data_stack,
+	AX_IN_OPT size_t		data_stack_size
 );
 
 #define UPD_EMPTY_SKIP_SET (const wchar_t[]){ \

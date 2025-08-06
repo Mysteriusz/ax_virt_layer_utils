@@ -1,38 +1,5 @@
 #include "upd_executor.h"
 
-void* upd_collect_stack(
-	AX_IN const UPD_COMMAND*	command,
-	AX_OUT size_t*			stack_size,
-	AX_IN_OUT uint32_t* 		token_index
-){
-	if (command == NULL
-		|| command->tokens == NULL
-		|| stack_size == NULL
-		|| token_index == NULL){
-		return NULL;
-	}
-
-	void* stack_buffer = NULL;
-	size_t stack_buffer_size = 0;
-	uint32_t i = *token_index;
-
-	while (i < command->token_count){
-		UPD_COMMAND_TOKEN* current = command->tokens[i];
-		if (current->token_type != VALUE) break;
-
-		stack_buffer_size += current->value_size;
-		void* temp = realloc(stack_buffer, stack_buffer_size);
-		stack_buffer = temp;
-	 
-		i++;
-	}
-
-	*stack_size = stack_buffer_size;
-	*token_index = i;
-
-	return stack_buffer;
-}
-
 AXSTATUS upd_execute_command(
 	AX_IN const UPD_COMMAND*	command,
 	AX_IN uint32_t			start_index,
@@ -44,6 +11,12 @@ AXSTATUS upd_execute_command(
 		return AX_INVALID_ARGUMENT;
 	}
 
+	AXSTATUS command_validation = upd_command_validate(command);
+	if (AX_ERROR(command_validation)){
+		ax_log_status(AX_INVALID_DATA, 1, NULL, L"COMMAND VALIDATION FAILED");
+		return AX_INVALID_DATA;
+	}
+
 	uint64_t switch_exclusion_flags = 0;
 	void* stack = NULL;
 	size_t stack_size = 0;
@@ -51,10 +24,10 @@ AXSTATUS upd_execute_command(
 	AXSTATUS status = AX_SUCCESS;
 
 	uint32_t i = start_index;
+	uint32_t j = i + 1;
 	while (i < command->token_count){
 		UPD_COMMAND_TOKEN* current = command->tokens[i];
 		AXSTATUS current_result = AX_SUCCESS;
-		uint32_t j = i + 1;
 
 		switch (current->token_type){
 		case VALUE:{
@@ -62,25 +35,15 @@ AXSTATUS upd_execute_command(
 			return AX_INVALID_DATA;
 		}
 		case SWITCH:{
+			// Try to collect the stack
+			stack = upd_collect_stack(command, &stack_size, &j);	
 			status = upd_execute_switch(
 				current->value,
 				&switch_exclusion_flags,
-				NULL,
-				0,
+				stack,
+				stack_size,
 				&current_result
 			);
-			// That means the switch requires stack 
-			if (status == AX_INVALID_STACK){
-				// Collect all the next tokens with name VALUE 
-				stack = upd_collect_stack(command, &stack_size, &j);	
-				status = upd_execute_switch(
-					current->value,
-					&switch_exclusion_flags,
-					stack,
-					stack_size,
-					&current_result
-				);
-			}
 
 			// Stop command execution if there was an error
 			if (AX_ERROR(status)
@@ -105,25 +68,10 @@ AXSTATUS upd_execute_command(
 		}
 
 		i = j;
+		j = i + 1;
 	}
 	
 	return AX_SUCCESS;
-}
-
-const UPD_SWITCH_DESCRIPTOR* upd_map_switch(
-	AX_IN const wchar_t*		string
-){
-	const UPD_SWITCH_DESCRIPTOR* switch_buffer = NULL;
-
-	for (uint32_t i = 0; i < UPD_SWITCH_TABLE_COUNT; i++){
-		UPD_SWITCH_DESCRIPTOR current = UPD_SWITCH_TABLE[i];
-		if (wcscmp(current.switch_string, string) == 0){
-			switch_buffer = &current;
-			break;
-		}
-	}
-
-	return switch_buffer;
 }
 
 AXSTATUS upd_execute_switch(
@@ -143,19 +91,14 @@ AXSTATUS upd_execute_switch(
 		return AX_NOT_FOUND;
 	}
 
-	// If exclusion flags contains the switch flags
-	if (current->switch_flags & *switch_exclusion_flags){
-		return AX_INVALID_DATA;
-	}
-
-	// If stack is required and provided stack is NULL
-	if (current->switch_flags & UPD_SWITCH_ACTION_STACK
-		&& action_stack == NULL){
-		return AX_INVALID_STACK;
-	}
-	// If required stack size is not equal to provided stack size
-	if (current->stack_size != action_stack_size){
-		return AX_INVALID_STACK_SIZE;
+	UPD_COMMAND_TOKEN token = {
+		.value = (void*)string,
+		.value_size = wcslen(string),
+		.token_type = SWITCH
+	};
+	AXSTATUS validation = upd_token_validate(&token, switch_exclusion_flags, action_stack, action_stack_size);
+	if (AX_ERROR(validation)){
+		return AX_NOT_IMPLEMENTED;
 	}
 
 	// Execute the action with provided stack (if needed)

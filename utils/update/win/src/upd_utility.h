@@ -39,23 +39,33 @@ typedef struct {
 	UPD_ACTION		action;
 } UPD_SWITCH_DESCRIPTOR;
 
-static const UPD_SWITCH_DESCRIPTOR UPD_SWITCH_TABLE[] = { \
-	{ \
-		.switch_string = 	L"install", \
-		.exclusion_flags = 	UPD_SWITCH_ALL, \
-		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.stack_size = 		UPD_ACTION_UPDATE_STACK_SIZE, \
-		.action = 		upd_action_install, \
-	}, \
-	{ \
-		.switch_string = 	L"update", \
-		.exclusion_flags = 	UPD_SWITCH_ALL, \
-		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.stack_size = 		UPD_ACTION_UPDATE_STACK_SIZE, \
-		.action = 		upd_action_update, \
-	}, \
+static const UPD_SWITCH_DESCRIPTOR UPD_SWITCH_TABLE[] = {
+	{ 
+		.switch_string = 	L"install", 
+		.exclusion_flags = 	UPD_SWITCH_ALL, 
+		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, 
+		.stack_size = 		UPD_ACTION_INSTALL_STACK_SIZE, 
+		.action = 		upd_action_install, 
+	}, 
+	{ 
+		.switch_string = 	L"update", 
+		.exclusion_flags = 	UPD_SWITCH_ALL, 
+		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, 
+		.stack_size = 		UPD_ACTION_UPDATE_STACK_SIZE, 
+		.action = 		upd_action_update, 
+	} 
 };
 #define UPD_SWITCH_TABLE_COUNT	 	(sizeof(UPD_SWITCH_TABLE) / sizeof(UPD_SWITCH_DESCRIPTOR))
+
+// TODO: COPY TO THE STACK
+void* upd_collect_stack(
+	AX_IN const UPD_COMMAND*	command,
+	AX_OUT size_t*			stack_size,
+	AX_IN_OUT uint32_t* 		token_index
+);
+const UPD_SWITCH_DESCRIPTOR* upd_map_switch(
+	AX_IN const wchar_t*		string
+);
 
 #endif // !defined(UPD_UTILITY_INT)
 

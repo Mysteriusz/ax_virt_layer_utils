@@ -183,6 +183,77 @@ void upd_token_free(
 	free(token);
 }
 
+AXSTATUS upd_command_validate(
+	AX_IN const UPD_COMMAND*	command,
+	AX_IN uint32_t			start_index
+){
+	if (command == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	uint32_t i = start_index;
+	uint32_t j = i + 1;
+	uint64_t exclusion_flags = 0;
+	while (i < command->token_count){
+		UPD_COMMAND_TOKEN* current = command->tokens[i];
+		size_t current_stack_size = 0;
+		void* current_stack = upd_collect_stack(command, &current_stack_size, &j);
+
+		AXSTATUS current_status = upd_token_validate(current, &exclusion_flags, current_stack, current_stack_size);
+		if (AX_ERROR(current_status)){
+			return current_status;
+		}
+
+		i = j;
+		j = i + 1;
+	}
+
+	return AX_SUCCESS;
+}
+AXSTATUS upd_token_validate(
+	AX_IN const UPD_COMMAND_TOKEN*	token,
+	AX_IN_OUT uint64_t*		exclusion_flags,
+	AX_IN_OPT void* 		data_stack,
+	AX_IN_OPT size_t		data_stack_size
+){
+	if (token == NULL
+		|| exclusion_flags == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	switch (token->token_type){
+	case SWITCH:{
+		const UPD_SWITCH_DESCRIPTOR* descriptor = upd_map_switch((const wchar_t*)token->value);
+		if (descriptor == NULL){
+			return AX_NOT_FOUND;
+		}
+
+		// If exclusion flags contains the switch flags
+		if (descriptor->switch_flags & *exclusion_flags){
+			return AX_INVALID_DATA;
+		}
+
+		// If stack is required and provided stack is NULL
+		if (descriptor->switch_flags & UPD_SWITCH_ACTION_STACK
+			&& data_stack == NULL){
+			return AX_INVALID_STACK;
+		}
+
+		// If required stack size is not equal to provided stack size
+		if (descriptor->stack_size != data_stack_size){
+			return AX_INVALID_STACK_SIZE;
+		}
+
+		*exclusion_flags |= descriptor->exclusion_flags; 
+		break;
+	}
+	default:
+		return AX_INVALID_ARGUMENT;
+	}
+	
+	return AX_SUCCESS;
+}
+
 wchar_t* upd_range(
 	AX_IN const wchar_t*		from,
 	AX_IN const wchar_t 		skip_set[], // Array of characters that stop range lookup
