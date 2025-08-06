@@ -22,9 +22,12 @@ typedef uint64_t AXSTATUS;
 #define AX_INVALID_DATA			0x0000000000000004
 #define AX_EXECUTION_ERROR		0x0000000000000005
 #define AX_NOT_FOUND			0x0000000000000006
+#define AX_ACCESS_VIOLATION		0x0000000000000007
 #define AX_BUFFER_TOO_SMALL		0x0000000000000010
-#define AX_BUFFER_TOO_BIG		0x0000000000000020
-#define AX_INVALID_BUFFER_SIZE		0x0000000000000030
+#define AX_BUFFER_TOO_BIG		0x0000000000000011
+#define AX_INVALID_BUFFER_SIZE		0x0000000000000012
+#define AX_INVALID_STACK		0x0000000000000013
+#define AX_INVALID_STACK_SIZE		0x0000000000000014
 #define AX_NOT_IMPLEMENTED		0x00000000ffffffff
 // AX Error check 
 #define AX_ERROR(code)			((code != AX_SUCCESS))
@@ -73,7 +76,7 @@ static void ax_log_status(
 	}
 
 	// Print status
-	printf("%ls: %llu\n %ls%ls%ls",
+	printf("%ls: %llu\n %ls%ls%ls\n",
 		L"AXSTATUS Status", status,
 		meta_buffer,
 		address_buffer,

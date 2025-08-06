@@ -6,8 +6,8 @@
 
 typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
 enum{
-	SWITCH = 0,
-	VALUE = 1,
+	VALUE = 0,
+	SWITCH = 1,
 	EXPRESSION = 2,
 };
 
@@ -29,33 +29,33 @@ typedef struct{
 typedef struct{
 	UPD_COMMAND_TOKEN**	tokens;
 	uint32_t		token_count;
-	uint64_t		switch_flags; // Specifies the switch types that can be executed (modifies on each execution of the switch)
 } UPD_COMMAND;
 
 typedef struct {
 	wchar_t*		switch_string;
 	uint64_t		exclusion_flags; // Tells what other switch flags are not able to execute with this switch	
 	uint64_t		switch_flags; // Tells what flags this switch has
-	size_t			action_stack_size; // if switch_flags & UPD_SWITCH_ACTION_STACK
+	size_t			stack_size; // if switch_flags & UPD_SWITCH_ACTION_STACK
 	UPD_ACTION		action;
 } UPD_SWITCH_DESCRIPTOR;
 
-#define UPD_SWITCH_TABLE (const UPD_SWITCH_DESCRIPTOR[]){ \
-	(UPD_SWITCH_DESCRIPTOR){ \
+static const UPD_SWITCH_DESCRIPTOR UPD_SWITCH_TABLE[] = { \
+	{ \
 		.switch_string = 	L"install", \
 		.exclusion_flags = 	UPD_SWITCH_ALL, \
 		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.action_stack_size = 	UPD_ACTION_INSTALL_STACK_SIZE, \
+		.stack_size = 		UPD_ACTION_UPDATE_STACK_SIZE, \
 		.action = 		upd_action_install, \
 	}, \
-	(UPD_SWITCH_DESCRIPTOR){ \
+	{ \
 		.switch_string = 	L"update", \
 		.exclusion_flags = 	UPD_SWITCH_ALL, \
 		.switch_flags = 	UPD_SWITCH_PRIORITY_MAIN, \
-		.action_stack_size = 	UPD_ACTION_UPDATE_STACK_SIZE, \
+		.stack_size = 		UPD_ACTION_UPDATE_STACK_SIZE, \
 		.action = 		upd_action_update, \
 	}, \
-}
+};
+#define UPD_SWITCH_TABLE_COUNT	 	(sizeof(UPD_SWITCH_TABLE) / sizeof(UPD_SWITCH_DESCRIPTOR))
 
 #endif // !defined(UPD_UTILITY_INT)
 
