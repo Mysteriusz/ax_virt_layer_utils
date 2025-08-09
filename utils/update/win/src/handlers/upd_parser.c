@@ -297,7 +297,7 @@ const wchar_t* upd_skip(
 	const wchar_t* current = string;
 	const wchar_t* occurence = NULL;
 
-	uint8_t null_out = 0;
+	bool null_out = false;
 
 	switch (UPD_SKIP_FLAG_LOWER(skip_flag)){
 	case UPD_SKIP_FLAG_FO:{
@@ -307,7 +307,7 @@ const wchar_t* upd_skip(
 			if (occurence != NULL) break; 
 		}
 
-		if (occurence == NULL) null_out = 1;
+		if (occurence == NULL) null_out = true;
 		break;
 	}
 	case UPD_SKIP_FLAG_LO:{
@@ -318,7 +318,7 @@ const wchar_t* upd_skip(
 			current++;
 		}
 
-		if (last_occurence == NULL) null_out = 1;
+		if (last_occurence == NULL) null_out = true;
 		else current = last_occurence;
 		break;
 	}
@@ -331,7 +331,7 @@ const wchar_t* upd_skip(
 			current++;
 		}
 
-		if (skipped == 0) null_out = 1;
+		if (skipped == 0) null_out = true;
 		break;
 	}
 	default:

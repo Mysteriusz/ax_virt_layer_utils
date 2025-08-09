@@ -12,9 +12,9 @@ AXSTATUS ax_control_setup_i(
 	}
 
 	AX_DATA_ROOT root;
-	ax_get_data_root(&root);
+	ax_open_data_root(&root, NULL);
 
-	AX_DATA_NODE bin_path = AX_DATA_NODE_CTP(NULL);
+	AX_DATA_NODE bin_path = AX_DATA_NODE_CTP(root.type);
 	ax_get_data(&root, &bin_path);
 
 	SC_HANDLE control_service = CreateServiceW(sc,

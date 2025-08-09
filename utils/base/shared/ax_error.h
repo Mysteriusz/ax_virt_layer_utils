@@ -13,6 +13,8 @@
 #if !defined(AX_ERROR_INT)
 #define AX_ERROR_INT
 
+#include "stdbool.h"
+
 typedef uint64_t AXSTATUS;
 
 #define AX_SUCCESS 			0x0000000000000000
@@ -43,11 +45,13 @@ typedef uint64_t AXSTATUS;
 // AX Native error check (Is error is purely from AX)
 #define AX_NERROR(code)			(!AX_WERROR(code) && !AX_LERROR(code))
 
+#define AX_STATUS_FLAGS (AX_STATUS_LRESULT | AX_STATUS_LERROR)
+
 #if defined(AX_UM)
 
 static void ax_log_status(
 	AX_IN AXSTATUS 			status,
-	AX_IN_OPT uint8_t		metadata,
+	AX_IN_OPT bool			metadata,
 	AX_IN_OPT const void*		location,
 	AX_IN_OPT const wchar_t*	message
 ){
@@ -76,11 +80,12 @@ static void ax_log_status(
 	}
 
 	// Print status
-	printf("%ls: %llu\n %ls%ls%ls\n",
+	printf("\r%ls: %llu\n\r%ls: %llu\n %ls%ls%ls\n",
 		L"AXSTATUS Status", status,
+		L"AXSTATUS Raw", status & ~AX_STATUS_FLAGS,
 		meta_buffer,
 		address_buffer,
-		message == NULL ? L"No message." : message
+		message == NULL ? L"\rNo message." : message
 	);
 }
 

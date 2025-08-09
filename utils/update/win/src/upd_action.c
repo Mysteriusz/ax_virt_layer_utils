@@ -3,22 +3,27 @@
 AXSTATUS upd_action_install(
 	AX_IN_OPT void*			stack // STACK NOT USED
 ){
+	AXSTATUS status = AX_SUCCESS;
+
 	// Get root of the configuration data
-	AX_DATA_ROOT root;
-	ax_get_data_root(&root);
+	const AX_DATA_ROOT root;
+	ax_open_data_root(&root, NULL);
 
-	// Get default configuration nodes
-	AX_DATA_NODE* default_data = ax_get_data_node_d();
-	// Write all default data nodes to the root
-	for (uint32_t i = 0; i < AX_DATA_NODE_COUNT_D; i++){
-		ax_set_data(&root, &default_data[i]);
-	}
+	// Set default configuration nodes
+	ax_set_default_data(&root);
 
-	ax_free_root(&root);
+	ax_free_root((AX_DATA_ROOT*)&root);
 
 	// Setup control and the driver using their interface
-	ax_control_setup_i();
-	ax_driver_setup_i();
+	status = ax_control_setup_i();
+	if (AX_ERROR(status)){
+		ax_log_status(status, true, NULL, NULL);
+	}
+	
+	status = ax_driver_setup_i();
+	if (AX_ERROR(status)){
+		ax_log_status(status, true, NULL, NULL);
+	}
 
 	return AX_SUCCESS;
 }
