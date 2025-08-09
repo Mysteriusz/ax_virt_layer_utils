@@ -1,5 +1,6 @@
 #include "upd_action.h"
 
+// TODO: Stack structure that lets user to use different configuration type (AX_DATA_TYPE) 
 AXSTATUS upd_action_install(
 	AX_IN_OPT void*			stack // STACK NOT USED
 ){
@@ -7,10 +8,32 @@ AXSTATUS upd_action_install(
 
 	// Get root of the configuration data
 	const AX_DATA_ROOT root;
-	ax_open_data_root(&root, NULL);
+	status = ax_open_data_root(&root, NULL);
+	if (AX_ERROR(status)){
+		ax_log_status(
+			status,
+			true, 
+			NULL, 
+			L"CRITICAL: Reading root of the default configuration data failed."
+		);
+		__debugbreak();
+
+		return status;
+	}
 
 	// Set default configuration nodes
-	ax_set_default_data(&root);
+	status = ax_set_default_data(&root);
+	if (AX_ERROR(status)){
+		ax_log_status(
+			status,
+			true, 
+			NULL, 
+			L"CRITICAL: Writing default configuration data failed."
+		);
+		__debugbreak();
+
+		return status;
+	}
 
 	ax_free_root((AX_DATA_ROOT*)&root);
 

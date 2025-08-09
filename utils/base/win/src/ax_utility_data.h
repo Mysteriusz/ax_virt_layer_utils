@@ -60,11 +60,13 @@ static wchar_t* ax_load_working_directory(
 	wchar_t* buffer = malloc(buffer_size);
 	GetCurrentDirectoryW(buffer_size, buffer);
 
+	// Assert current directory gather not failing
 	assert(GetLastError() == NO_ERROR);
 
 	return buffer;
 }
 
+#define AX_DEFAULT_NODE_COUNT 		0x0004
 #define AX_DATA_NODE_BSD(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"base_directory", \
@@ -98,8 +100,10 @@ static wchar_t* ax_load_working_directory(
 		.context = NULL, \
 	} 
 
-AX_DATA_NODE* ax_get_default_data(
-	void		
+AXSTATUS ax_get_default_data(
+	AX_IN const AX_DATA_ROOT*	root,
+	AX_OUT AX_DATA_NODE**		node_array,
+	AX_OUT uint32_t*		node_count
 );
 AXSTATUS ax_set_default_data(
 	AX_IN const AX_DATA_ROOT*	root
