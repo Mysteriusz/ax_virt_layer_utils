@@ -1,4 +1,5 @@
 #if !defined(AX_UTILITY_DATA_INT)
+
 #define AX_UTILITY_DATA_INT
 
 #include "ax_utility.h"
@@ -15,13 +16,19 @@
 
 #define AX_DATA_ROOT_NAME 		L"AX_VIRTUALIZATION"
 
+// Data location as Windows directory
+#define AX_DEFAULT_DATA_ROOT_DIRECTORY 	L"%USERPROFILE%\\Documents"
+// Data location as Windows file
+#define AX_DEFAULT_DATA_ROOT_FILE 	L"%USERPROFILE%\\Documents\\ax_data.cfg"
+
 typedef uint8_t AX_DATA_TYPE;
-enum {
-	DIRECTORY = 0, // context == wchar_t* 
-	REGISTRY = 1, // context == uint32_t* (Windows registry value key) 
+enum _AX_DATA_TYPE {
+	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path)
+	DATA_TYPE_FILE = 1, // context == wchar_t* (File path)
+	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: "REG_SZ") 
 	// FUTURE
-	SERVER = 2, 
-	SECURE_SERVER = 3
+	DATA_TYPE_SERVER = 3, 
+	DATA_TYPE_SECURE_SERVER = 4
 };
 
 /*
@@ -29,22 +36,24 @@ enum {
 
 	IMPORTANT NOTICE:
 
-	If type is equal to DIRECTORY location is wchar_t*
+	If type is equal to DIRECTORY location is wchar_t* (Directory path)
+	If type is equal to FILE location is int (HFILE)
 	If type is equal to REGISTRY location is void* (HKEY) 
 */
-typedef struct {
+typedef struct _AX_DATA_ROOT {
 	void* 			location;
 	size_t 			location_size;
 	AX_DATA_TYPE 		type;	
 } AX_DATA_ROOT;
 
-#define AX_DEFAULT_DATA_ROOT_TYPE 	(AX_DATA_TYPE)REGISTRY
+#define AX_DEFAULT_DATA_ROOT_TYPE 	(AX_DATA_TYPE)DATA_TYPE_REGISTRY
 AXSTATUS ax_open_data_root(
 	AX_OUT const AX_DATA_ROOT* 	root,	
-	AX_IN_OPT const AX_DATA_TYPE* 	type
+	AX_IN_OPT const AX_DATA_TYPE* 	type,
+	AX_IN_OPT void*			context
 );
 
-typedef struct {
+typedef struct _AX_DATA_NODE {
 	wchar_t* 		name;
 	void* 			value;
 	size_t 			value_size;

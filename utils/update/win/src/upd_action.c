@@ -8,7 +8,8 @@ AXSTATUS upd_action_install(
 
 	// Get root of the configuration data
 	const AX_DATA_ROOT root;
-	status = ax_open_data_root(&root, NULL);
+	AX_DATA_TYPE root_type = DATA_TYPE_DIRECTORY;
+	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		ax_log_status(
 			status,
@@ -35,10 +36,16 @@ AXSTATUS upd_action_install(
 		return status;
 	}
 
-	ax_free_root((AX_DATA_ROOT*)&root);
+	AX_DATA_NODE temp = AX_DATA_NODE_DVP(DATA_TYPE_DIRECTORY);
+	status = ax_get_data(&root, &temp);
+
+	printf("%ls", (wchar_t*)temp.context);
+	ax_free_data(&temp);
+
+	//ax_free_root((AX_DATA_ROOT*)&root);
 
 	// Setup control and the driver using their interface
-	status = ax_control_setup_i();
+	/*status = ax_control_setup_i();
 	if (AX_ERROR(status)){
 		ax_log_status(status, true, NULL, NULL);
 	}
@@ -46,7 +53,7 @@ AXSTATUS upd_action_install(
 	status = ax_driver_setup_i();
 	if (AX_ERROR(status)){
 		ax_log_status(status, true, NULL, NULL);
-	}
+	}*/
 
 	return AX_SUCCESS;
 }

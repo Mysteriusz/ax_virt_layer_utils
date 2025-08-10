@@ -30,6 +30,7 @@ typedef uint64_t AXSTATUS;
 #define AX_INVALID_BUFFER_SIZE		0x0000000000000012
 #define AX_INVALID_STACK		0x0000000000000013
 #define AX_INVALID_STACK_SIZE		0x0000000000000014
+#define AX_UNKNOWN_CONTEXT		0x0000000000000020
 #define AX_NOT_IMPLEMENTED		0x00000000ffffffff
 // AX Error check 
 #define AX_ERROR(code)			((code != AX_SUCCESS))
@@ -80,7 +81,8 @@ static void ax_log_status(
 	}
 
 	// Print status
-	printf("\r%ls: %llu\n\r%ls: %llu\n %ls%ls%ls\n",
+	printf("%ls\n\r%ls: %llu\n\r%ls: %llu\n %ls%ls%ls\n",
+		L"---------------AX STATUS LOG---------------",
 		L"AXSTATUS Status", status,
 		L"AXSTATUS Raw", status & ~AX_STATUS_FLAGS,
 		meta_buffer,

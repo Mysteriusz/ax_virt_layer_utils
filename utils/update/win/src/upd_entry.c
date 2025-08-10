@@ -16,7 +16,6 @@ int main(){
 	AXSTATUS exec_status = 0;
 	AXSTATUS status = upd_execute_command(command, 1, &exec_status, NULL);
 
-	getchar();
 	return 0;
 }
 

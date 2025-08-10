@@ -5,13 +5,13 @@
 #include "upd_action.h"
 
 typedef uint8_t UPD_COMMAND_TOKEN_TYPE;
-enum{
+enum _UPD_COMMAND_TOKEN_TYPE{
 	VALUE = 0,
 	SWITCH = 1,
 	EXPRESSION = 2,
 };
 
-typedef struct{
+typedef struct _UPD_COMMAND_TOKEN{
 	void*			value;
 	size_t 			value_size;
 	UPD_COMMAND_TOKEN_TYPE 	token_type;
@@ -26,12 +26,12 @@ typedef struct{
 #define UPD_SWITCH_PRIORITY_MAIN	0x0000000000000020
 
 #define UPD_SWITCH_ACTION_STACK		0x0000000100000000
-typedef struct{
+typedef struct _UPD_COMMAND{
 	UPD_COMMAND_TOKEN**	tokens;
 	uint32_t		token_count;
 } UPD_COMMAND;
 
-typedef struct {
+typedef struct _UPD_SWITCH_DESCRIPTOR{
 	wchar_t*		switch_string;
 	uint64_t		exclusion_flags; // Tells what other switch flags are not able to execute with this switch	
 	uint64_t		switch_flags; // Tells what flags this switch has

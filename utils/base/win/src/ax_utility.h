@@ -24,6 +24,7 @@
 #include "stdio.h"
 #include "stdbool.h"
 #include "assert.h"
+#include "pathcch.h"
 
 #if !defined(AX_WINDOWS)
 #define AX_WINDOWS
@@ -38,7 +39,7 @@
 #define AX_IN_OUT_OPT
 
 #define AX_CACHE_SIZE			0x200
-#define AX_UPDATE_PATH 			L"\\update"
+#define AX_DEFAULT_UPDATE_FOLDER_NAME 	L"update\\"
 
 #include "ax_error.h"
 
