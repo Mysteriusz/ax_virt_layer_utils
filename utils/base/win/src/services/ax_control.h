@@ -38,10 +38,10 @@
 #if defined(AX_UM)
 
 AXSTATUS ax_control_setup_i(
-	void
+	AX_IN_OPT const AX_DATA_ROOT*	root
 );
 
-#endif // AX_UM
+#endif // defined(AX_UM)
 
-#endif // AX_CONTROL_INT
+#endif // !defined(AX_CONTROL_INT)
 

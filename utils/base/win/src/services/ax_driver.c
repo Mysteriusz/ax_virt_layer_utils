@@ -1,7 +1,7 @@
 #include "ax_driver.h"
 
 AXSTATUS ax_driver_setup_i(
-	void
+	AX_IN_OPT const AX_DATA_ROOT*	root
 ){
 	AXSTATUS status = 0;
 
@@ -11,11 +11,23 @@ AXSTATUS ax_driver_setup_i(
 		return GetLastError() | AX_STATUS_LERROR;
 	}
 
-	AX_DATA_ROOT root;
-	ax_open_data_root(&root, NULL, NULL);
+	bool local_root = root == NULL ? true : false;
 
-	AX_DATA_NODE bin_path = AX_DATA_NODE_DVP(root.type);
-	ax_get_data(&root, &bin_path);
+	const AX_DATA_ROOT* data_root = root;
+	if (local_root){
+		status = ax_open_data_root(data_root, NULL, NULL);
+
+		if (AX_ERROR(status)){
+			return status;
+		}
+	}
+
+	AX_DATA_NODE bin_path = AX_DATA_NODE_CTP(data_root->type);
+	status = ax_get_data(data_root, &bin_path);
+
+	if (AX_ERROR(status)){
+		return status;
+	}
 
 	SC_HANDLE driver_service = CreateServiceW(sc,
 		AX_DRIVER_SERVICE_NAME,
@@ -33,7 +45,7 @@ AXSTATUS ax_driver_setup_i(
 	);
 
 	ax_free_data(&bin_path);
-	ax_free_root(&root);
+	ax_free_root((AX_DATA_ROOT*)root);
 	CloseServiceHandle(sc);
 
 	if (driver_service == NULL){

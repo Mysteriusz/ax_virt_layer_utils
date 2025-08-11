@@ -55,8 +55,6 @@
 	Default services interface.
 
 */
-#include "ax_control.h"
-#include "ax_driver.h"
-
+ 
 #endif // !defined(AX_UTILITY_INT)
 

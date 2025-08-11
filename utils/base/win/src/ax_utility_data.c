@@ -1,6 +1,6 @@
 #include "ax_utility_data.h"
 
-// Data type gathering controllers
+// Data type gathering handlers
 #include "ax_utility_data_reg.c"
 #include "ax_utility_data_dir.c"
 

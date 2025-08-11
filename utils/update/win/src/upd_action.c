@@ -36,24 +36,28 @@ AXSTATUS upd_action_install(
 		return status;
 	}
 
-	AX_DATA_NODE temp = AX_DATA_NODE_DVP(DATA_TYPE_DIRECTORY);
-	status = ax_get_data(&root, &temp);
 
-	printf("%ls", (wchar_t*)temp.context);
-	ax_free_data(&temp);
-
-	//ax_free_root((AX_DATA_ROOT*)&root);
-
-	// Setup control and the driver using their interface
-	/*status = ax_control_setup_i();
+	// Setup control service using its interface
+	status = ax_control_setup_i(&root);
 	if (AX_ERROR(status)){
-		ax_log_status(status, true, NULL, NULL);
+		ax_log_status(
+			status,
+			true, 
+			NULL, 
+			L"WARNING: Creation of the " AX_CONTROL_BIN_NAME L" service failed."
+		);
 	}
 	
-	status = ax_driver_setup_i();
+	// Setup driver service using its interface
+	status = ax_driver_setup_i(&root);
 	if (AX_ERROR(status)){
-		ax_log_status(status, true, NULL, NULL);
-	}*/
+		ax_log_status(
+			status,
+			true, 
+			NULL, 
+			L"WARNING: Creation of the " AX_DRIVER_BIN_NAME L" service failed."
+		);
+	}
 
 	return AX_SUCCESS;
 }

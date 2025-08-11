@@ -27,7 +27,7 @@
 #if defined(AX_UM)
 
 AXSTATUS ax_driver_setup_i(
-	void
+	AX_IN_OPT const AX_DATA_ROOT*	root
 );
 
 #endif // AX_UM
