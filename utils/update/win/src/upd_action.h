@@ -1,5 +1,9 @@
 #include "ax_utility.h"
 
+// Control and driver interfaces
+#include "ax_control.h"
+#include "ax_driver.h"
+
 typedef AXSTATUS(*UPD_ACTION)(void* stack);
 
 #define UPD_ACTION_INSTALL_STACK_SIZE	0x00000000

@@ -1,6 +1,6 @@
 #include "ax_utility.h"
 
-static AXSTATUS ax_open_data_root_reg(
+static AXSTATUS _ax_open_data_root_reg(
 	AX_IN_OUT AX_DATA_ROOT*		root
 ){
 	if (root == NULL){

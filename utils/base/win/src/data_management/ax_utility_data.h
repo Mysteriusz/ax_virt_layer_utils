@@ -1,5 +1,4 @@
 #if !defined(AX_UTILITY_DATA_INT)
-
 #define AX_UTILITY_DATA_INT
 
 #include "ax_utility.h"
@@ -24,8 +23,8 @@
 typedef uint8_t AX_DATA_TYPE;
 enum _AX_DATA_TYPE {
 	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path ex: root->location + node->name) 
-	DATA_TYPE_FILE = 1, // context == wchar_t* (File path ex: root->location) 
-	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: "REG_SZ") 
+	DATA_TYPE_FILE = 1, // context == struct _AX_DATA_FILE_INFO  
+	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: REG_SZ) 
 	// FUTURE
 	DATA_TYPE_SERVER = 3, 
 	DATA_TYPE_SECURE_SERVER = 4
@@ -37,9 +36,9 @@ enum _AX_DATA_TYPE {
 
 	IMPORTANT NOTICE:
 
-	If type is equal to DIRECTORY location is wchar_t* (Directory path)
-	If type is equal to FILE location is int (HFILE)
-	If type is equal to REGISTRY location is void* (HKEY) 
+	If type is equal to DIRECTORY location is allocted wchar_t* (Directory path)
+	If type is equal to FILE location is allocted int (HANDLE)
+	If type is equal to REGISTRY location is allocated int (HKEY) 
 
 */
 typedef struct _AX_DATA_ROOT {
@@ -56,9 +55,11 @@ typedef struct _AX_DATA_NODE {
 	void*			context;
 } AX_DATA_NODE; 
 
-static wchar_t* _ax_load_working_directory(
-	void
-);
+struct _AX_DATA_FILE_INFO {
+	wchar_t* 		path; // Path to the file.
+	uint32_t 		line_index; // Index of the line from which context starts.
+	size_t 			label_size; // Ex: [base_directory]: (content)
+} AX_DATA_FILE_INFO;
 
 /*
  	
@@ -273,10 +274,6 @@ void ax_free_data_array(
 	AX_IN AX_DATA_NODE*	 	node_array,
 	AX_IN uint32_t			node_count
 );
-
-// Include both at the bootom since they rely on the implementation of the data interface.
-#include "ax_control.h"
-#include "ax_driver.h"
 
 #endif // !defined(AX_UTILITY_DATA_INT)
 

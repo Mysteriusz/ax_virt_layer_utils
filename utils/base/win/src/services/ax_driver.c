@@ -22,7 +22,7 @@ AXSTATUS ax_driver_setup_i(
 		}
 	}
 
-	AX_DATA_NODE bin_path = AX_DATA_NODE_CTP(data_root->type);
+	AX_DATA_NODE bin_path = AX_DATA_NODE_DVP(data_root->type);
 	status = ax_get_data(data_root, &bin_path);
 
 	if (AX_ERROR(status)){

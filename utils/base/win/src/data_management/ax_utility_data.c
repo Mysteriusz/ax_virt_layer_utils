@@ -1,28 +1,14 @@
 #include "ax_utility_data.h"
 
 // Data type gathering handlers
-#include "ax_utility_data_reg.c"
-#include "ax_utility_data_dir.c"
-
-static wchar_t* _ax_load_working_directory(
-	void
-){
-	uint32_t buffer_size = 0;
-
-	buffer_size = GetCurrentDirectoryW(0, NULL);
-	wchar_t* buffer = malloc(buffer_size);
-	GetCurrentDirectoryW(buffer_size, buffer);
-
-	// Assert current directory gather not failing
-	assert(GetLastError() == NO_ERROR);
-
-	return buffer;
-}
+#include "ax_utility_data_dir.c" // DATA_TYPE_DIRECTORY
+#include "ax_utility_data_file.c" // DATA_TYPE_FILE
+#include "ax_utility_data_reg.c" // DATA_TYPE_REGISTRY
 
 /*
 
  	Main functions
-
+ 
 */
 
 AXSTATUS ax_open_data_root(
@@ -34,16 +20,19 @@ AXSTATUS ax_open_data_root(
 		return AX_INVALID_ARGUMENT;
 	}
 
+	AXSTATUS status = AX_SUCCESS;
+
 	AX_DATA_TYPE data_type = type != NULL ? *type : AX_DEFAULT_DATA_ROOT_TYPE;
 
-	AXSTATUS status = AX_SUCCESS;
-	
 	switch (data_type){
 	case DATA_TYPE_DIRECTORY:
-		status = ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
+		status = _ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
+		break;
+	case DATA_TYPE_FILE:
+		status = _ax_open_data_root_file((AX_DATA_ROOT*)root, (wchar_t*)context);
 		break;
 	case DATA_TYPE_REGISTRY:
-		status = ax_open_data_root_reg((AX_DATA_ROOT*)root);
+		status = _ax_open_data_root_reg((AX_DATA_ROOT*)root);
 		break;
 	default:
 		return AX_INVALID_DATA;
@@ -152,7 +141,7 @@ AXSTATUS ax_get_default_data(
 	//
 	PathAllocCombine(
 		working_directory,
-		AX_DEFAULT_UPDATE_FOLDER_NAME, 
+		AX_UPDATE_FOLDER_NAME, 
 		PATHCCH_ALLOW_LONG_PATHS, 
 		&temp
 	);

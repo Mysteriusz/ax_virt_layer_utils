@@ -8,7 +8,7 @@ AXSTATUS upd_action_install(
 
 	// Get root of the configuration data
 	const AX_DATA_ROOT root;
-	AX_DATA_TYPE root_type = DATA_TYPE_DIRECTORY;
+	AX_DATA_TYPE root_type = DATA_TYPE_FILE;
 	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		_ax_log_status(
@@ -17,13 +17,13 @@ AXSTATUS upd_action_install(
 			NULL, 
 			L"CRITICAL: Reading root of the default configuration data failed."
 		);
-		__debugbreak();
+		//__debugbreak();
 
 		return status;
 	}
 
 	// Set default configuration nodes
-	status = ax_set_default_data(&root);
+	//status = ax_set_default_data(&root);
 	if (AX_ERROR(status)){
 		_ax_log_status(
 			status,
@@ -38,7 +38,7 @@ AXSTATUS upd_action_install(
 
 
 	// Setup control service using its interface
-	status = ax_control_setup_i(&root);
+	//status = ax_control_setup_i(&root);
 	if (AX_ERROR(status)){
 		_ax_log_status(
 			status,
@@ -49,7 +49,7 @@ AXSTATUS upd_action_install(
 	}
 	
 	// Setup driver service using its interface
-	status = ax_driver_setup_i(&root);
+	//status = ax_driver_setup_i(&root);
 	if (AX_ERROR(status)){
 		_ax_log_status(
 			status,

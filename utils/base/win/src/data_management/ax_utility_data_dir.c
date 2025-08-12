@@ -1,6 +1,6 @@
 #include "ax_utility.h"
 
-static AXSTATUS ax_open_data_root_dir(
+static AXSTATUS _ax_open_data_root_dir(
 	AX_IN_OUT AX_DATA_ROOT*		root,
 	AX_IN_OPT wchar_t* 		path
 ){
@@ -9,27 +9,21 @@ static AXSTATUS ax_open_data_root_dir(
 	}
 
 	// Set the buffer to default if provided path is NULL
-	wchar_t* path_buffer = 
-		path != NULL 
+	wchar_t* path_buffer = path != NULL 
 		? path 
 		: AX_DEFAULT_DATA_ROOT_DIRECTORY;
-	size_t path_buffer_size = (wcslen(path_buffer) + 1) * sizeof(wchar_t);
+	size_t path_buffer_size = 0;
 
-	//
-	// Expand environment variables if used in the path
-	// ex: %USERPROFILE% -> C:\users\username
-	//
-	size_t temp_size = ExpandEnvironmentStringsW(path_buffer, NULL, 0) * sizeof(wchar_t);
-	wchar_t* temp = malloc(temp_size);
-	ExpandEnvironmentStringsW(path_buffer, temp, temp_size);
+	// Write expanded to the path buffer
+	path_buffer = _ax_expand_path(path_buffer);
+	path_buffer_size = _ax_size_w(path_buffer);
 
-	// Write expanded back to the path buffer
-	path_buffer = temp;
-	path_buffer_size = temp_size;
+	uint32_t attributes = GetFileAttributesW(path_buffer);
 
 	// Check if directory exists by getting its attributes
 	bool directory_exists = 
-		GetFileAttributesW(path_buffer) != INVALID_FILE_ATTRIBUTES 
+		(attributes != INVALID_FILE_ATTRIBUTES 
+		&& attributes & FILE_ATTRIBUTE_DIRECTORY)
 		? true 
 		: false;
 

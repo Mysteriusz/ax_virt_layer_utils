@@ -14,7 +14,7 @@
 #define AX_ERROR_INT
 
 // Size of the AXSTATUS is to allow different flags at unison with platform-specific error codes 
-typedef uint64_t AXSTATUS;
+typedef unsigned long long AXSTATUS;
 
 #define AX_SUCCESS 			0x0000000000000000 // Successfull status
 #define AX_INVALID_COMMAND	 	0x0000000000000001 // Invalid command structure
@@ -96,7 +96,7 @@ static void _ax_log_status(
 #define AX_NORETURN __attribute__(noreturn)	
 #endif 
 
-AX_NORETURN static void ax_crash(
+AX_NORETURN static inline void _ax_crash(
 	void
 ){
 	abort();
