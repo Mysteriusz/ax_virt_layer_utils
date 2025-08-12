@@ -11,7 +11,7 @@ AXSTATUS upd_action_install(
 	AX_DATA_TYPE root_type = DATA_TYPE_DIRECTORY;
 	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
-		ax_log_status(
+		_ax_log_status(
 			status,
 			true, 
 			NULL, 
@@ -25,7 +25,7 @@ AXSTATUS upd_action_install(
 	// Set default configuration nodes
 	status = ax_set_default_data(&root);
 	if (AX_ERROR(status)){
-		ax_log_status(
+		_ax_log_status(
 			status,
 			true, 
 			NULL, 
@@ -40,7 +40,7 @@ AXSTATUS upd_action_install(
 	// Setup control service using its interface
 	status = ax_control_setup_i(&root);
 	if (AX_ERROR(status)){
-		ax_log_status(
+		_ax_log_status(
 			status,
 			true, 
 			NULL, 
@@ -51,7 +51,7 @@ AXSTATUS upd_action_install(
 	// Setup driver service using its interface
 	status = ax_driver_setup_i(&root);
 	if (AX_ERROR(status)){
-		ax_log_status(
+		_ax_log_status(
 			status,
 			true, 
 			NULL, 

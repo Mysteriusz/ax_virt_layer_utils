@@ -49,12 +49,6 @@
 
 */
 #include "ax_utility_data.h"
-
-/*
-	
-	Default services interface.
-
-*/
  
 #endif // !defined(AX_UTILITY_INT)
 

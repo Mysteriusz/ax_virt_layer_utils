@@ -4,6 +4,58 @@
 #include "ax_utility_data_reg.c"
 #include "ax_utility_data_dir.c"
 
+static wchar_t* _ax_load_working_directory(
+	void
+){
+	uint32_t buffer_size = 0;
+
+	buffer_size = GetCurrentDirectoryW(0, NULL);
+	wchar_t* buffer = malloc(buffer_size);
+	GetCurrentDirectoryW(buffer_size, buffer);
+
+	// Assert current directory gather not failing
+	assert(GetLastError() == NO_ERROR);
+
+	return buffer;
+}
+
+/*
+
+ 	Main functions
+
+*/
+
+AXSTATUS ax_open_data_root(
+	AX_OUT const AX_DATA_ROOT* 	root,	
+	AX_IN_OPT const AX_DATA_TYPE*	type,
+	AX_IN_OPT const void*		context
+){
+	if (root == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	AX_DATA_TYPE data_type = type != NULL ? *type : AX_DEFAULT_DATA_ROOT_TYPE;
+
+	AXSTATUS status = AX_SUCCESS;
+	
+	switch (data_type){
+	case DATA_TYPE_DIRECTORY:
+		status = ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
+		break;
+	case DATA_TYPE_REGISTRY:
+		status = ax_open_data_root_reg((AX_DATA_ROOT*)root);
+		break;
+	default:
+		return AX_INVALID_DATA;
+	}
+
+	if (AX_ERROR(status)){
+		return status;
+	}
+
+	return AX_SUCCESS; 
+}
+
 AXSTATUS ax_get_default_data(
 	AX_IN const AX_DATA_ROOT*	root,
 	AX_OUT AX_DATA_NODE**		node_array,
@@ -29,7 +81,7 @@ AXSTATUS ax_get_default_data(
 	AX_DATA_NODE* ctp = &node_buffer[3];
 	memcpy(ctp, &AX_DATA_NODE_CTP(root->type), sizeof(AX_DATA_NODE));
 
-	wchar_t* working_directory = ax_load_working_directory();
+	wchar_t* working_directory = _ax_load_working_directory();
 	size_t working_directory_size = wcslen(working_directory) * sizeof(wchar_t);
 
 	// Setup context for all nodes depending on the data type 
@@ -147,11 +199,7 @@ CLEANUP:
 
 	// This will only be executed when function fails in any of the breakpoints
 
-	ax_free_data(bsd);
-	ax_free_data(upd);
-	ax_free_data(dvp);
-	ax_free_data(ctp);
-	free(node_buffer);
+	ax_free_data_array(node_buffer, node_buffer_count);
 
 	return status;
 }
@@ -174,13 +222,14 @@ AXSTATUS ax_set_default_data(
 
 	for (uint32_t i = 0; i < node_array_count; i++){
 		status = ax_set_data(root, &node_array[i]);
+
 		if (AX_ERROR(status)){
 			break;
 		}
 	}
 
 	// Free array allocated by ax_get_default_data.
-	free(node_array);
+	ax_free_data_array(node_array, node_array_count);
 
 	// Checking if any of the nodes failed to write.
 	if (AX_ERROR(status)){
@@ -189,41 +238,6 @@ AXSTATUS ax_set_default_data(
 
 	return AX_SUCCESS;
 }
-
-AXSTATUS ax_open_data_root(
-	AX_OUT const AX_DATA_ROOT* 	root,	
-	AX_IN_OPT const AX_DATA_TYPE*	type,
-	AX_IN_OPT const void*		context
-){
-	if (root == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	AX_DATA_TYPE data_type = type != NULL ? *type : AX_DEFAULT_DATA_ROOT_TYPE;
-
-	AXSTATUS status = AX_SUCCESS;
-	
-	switch (data_type){
-	case DATA_TYPE_DIRECTORY:
-		status = ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
-		break;
-	case DATA_TYPE_REGISTRY:
-		status = ax_open_data_root_reg((AX_DATA_ROOT*)root);
-		break;
-	default:
-		return AX_INVALID_DATA;
-	}
-
-	if (AX_ERROR(status)){
-		return status;
-	}
-
-	return AX_SUCCESS; 
-}
-
-/*
- 	Main functions
-*/
 
 AXSTATUS ax_get_data(
 	AX_IN const AX_DATA_ROOT*	root,
@@ -284,7 +298,7 @@ AXSTATUS ax_set_data(
 }
 
 void ax_free_root(
-	AX_IN_OUT AX_DATA_ROOT*		root
+	AX_IN AX_DATA_ROOT*		root
 ){
 	if (root == NULL){
 		return;
@@ -292,13 +306,14 @@ void ax_free_root(
 
 	switch (root->type){
 	case DATA_TYPE_DIRECTORY:
-		free(root->location);
+		if (root->location) free(root->location);
 	case DATA_TYPE_REGISTRY:
-		RegCloseKey(root->location); // Close registry handle 
+		if (root->location) RegCloseKey(root->location); // Close registry handle 
 	default:
 		return;
 	}
-	memset(root, 0, sizeof(AX_DATA_ROOT));
+
+	return;
 }
 void ax_free_data(
 	AX_IN AX_DATA_NODE* 		node
@@ -307,7 +322,25 @@ void ax_free_data(
 		return;
 	}
 
-	free(node->value);
-	free(node->context);
+	if (node->value) free(node->value);
+	if (node->context) free(node->context);
+
+	return;
+}
+void ax_free_data_array(
+	AX_IN AX_DATA_NODE*	 	node_array,
+	AX_IN uint32_t			node_count
+){	
+	if (node_array == NULL){
+		return;
+	}
+
+	for (uint32_t i = 0; i < node_count; i++){
+		ax_free_data(&node_array[i]);
+	}
+
+	free(node_array);
+
+	return;
 }
 

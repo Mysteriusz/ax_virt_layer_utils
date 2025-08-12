@@ -7,22 +7,24 @@
 // Data location on Windows is in the registry
 #define AX_DATA_ROOT_HKEY 		HKEY_LOCAL_MACHINE
 #define AX_DATA_ROOT_SUBKEY 		L"SOFTWARE"
-// Data is located in the registry at: 
-//
-// HKEY_LOCAL_MACHINE\\SOFTWARE\\AX_VIRTUALIZATION
-//
+/* 
+	Data is located in the registry at: 
+
+ 		- HKEY_LOCAL_MACHINE\\SOFTWARE\\AX_VIRTUALIZATION
+
+*/
 
 #define AX_DATA_ROOT_NAME 		L"AX_VIRTUALIZATION"
 
-// Data location as Windows directory
+// Default DATA_TYPE_DIRECTORY root->location
 #define AX_DEFAULT_DATA_ROOT_DIRECTORY 	L"%USERPROFILE%\\Documents"
-// Data location as Windows file
+// Default DATA_TYPE_DIRECTORY root->location
 #define AX_DEFAULT_DATA_ROOT_FILE 	L"%USERPROFILE%\\Documents\\ax_data.cfg"
 
 typedef uint8_t AX_DATA_TYPE;
 enum _AX_DATA_TYPE {
-	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path)
-	DATA_TYPE_FILE = 1, // context == wchar_t* (File path)
+	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path ex: root->location + node->name) 
+	DATA_TYPE_FILE = 1, // context == wchar_t* (File path ex: root->location) 
 	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: "REG_SZ") 
 	// FUTURE
 	DATA_TYPE_SERVER = 3, 
@@ -30,6 +32,7 @@ enum _AX_DATA_TYPE {
 };
 
 /*
+
 	Root of the configuration data.
 
 	IMPORTANT NOTICE:
@@ -37,48 +40,13 @@ enum _AX_DATA_TYPE {
 	If type is equal to DIRECTORY location is wchar_t* (Directory path)
 	If type is equal to FILE location is int (HFILE)
 	If type is equal to REGISTRY location is void* (HKEY) 
+
 */
 typedef struct _AX_DATA_ROOT {
 	void* 			location;
 	size_t 			location_size;
 	AX_DATA_TYPE 		type;	
 } AX_DATA_ROOT;
-
-/*
-	Opens (allocates) a new root for the data.
-	
-	WORKFLOW:
-
-	Function check (if provided) type or uses AX_DEFAULT_DATA_ROOT_TYPE macro, 
-	and given that value calls handler function for the requested type.
-
-	Write-back to the root occurs only when return value is false in the ax_error(axstatus) statement. 
-	
-	IMPORTANT NOTICE:
-
-	For type EQUAL (DATA_TYPE_DIRECTORY) context is used as a path to the root location. 
-	(Directory which should be used as root)
-	Example: 
-		context = L"C:\path\to\root\directory";
-
-	For type EQUAL (DATA_TYPE_REGISTRY) context is NOT used. 
-
-	write-back to the root occurs only when return value is false in the ax_error(axstatus) statement. 
-	REMEMBER:
-
-	After calling this function its necessary to call:
-
-		- ax_free_root
-
-	to safely free data and prevent memory leaks.
-
-*/
-#define AX_DEFAULT_DATA_ROOT_TYPE 	(AX_DATA_TYPE)DATA_TYPE_REGISTRY
-AXSTATUS ax_open_data_root(
-	AX_OUT const AX_DATA_ROOT* 	root,	
-	AX_IN_OPT const AX_DATA_TYPE* 	type,
-	AX_IN_OPT void*			context
-);
 
 typedef struct _AX_DATA_NODE {
 	wchar_t* 		name;
@@ -88,21 +56,19 @@ typedef struct _AX_DATA_NODE {
 	void*			context;
 } AX_DATA_NODE; 
 
-static wchar_t* ax_load_working_directory(
+static wchar_t* _ax_load_working_directory(
 	void
-){
-	uint32_t buffer_size = 0;
-	buffer_size = GetCurrentDirectoryW(0, NULL);
-	wchar_t* buffer = malloc(buffer_size);
-	GetCurrentDirectoryW(buffer_size, buffer);
+);
 
-	// Assert current directory gather not failing
-	assert(GetLastError() == NO_ERROR);
+/*
+ 	
+	Defaults
 
-	return buffer;
-}
+*/
 
+#define AX_DEFAULT_DATA_ROOT_TYPE 	(AX_DATA_TYPE)DATA_TYPE_REGISTRY
 #define AX_DEFAULT_NODE_COUNT 		0x0004
+
 #define AX_DATA_NODE_BSD(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"base_directory", \
@@ -137,6 +103,42 @@ static wchar_t* ax_load_working_directory(
 	} 
 
 /*
+
+	Opens (allocates) a new root for the data.
+	
+	WORKFLOW:
+
+	Function check (if provided) type or uses AX_DEFAULT_DATA_ROOT_TYPE macro, 
+	and given that value calls handler function for the requested type.
+
+	Write-back to the root occurs only when return value is false in the ax_error(axstatus) statement. 
+	
+	IMPORTANT NOTICE:
+
+	For type EQUAL (DATA_TYPE_DIRECTORY) context is used as a path to the root location. 
+	(Directory which should be used as root)
+	Example: 
+		context = L"C:\path\to\root\directory";
+
+	For type EQUAL (DATA_TYPE_REGISTRY) context is NOT used. 
+
+	write-back to the root occurs only when return value is false in the ax_error(axstatus) statement. 
+	REMEMBER:
+
+	After calling this function its necessary to call:
+
+		- ax_free_root
+
+	to safely free data and prevent memory leaks.
+
+*/
+AXSTATUS ax_open_data_root(
+	AX_OUT const AX_DATA_ROOT* 	root,	
+	AX_IN_OPT const AX_DATA_TYPE* 	type,
+	AX_IN_OPT void*			context
+);
+
+/*
 	Gets (allocates) array of DEFAULT nodes and assigns DEFAULT values.
 	
 	WORKFLOW:
@@ -163,7 +165,7 @@ static wchar_t* ax_load_working_directory(
 
 	After calling this function its necessary to call:
 
-		- ax_free_node (ON EACH NODE)
+		- ax_free_data_array
 
 	to safely free data and prevent memory leaks.
 
@@ -222,7 +224,7 @@ AXSTATUS ax_set_default_data(
 
 	After calling this function its necessary to call:
 
-		- ax_free_node 
+		- ax_free_data 
 
 	to safely free data and prevent memory leaks.
 
@@ -262,12 +264,17 @@ AXSTATUS ax_set_data(
 );
 
 void ax_free_root(
-	AX_IN_OUT AX_DATA_ROOT*		root
+	AX_IN AX_DATA_ROOT*		root
 );
 void ax_free_data(
 	AX_IN AX_DATA_NODE* 		node
 );
+void ax_free_data_array(
+	AX_IN AX_DATA_NODE*	 	node_array,
+	AX_IN uint32_t			node_count
+);
 
+// Include both at the bootom since they rely on the implementation of the data interface.
 #include "ax_control.h"
 #include "ax_driver.h"
 

@@ -13,25 +13,24 @@
 #if !defined(AX_ERROR_INT)
 #define AX_ERROR_INT
 
-#include "stdbool.h"
-
+// Size of the AXSTATUS is to allow different flags at unison with platform-specific error codes 
 typedef uint64_t AXSTATUS;
 
-#define AX_SUCCESS 			0x0000000000000000
-#define AX_INVALID_COMMAND	 	0x0000000000000001
-#define AX_MEMORY_ERROR 		0x0000000000000002
-#define AX_INVALID_ARGUMENT		0x0000000000000003
-#define AX_INVALID_DATA			0x0000000000000004
-#define AX_EXECUTION_ERROR		0x0000000000000005
-#define AX_NOT_FOUND			0x0000000000000006
-#define AX_ACCESS_VIOLATION		0x0000000000000007
-#define AX_BUFFER_TOO_SMALL		0x0000000000000010
-#define AX_BUFFER_TOO_BIG		0x0000000000000011
-#define AX_INVALID_BUFFER_SIZE		0x0000000000000012
-#define AX_INVALID_STACK		0x0000000000000013
-#define AX_INVALID_STACK_SIZE		0x0000000000000014
-#define AX_UNKNOWN_CONTEXT		0x0000000000000020
-#define AX_NOT_IMPLEMENTED		0x00000000ffffffff
+#define AX_SUCCESS 			0x0000000000000000 // Successfull status
+#define AX_INVALID_COMMAND	 	0x0000000000000001 // Invalid command structure
+#define AX_MEMORY_ERROR 		0x0000000000000002 // Unexpected data error
+#define AX_INVALID_ARGUMENT		0x0000000000000003 // Argument was not as expected
+#define AX_INVALID_DATA			0x0000000000000004 // Argument inner data was not correct
+#define AX_EXECUTION_ERROR		0x0000000000000005 // Execution failed
+#define AX_NOT_FOUND			0x0000000000000006 // Not found
+#define AX_ACCESS_VIOLATION		0x0000000000000007 // Access was not authorized
+#define AX_BUFFER_TOO_SMALL		0x0000000000000010 // Provided buffer was too small
+#define AX_BUFFER_TOO_BIG		0x0000000000000011 // Provided buffer was too big
+#define AX_INVALID_BUFFER_SIZE		0x0000000000000012 // Provided buffer size was incorrect
+#define AX_INVALID_STACK		0x0000000000000013 // Provided was not as expected
+#define AX_INVALID_STACK_SIZE		0x0000000000000014 // Provided Stack size was incorrect 
+#define AX_UNKNOWN_CONTEXT		0x0000000000000020 // Context of the data was not correct
+#define AX_NOT_IMPLEMENTED		0x00000000ffffffff // TODO Implementation
 // AX Error check 
 #define AX_ERROR(code)			((code != AX_SUCCESS))
 
@@ -50,9 +49,9 @@ typedef uint64_t AXSTATUS;
 
 #if defined(AX_UM)
 
-static void ax_log_status(
+static void _ax_log_status(
 	AX_IN AXSTATUS 			status,
-	AX_IN_OPT bool			metadata,
+	AX_IN bool			metadata,
 	AX_IN_OPT const void*		location,
 	AX_IN_OPT const wchar_t*	message
 ){
@@ -92,9 +91,9 @@ static void ax_log_status(
 }
 
 #if defined(_MSC_VER)
-	#define AX_NORETURN __declspec(noreturn)
+#define AX_NORETURN __declspec(noreturn)
 #elif defined(__GNUC__) || (__clang__) 
-	#define AX_NORETURN __attribute__(noreturn)	
+#define AX_NORETURN __attribute__(noreturn)	
 #endif 
 
 AX_NORETURN static void ax_crash(

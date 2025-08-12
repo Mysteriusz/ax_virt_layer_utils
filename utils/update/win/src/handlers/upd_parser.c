@@ -73,7 +73,7 @@ AXSTATUS upd_token_parse(
 			&token_size
 		); 
 		if (current == NULL){
-			ax_log_status(
+			_ax_log_status(
 				AX_INVALID_DATA, 
 				1, 
 				NULL, 
@@ -108,7 +108,7 @@ AXSTATUS upd_token_parse(
 			&token_value_size
 		);
 		if (token_value == NULL) {
-			ax_log_status(
+			_ax_log_status(
 				AX_INVALID_DATA, 
 				1, 
 				NULL, 
@@ -131,7 +131,7 @@ AXSTATUS upd_token_parse(
 			&token_value_size
 		);
 		if (token_value == NULL) {
-			ax_log_status(
+			_ax_log_status(
 				AX_INVALID_DATA, 
 				1, 
 				NULL, 

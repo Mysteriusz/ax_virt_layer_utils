@@ -13,7 +13,7 @@ AXSTATUS upd_execute_command(
 
 	AXSTATUS command_validation = upd_command_validate(command);
 	if (AX_ERROR(command_validation)){
-		ax_log_status(AX_INVALID_DATA, 1, NULL, L"COMMAND VALIDATION FAILED");
+		_ax_log_status(AX_INVALID_DATA, 1, NULL, L"COMMAND VALIDATION FAILED");
 		return AX_INVALID_DATA;
 	}
 
@@ -31,7 +31,13 @@ AXSTATUS upd_execute_command(
 
 		switch (current->token_type){
 		case VALUE:{
-			ax_log_status(AX_INVALID_DATA, 0, NULL, L"INVALID SYMBOL");
+			_ax_log_status(
+				AX_INVALID_DATA,
+				0, 
+				NULL, 
+				L"INVALID SYMBOL"
+			);
+
 			return AX_INVALID_DATA;
 		}
 		case SWITCH:{
@@ -51,9 +57,6 @@ AXSTATUS upd_execute_command(
 
 				if (failed_token_status) *failed_token_status = current_result; 
 				if (failed_token_index) *failed_token_index = i; 
-
-				ax_log_status(current_result, 0, NULL, NULL);
-				ax_log_status(status, 0, NULL, NULL);
 
 				return status; 
 			}
