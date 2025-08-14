@@ -23,7 +23,7 @@
 typedef uint8_t AX_DATA_TYPE;
 enum _AX_DATA_TYPE {
 	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path ex: root->location + node->name) 
-	DATA_TYPE_FILE = 1, // context == struct _AX_DATA_FILE_INFO  
+	DATA_TYPE_FILE = 1, // context ==  _AX_DATA_FILE_INFO  
 	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: REG_SZ) 
 	// FUTURE
 	DATA_TYPE_SERVER = 3, 
@@ -55,10 +55,9 @@ typedef struct _AX_DATA_NODE {
 	void*			context;
 } AX_DATA_NODE; 
 
-struct _AX_DATA_FILE_INFO {
+typedef struct _AX_DATA_FILE_INFO {
 	wchar_t* 		path; // Path to the file.
-	uint32_t 		line_index; // Index of the line from which context starts.
-	size_t 			label_size; // Ex: [base_directory]: (content)
+	wchar_t* 		label; // Ex: [base_directory]: (content)
 } AX_DATA_FILE_INFO;
 
 /*

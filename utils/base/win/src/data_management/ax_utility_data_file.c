@@ -48,3 +48,77 @@ static AXSTATUS _ax_open_data_root_file(
 	return AX_SUCCESS;
 }
 
+static AXSTATUS _ax_get_data_file(
+	AX_IN AX_DATA_ROOT*		root,
+	AX_IN_OUT AX_DATA_NODE*		node
+){
+	if (root == NULL
+		|| node == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	if (root->type != DATA_TYPE_DIRECTORY){
+		return AX_INVALID_DATA;
+	}
+
+	return AX_SUCCESS;
+}
+
+static AXSTATUS _ax_set_data_file(
+	AX_IN AX_DATA_ROOT*		root,
+	AX_IN AX_DATA_NODE*		node
+){
+	if (root == NULL
+		|| node == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	if (root->type != DATA_TYPE_FILE
+		|| node->value == NULL){
+		return AX_INVALID_DATA;
+	}
+
+	if (node->context == NULL){
+		return AX_UNKNOWN_CONTEXT;
+	}
+
+	uint32_t result = NO_ERROR;
+
+	AX_DATA_FILE_INFO* file_info = (AX_DATA_FILE_INFO*)node->context;
+
+	if (file_info->label != NULL){
+
+		// Write label
+		WriteFile(
+			*(HANDLE*)root->location,
+			file_info->label,	
+			_ax_size_w(file_info->label),
+			NULL,
+			NULL
+		);
+
+		result = GetLastError();
+	
+		if (result != NO_ERROR){
+			return result | AX_STATUS_LERROR;
+		}
+	}
+
+	// Write value
+	WriteFile(
+		*(HANDLE*)root->location,
+		node->value,	
+		node->value_size,
+		NULL,
+		NULL
+	);
+
+	result = GetLastError();
+	
+	if (result != NO_ERROR){
+		return result | AX_STATUS_LERROR;
+	}
+
+	return AX_SUCCESS;
+}
+

@@ -23,8 +23,8 @@ void upd_token_free(
 );
 
 AXSTATUS upd_command_validate(
-	AX_IN const UPD_COMMAND*		command,
-	AX_IN uint32_t				start_index
+	AX_IN const UPD_COMMAND*	command,
+	AX_IN uint32_t			start_index
 );
 AXSTATUS upd_token_validate(
 	AX_IN const UPD_COMMAND_TOKEN*	token,

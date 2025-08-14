@@ -1,12 +1,14 @@
 # Base utilities are still under development.
 
-## All the AX Project`s utilities and applications as well as the driver itself rely on the base library below.
+### Task list will be updated with every new issue/feature.
 
-### Default AX method shared library:
-```ax_utility.lib``` 
-### It`s corresponding header: 
-```ax_utility.h``` 
-### located in: 
-```ax_virt_layer_utils/utils/base/build/```
-### Each standard utility provides it`s own API that allows for easy scalability although all of them rely on the same core principals and naming conventions.
+| Task | Priority |
+|------|---------|
+| ax_utility_data_reg.c code quality review | Very High |
+| ax_utility_data_dir.c code quality review | Very High |
+| DATA_TYPE_FILE interface implementation for ax_utility_data.h | High |
+| ax_utility_reader_int extension for DATA_TYPE_FILE interface data reading | Medium |
+| upd_parser_int discontinuation for ax_utility_reader_int | Medium |
+| DATA_TYPE_SERVER interface implementation for ax_utility_data.h | Low |
+| DATA_TYPE_SECURE_SERVER interface implementation for ax_utility_data.h | Low |
 

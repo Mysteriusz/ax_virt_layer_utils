@@ -1,5 +1,11 @@
 #include "ax_utility.h"
 
+/*
+
+   	AWAITING CODE REFACTOR!!!!!
+
+*/
+
 static AXSTATUS _ax_open_data_root_reg(
 	AX_IN_OUT AX_DATA_ROOT*		root
 ){
@@ -47,7 +53,7 @@ static AXSTATUS _ax_open_data_root_reg(
 
 	return AX_SUCCESS;
 }
-static AXSTATUS ax_get_data_reg(
+static AXSTATUS _ax_get_data_reg(
 	AX_IN AX_DATA_ROOT*		root,
 	AX_IN_OUT AX_DATA_NODE*		node
 ){
@@ -101,7 +107,7 @@ static AXSTATUS ax_get_data_reg(
 
 	return AX_SUCCESS;
 }
-static AXSTATUS ax_set_data_reg(
+static AXSTATUS _ax_set_data_reg(
 	AX_IN AX_DATA_ROOT*		root,
 	AX_IN AX_DATA_NODE*		node
 ){

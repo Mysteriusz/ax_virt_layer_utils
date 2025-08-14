@@ -56,6 +56,7 @@
 	Default configuration data interface.
 
 */
+#include "ax_utility_reader.h"
 #include "ax_utility_data.h"
 
 #endif // !defined(AX_UTILITY_INT)

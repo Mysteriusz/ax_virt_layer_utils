@@ -22,8 +22,26 @@ AXSTATUS upd_action_install(
 		return status;
 	}
 
+	wchar_t* label = L"[base_directory]:\n";
+	const wchar_t* text = L"[base_directory]:\n jol\0fdjsfdksjl";
+
+	struct AX_READER_SETTINGS settings = {
+		.label = label,
+		.skip_set = NULL 
+	};
+
+	wchar_t* buffer = NULL;
+	size_t buffer_size = 0;
+
+	status = ax_read_range(
+		text, 
+		&settings,
+		&buffer,
+		&buffer_size
+	);
+
 	// Set default configuration nodes
-	//status = ax_set_default_data(&root);
+	status = ax_set_default_data(&root);
 	if (AX_ERROR(status)){
 		_ax_log_status(
 			status,

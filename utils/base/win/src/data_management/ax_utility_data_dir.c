@@ -20,14 +20,9 @@ static AXSTATUS _ax_open_data_root_dir(
 
 	uint32_t attributes = GetFileAttributesW(path_buffer);
 
-	// Check if directory exists by getting its attributes
-	bool directory_exists = 
-		(attributes != INVALID_FILE_ATTRIBUTES 
-		&& attributes & FILE_ATTRIBUTE_DIRECTORY)
-		? true 
-		: false;
-
-	if (directory_exists == false){
+	// Check if path exists and is a directory and not a file 
+	if (attributes != INVALID_FILE_ATTRIBUTES 
+		&& attributes & FILE_ATTRIBUTE_DIRECTORY){
 		free((void*)path_buffer);
 		return AX_INVALID_DATA;
 	}
@@ -39,7 +34,7 @@ static AXSTATUS _ax_open_data_root_dir(
 
 	return AX_SUCCESS;
 }
-static AXSTATUS ax_get_data_dir(
+static AXSTATUS _ax_get_data_dir(
 	AX_IN AX_DATA_ROOT*		root,
 	AX_IN_OUT AX_DATA_NODE*		node
 ){
@@ -105,7 +100,7 @@ static AXSTATUS ax_get_data_dir(
 
 	return AX_SUCCESS;
 }
-static AXSTATUS ax_set_data_dir(
+static AXSTATUS _ax_set_data_dir(
 	AX_IN AX_DATA_ROOT*		root,
 	AX_IN AX_DATA_NODE*		node
 ){
@@ -114,7 +109,8 @@ static AXSTATUS ax_set_data_dir(
 		return AX_INVALID_ARGUMENT;
 	}
 
-	if (root->type != DATA_TYPE_DIRECTORY){
+	if (root->type != DATA_TYPE_DIRECTORY
+		|| node->value == NULL){
 		return AX_INVALID_DATA;
 	}
 

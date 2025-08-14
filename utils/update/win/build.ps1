@@ -26,4 +26,3 @@ foreach ($FILE in $FILE_C) {
 
 cl $LIBS $INCLUDE $FILE_O /Fe:"$OUTPUT_DIR\$OUTPUT_BIN" /std:c17 /link /subsystem:console   
 
-

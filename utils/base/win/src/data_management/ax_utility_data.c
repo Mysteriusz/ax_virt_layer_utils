@@ -2,7 +2,7 @@
 
 // Data type gathering handlers
 #include "ax_utility_data_dir.c" // DATA_TYPE_DIRECTORY
-#include "ax_utility_data_file.c" // DATA_TYPE_FILE
+//#include "ax_utility_data_file.c" // DATA_TYPE_FILE
 #include "ax_utility_data_reg.c" // DATA_TYPE_REGISTRY
 
 /*
@@ -29,11 +29,14 @@ AXSTATUS ax_open_data_root(
 		status = _ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
 		break;
 	case DATA_TYPE_FILE:
-		status = _ax_open_data_root_file((AX_DATA_ROOT*)root, (wchar_t*)context);
-		break;
+		return AX_NOT_IMPLEMENTED;
 	case DATA_TYPE_REGISTRY:
 		status = _ax_open_data_root_reg((AX_DATA_ROOT*)root);
 		break;
+	case DATA_TYPE_SERVER:
+		return AX_NOT_IMPLEMENTED;
+	case DATA_TYPE_SECURE_SERVER:
+		return AX_NOT_IMPLEMENTED;
 	default:
 		return AX_INVALID_DATA;
 	}
@@ -42,7 +45,7 @@ AXSTATUS ax_open_data_root(
 		return status;
 	}
 
-	return AX_SUCCESS; 
+	return AX_SUCCESS;
 }
 
 AXSTATUS ax_get_default_data(
@@ -102,6 +105,9 @@ AXSTATUS ax_get_default_data(
 		);
 
 		break;
+	case DATA_TYPE_FILE:{
+		return AX_NOT_IMPLEMENTED;
+	}
 	case DATA_TYPE_REGISTRY:
 		bsd->context = malloc(sizeof(uint32_t));
 		upd->context = malloc(sizeof(uint32_t));
@@ -113,6 +119,10 @@ AXSTATUS ax_get_default_data(
 		*((uint32_t*)dvp->context) = REG_SZ;
 		*((uint32_t*)ctp->context) = REG_SZ;
 		break;
+	case DATA_TYPE_SERVER:
+		return AX_NOT_IMPLEMENTED;
+	case DATA_TYPE_SECURE_SERVER:
+		return AX_NOT_IMPLEMENTED;
 	default:
 		status = AX_NOT_IMPLEMENTED;
 		goto CLEANUP;
@@ -241,11 +251,17 @@ AXSTATUS ax_get_data(
 	
 	switch (root->type){
 	case DATA_TYPE_DIRECTORY:
-		status = ax_get_data_dir((AX_DATA_ROOT*)root, node);
+		status = _ax_get_data_dir((AX_DATA_ROOT*)root, node);
 		break;
+	case DATA_TYPE_FILE:
+		return AX_NOT_IMPLEMENTED;
 	case DATA_TYPE_REGISTRY:
-		status = ax_get_data_reg((AX_DATA_ROOT*)root, node);
+		status = _ax_get_data_reg((AX_DATA_ROOT*)root, node);
 		break;
+	case DATA_TYPE_SERVER:
+		return AX_NOT_IMPLEMENTED;
+	case DATA_TYPE_SECURE_SERVER:
+		return AX_NOT_IMPLEMENTED;
 	default:
 		return AX_INVALID_DATA;
 	}
@@ -270,11 +286,17 @@ AXSTATUS ax_set_data(
 
 	switch (root->type){
 	case DATA_TYPE_DIRECTORY:
-		status = ax_set_data_dir((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
+		status = _ax_set_data_dir((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
 		break;
+	case DATA_TYPE_FILE:
+		return AX_NOT_IMPLEMENTED;
 	case DATA_TYPE_REGISTRY:
-		status = ax_set_data_reg((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
+		status = _ax_set_data_reg((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
 		break;
+	case DATA_TYPE_SERVER:
+		return AX_NOT_IMPLEMENTED;
+	case DATA_TYPE_SECURE_SERVER:
+		return AX_NOT_IMPLEMENTED;
 	default:
 		return AX_INVALID_DATA;
 	}
@@ -296,8 +318,17 @@ void ax_free_root(
 	switch (root->type){
 	case DATA_TYPE_DIRECTORY:
 		if (root->location) free(root->location);
+	case DATA_TYPE_FILE:
+		_ax_log_status(AX_NOT_IMPLEMENTED, false, NULL, L"DATA_TYPE_FILE ax_free_root not implemented.");
+		return;
 	case DATA_TYPE_REGISTRY:
 		if (root->location) RegCloseKey(root->location); // Close registry handle 
+	case DATA_TYPE_SERVER:
+		_ax_log_status(AX_NOT_IMPLEMENTED, false, NULL, L"DATA_TYPE_SERVER ax_free_root not implemented.");
+		return;
+	case DATA_TYPE_SECURE_SERVER:
+		_ax_log_status(AX_NOT_IMPLEMENTED, false, NULL, L"DATA_TYPE_SECURE_SERVER ax_free_root not implemented.");
+		return;
 	default:
 		return;
 	}
