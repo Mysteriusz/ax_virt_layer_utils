@@ -27,6 +27,7 @@ AXSTATUS ax_open_data_root(
 	switch (data_type){
 	case DATA_TYPE_DIRECTORY:
 		status = _ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
+		_ax_print_w(L"kurwa");
 		break;
 	case DATA_TYPE_FILE:
 		return AX_NOT_IMPLEMENTED;

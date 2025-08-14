@@ -8,7 +8,7 @@ AXSTATUS upd_action_install(
 
 	// Get root of the configuration data
 	const AX_DATA_ROOT root;
-	AX_DATA_TYPE root_type = DATA_TYPE_REGISTRY;
+	AX_DATA_TYPE root_type = DATA_TYPE_DIRECTORY;
 	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		_ax_log_status(

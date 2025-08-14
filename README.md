@@ -4,9 +4,8 @@
 
 | Task | Priority |
 |------|---------|
-| ax_utility_data_int too long path heap corruption in ax_get_default_data | Highest |
-| ax_utility_data_reg.c code quality review | Very High |
-| ax_utility_data_dir.c code quality review | Very High |
+| ax_utility_data_reg.c code quality review | Highest |
+| ax_utility_data_dir.c code quality review | Highest |
 | DATA_TYPE_FILE interface implementation for ax_utility_data.h | High |
 | ax_utility_reader_int extension for DATA_TYPE_FILE interface data reading | Medium |
 | upd_parser_int discontinuation for ax_utility_reader_int | Medium |

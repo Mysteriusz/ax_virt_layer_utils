@@ -20,9 +20,11 @@ static AXSTATUS _ax_open_data_root_dir(
 
 	uint32_t attributes = GetFileAttributesW(path_buffer);
 
+	_ax_print_w(path_buffer);
+
 	// Check if path exists and is a directory and not a file 
 	if (attributes != INVALID_FILE_ATTRIBUTES 
-		&& attributes & FILE_ATTRIBUTE_DIRECTORY){
+		&& !(attributes & FILE_ATTRIBUTE_DIRECTORY)){
 		free((void*)path_buffer);
 		return AX_INVALID_DATA;
 	}
