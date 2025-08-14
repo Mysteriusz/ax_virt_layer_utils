@@ -7,12 +7,11 @@ wchar_t* _ax_load_working_directory(
 	size_t buffer_size = 0;
 
 	buffer_size = GetCurrentDirectoryW(0, NULL);
-	buffer = malloc(buffer_size);
+	buffer = malloc((buffer_size + 1) * sizeof(wchar_t));
 	GetCurrentDirectoryW(buffer_size, buffer);
 
 	return buffer;
 }
-
 
 /*
 
@@ -32,8 +31,8 @@ wchar_t* _ax_expand_path(
 	wchar_t* buffer = NULL;
 	size_t buffer_size = 0; 
 
-	buffer_size = ExpandEnvironmentStringsW(path, NULL, 0) * sizeof(wchar_t);
-	buffer = malloc(buffer_size);
+	buffer_size = ExpandEnvironmentStringsW(path, NULL, 0);
+	buffer = malloc(buffer_size * sizeof(wchar_t));
 	ExpandEnvironmentStringsW(path, buffer, buffer_size);
 
 	// Assert function not failing. 
@@ -52,8 +51,8 @@ wchar_t* _ax_get_file_path(
 	wchar_t* buffer = NULL;
 	size_t buffer_size = 0; 
 
-	buffer_size = GetFinalPathNameByHandleW(file, NULL, 0, FILE_NAME_OPENED) * sizeof(wchar_t);
-	buffer = malloc(buffer_size);
+	buffer_size = GetFinalPathNameByHandleW(file, NULL, 0, FILE_NAME_OPENED);
+	buffer = malloc((buffer_size + 1) * sizeof(wchar_t));
 	GetFinalPathNameByHandleW(file, buffer, buffer_size, FILE_NAME_OPENED);
 
 	// Assert function not failing. 

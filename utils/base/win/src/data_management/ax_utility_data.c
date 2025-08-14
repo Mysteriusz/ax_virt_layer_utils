@@ -74,7 +74,6 @@ AXSTATUS ax_get_default_data(
 	memcpy(ctp, &AX_DATA_NODE_CTP(root->type), sizeof(AX_DATA_NODE));
 
 	wchar_t* working_directory = _ax_load_working_directory();
-	size_t working_directory_size = wcslen(working_directory) * sizeof(wchar_t);
 
 	// Setup context for all nodes depending on the data type 
 	switch (root->type){
@@ -198,6 +197,7 @@ CLEANUP:
 
 	// This will only be executed when function fails in any of the breakpoints
 
+	__debugbreak();
 	ax_free_data_array(node_buffer, node_buffer_count);
 
 	return status;

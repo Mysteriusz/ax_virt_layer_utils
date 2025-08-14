@@ -8,7 +8,7 @@ AXSTATUS upd_action_install(
 
 	// Get root of the configuration data
 	const AX_DATA_ROOT root;
-	AX_DATA_TYPE root_type = DATA_TYPE_FILE;
+	AX_DATA_TYPE root_type = DATA_TYPE_REGISTRY;
 	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		_ax_log_status(
@@ -21,24 +21,6 @@ AXSTATUS upd_action_install(
 
 		return status;
 	}
-
-	wchar_t* label = L"[base_directory]:\n";
-	const wchar_t* text = L"[base_directory]:\n jol\0fdjsfdksjl";
-
-	struct AX_READER_SETTINGS settings = {
-		.label = label,
-		.skip_set = NULL 
-	};
-
-	wchar_t* buffer = NULL;
-	size_t buffer_size = 0;
-
-	status = ax_read_range(
-		text, 
-		&settings,
-		&buffer,
-		&buffer_size
-	);
 
 	// Set default configuration nodes
 	status = ax_set_default_data(&root);
