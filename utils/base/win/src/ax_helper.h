@@ -32,6 +32,16 @@ static inline bool _ax_check_bit(
 	return value & flag;
 }
 
+static inline void _ax_free_array(
+	AX_IN void**		array,
+	AX_IN size_t		array_size
+){
+	for (uint32_t i = 0; i < array_size; i++){
+		free(array[i]);
+	}
+	free(array);
+}
+
 /*
 
  	Allocate a new buffer and load working directory.

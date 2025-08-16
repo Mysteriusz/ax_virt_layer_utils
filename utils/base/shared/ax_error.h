@@ -46,7 +46,11 @@ typedef unsigned long long AXSTATUS;
 */
 
 // Error check that ignores non-critical or partial errors 
+#if !defined(AX_EXTENSIVE_SAFETY)
 #define AX_ERROR(code)			((code != AX_SUCCESS) && (code != AX_PARTIAL_ERROR))
+#else
+#define AX_ERROR(code)			(code != AX_SUCCESS)
+#endif
 // Error check that accepts only AX_SUCCESS 
 #define AX_ERROR_STRICT(code)		(code != AX_SUCCESS)
 

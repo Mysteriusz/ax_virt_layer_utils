@@ -4,16 +4,14 @@
 #include "ax_utility.h"
 
 // Data location on Windows is in the registry
-#define AX_DATA_ROOT_HKEY 		HKEY_LOCAL_MACHINE
-#define AX_DATA_ROOT_SUBKEY 		L"SOFTWARE"
+#define AX_DEFAULT_SYSTEM_ROOT_REG 	HKEY_LOCAL_MACHINE
+#define AX_DEFAULT_DATA_ROOT_REG 	L"SOFTWARE\\AX_VIRTUALIZATION"
 /* 
 	Data is located in the registry at: 
 
  		- HKEY_LOCAL_MACHINE\\SOFTWARE\\AX_VIRTUALIZATION
 
 */
-
-#define AX_DATA_ROOT_NAME 		L"AX_VIRTUALIZATION"
 
 // Default DATA_TYPE_DIRECTORY root->location
 #define AX_DEFAULT_DATA_ROOT_DIRECTORY 	L"%USERPROFILE%\\Documents"

@@ -1,64 +1,101 @@
 #include "ax_utility.h"
 
-/*
+static AXSTATUS _ax_create_data_root_reg(
+	AX_IN wchar_t*				path,
+	AX_IN HKEY				system_root,
+	AX_OUT HKEY*				new_key
+){
+	if (path == NULL
+	|| system_root == NULL
+	|| new_key == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
 
-   	AWAITING CODE REFACTOR!!!!!
+	AXSTATUS status = AX_SUCCESS;
+	LSTATUS result = NO_ERROR;	
 
-*/
+	HKEY system_buffer = NULL;
+
+	result = RegOpenKeyExW(
+		system_root,
+		NULL,
+		0,
+		KEY_CREATE_SUB_KEY,
+		&system_buffer
+	);
+
+	if (result != NO_ERROR){
+		return result | AX_STATUS_LRESULT; 
+	}
+	
+	wchar_t** path_array = NULL;
+	size_t path_array_size = 0;
+	struct AX_READER_SETTINGS path_settings = {
+		.label = NULL,
+		.char_set = AX_PATH_CHAR_SET
+	};
+
+	status = ax_split_text(path, &path_settings, &path_array, &path_array_size);
+	if (AX_ERROR(status)){
+		return status;
+	}
+
+	HKEY current_buffer = NULL;	
+	HKEY previous_buffer = system_buffer;	
+	for (uint32_t i = 0; i < path_array_size; i++){
+		result = RegCreateKeyExW(
+			previous_buffer,
+			path_array[i],
+			0,
+			NULL,
+			0,
+			KEY_CREATE_SUB_KEY | KEY_READ | KEY_WRITE,
+			NULL,
+			&current_buffer,
+			NULL
+		);
+
+		if (i < path_array_size - 1){
+			RegCloseKey(previous_buffer);
+			previous_buffer = current_buffer;
+		}
+
+		if (result != NO_ERROR){
+			_ax_free_array(path_array, path_array_size);
+			return result | AX_STATUS_LRESULT; 
+		}
+	}
+	_ax_free_array(path_array, path_array_size);
+	
+	*new_key = current_buffer;
+
+	return AX_SUCCESS;
+}
 
 static AXSTATUS _ax_open_data_root_reg(
 	AX_IN_OUT AX_DATA_ROOT*			root,
-	AX_IN wchar_t*				key
+	AX_IN_OPT wchar_t*			path
 ){
 	if (root == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	wchar_t** split = NULL;
-	size_t split_size = 0;
-	struct AX_READER_SETTINGS settings = {
-		.label = NULL,
-		.char_set = AX_PATH_CHAR_SET
-	};
+	AXSTATUS status = AX_SUCCESS;
 
-	UNREFERENCED_PARAMETER(key);
-	ax_split_text(L"path\\to\\something", &settings, &split, &split_size);
+	HKEY* buffer = malloc(sizeof(HKEY));
 
-	LRESULT result = NO_ERROR;
-	HKEY buffer = NULL;
-	HKEY lbuffer = NULL;
+	wchar_t* path_buffer =
+		(path != NULL)
+		? path
+		: AX_DEFAULT_DATA_ROOT_REG; 	 
 
-	result = RegOpenKeyEx(
-		AX_DATA_ROOT_HKEY,
-		AX_DATA_ROOT_SUBKEY,
-		0, 
-		KEY_CREATE_SUB_KEY, 
-		&buffer
-	);
-
-	if (result != NO_ERROR){
-		return result | AX_STATUS_LRESULT;
+	status = _ax_create_data_root_reg(path_buffer, AX_DEFAULT_SYSTEM_ROOT_REG, buffer);
+	if (AX_ERROR(status)){
+		free(buffer);
+		return status;
 	}
 
-	result = RegCreateKeyExW(
-		buffer,
-		AX_DATA_ROOT_NAME,
-		0,
-		NULL,
-		0,
-		KEY_ALL_ACCESS,
-		NULL,
-		&lbuffer,
-		NULL
-	);
-
-	if (result != NO_ERROR){
-		return result | AX_STATUS_LRESULT;
-	}
-
-	RegCloseKey(buffer);
-
-	root->location = lbuffer;
+	root->location = buffer;
 	root->location_size = sizeof(HKEY);
 	root->type = DATA_TYPE_REGISTRY;
 
@@ -143,7 +180,7 @@ static AXSTATUS _ax_set_data_reg(
 	LRESULT result = NO_ERROR; 
 
 	result = RegSetValueExW(
-		root->location,
+		*(HKEY*)root->location,
 		node->name,
 		0,
 		*(uint32_t*)node->context,

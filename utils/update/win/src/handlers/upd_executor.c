@@ -8,12 +8,14 @@ AXSTATUS upd_execute_command(
 	AX_OUT_OPT uint32_t* 		failed_token_index
 ){
 	if (command == NULL
-		|| command->tokens == NULL){
+	|| command->tokens == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	AXSTATUS command_validation = upd_command_validate(command, 1);
-	if (AX_ERROR(command_validation)){
+	AXSTATUS status = AX_SUCCESS;
+
+	status = upd_command_validate(command, 1);
+	if (AX_ERROR(status)){
 		_ax_log_status(AX_INVALID_DATA, 1, NULL, L"COMMAND VALIDATION FAILED");
 		return AX_INVALID_DATA;
 	}
@@ -21,8 +23,6 @@ AXSTATUS upd_execute_command(
 	uint64_t switch_exclusion_flags = 0;
 	void* stack = NULL;
 	size_t stack_size = 0;
-
-	AXSTATUS status = AX_SUCCESS;
 
 	uint32_t i = start_index;
 	uint32_t j = i + 1;

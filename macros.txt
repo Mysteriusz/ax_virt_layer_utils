@@ -13,3 +13,7 @@ This macro makes sure that header includes all User-Mode methods that are used f
 =========================================================================
 This macro makes sure that header includes all Kernel-Mode methods that are used for example in the driver. 
 
+=========================================================================
+			AX_EXTENSIVE_SAFETY
+=========================================================================
+This macro specifies if all error codes should be checked using AX_ERROR_STRICT which only accepts AX_SUCCESS as success.

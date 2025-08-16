@@ -20,6 +20,7 @@
 #if defined(AX_UM) 
 #include "windows.h"
 #include <shellapi.h>
+#include <pathcch.h>
 #elif defined(AX_KM)
 #include "ntddk.h"
 #endif
@@ -29,7 +30,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <pathcch.h>
 
 #if !defined(AX_WINDOWS)
 #define AX_WINDOWS
