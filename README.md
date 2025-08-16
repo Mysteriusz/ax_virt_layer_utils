@@ -4,10 +4,9 @@
 
 | Task | Priority |
 |------|---------|
-| DATA_TYPE_FILE interface implementation for ax_utility_data.h | High |
-| ax_utility_reader_int extension for DATA_TYPE_FILE interface data reading | Medium |
-| upd_parser_int discontinuation for ax_utility_reader_int | Medium |
-| DATA_TYPE_SERVER interface implementation for ax_utility_data.h | Low |
-| DATA_TYPE_SECURE_SERVER interface implementation for ax_utility_data.h | Low |
+| Extensive documention for ax_utlitiy_reader_int and all ax_utility_data_int source files | Highest |
+| upd_parser_int discontinuation for ax_utility_reader_int | High |
+| DATA_TYPE_SERVER interface implementation for ax_utility_data.h | Very Low |
+| DATA_TYPE_SECURE_SERVER interface implementation for ax_utility_data.h | Very Low |
 
 

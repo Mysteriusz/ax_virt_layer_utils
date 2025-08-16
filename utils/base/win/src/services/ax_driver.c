@@ -23,7 +23,7 @@ AXSTATUS ax_driver_setup_i(
 	}
 
 	AX_DATA_NODE bin_path = AX_DATA_NODE_DVP(data_root->type);
-	status = ax_get_data(data_root, &bin_path);
+	status = ax_get_data(data_root, &bin_path, NULL); // TODO: additional_data is NULL but it should differ depending on provided root
 
 	if (AX_ERROR(status)){
 		return status;

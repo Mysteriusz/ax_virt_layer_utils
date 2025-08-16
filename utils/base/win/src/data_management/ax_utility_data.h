@@ -21,7 +21,7 @@
 typedef uint8_t AX_DATA_TYPE;
 enum _AX_DATA_TYPE {
 	DATA_TYPE_DIRECTORY = 0, // context == wchar_t* (Directory path ex: root->location + node->name) 
-	DATA_TYPE_FILE = 1, // context ==  _AX_DATA_FILE_INFO  
+	DATA_TYPE_FILE = 1, // context == struct _AX_DATA_FILE_INFO  
 	DATA_TYPE_REGISTRY = 2, // context == uint32_t* (Windows registry value key ex: REG_SZ) 
 	// FUTURE
 	DATA_TYPE_SERVER = 3, 
@@ -53,10 +53,10 @@ typedef struct _AX_DATA_NODE {
 	void*			context;
 } AX_DATA_NODE; 
 
-typedef struct _AX_DATA_FILE_INFO {
+struct AX_DATA_FILE_INFO {
 	wchar_t* 		path; // Path to the file.
 	wchar_t* 		label; // Ex: [base_directory]: (content)
-} AX_DATA_FILE_INFO;
+};
 
 /*
  	
@@ -67,6 +67,7 @@ typedef struct _AX_DATA_FILE_INFO {
 #define AX_DEFAULT_DATA_ROOT_TYPE 	(AX_DATA_TYPE)DATA_TYPE_REGISTRY
 #define AX_DEFAULT_NODE_COUNT 		0x0004
 
+#define AX_DATA_NODE_BSD_LABEL L"[base_directory]"
 #define AX_DATA_NODE_BSD(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"base_directory", \
@@ -75,6 +76,7 @@ typedef struct _AX_DATA_FILE_INFO {
 		.type = node_type, \
 		.context = NULL, \
 	} 
+#define AX_DATA_NODE_UPD_LABEL L"[update_directory]"
 #define AX_DATA_NODE_UPD(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"update_directory", \
@@ -83,6 +85,7 @@ typedef struct _AX_DATA_FILE_INFO {
 		.type = node_type, \
 		.context = NULL, \
 	} 
+#define AX_DATA_NODE_DVP_LABEL L"[driver_path]"
 #define AX_DATA_NODE_DVP(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"driver_path", \
@@ -91,6 +94,7 @@ typedef struct _AX_DATA_FILE_INFO {
 		.type = node_type, \
 		.context = NULL, \
 	} 
+#define AX_DATA_NODE_CTP_LABEL L"[control_path]"
 #define AX_DATA_NODE_CTP(node_type) \
 	(AX_DATA_NODE){ \
 		.name = L"control_path", \
@@ -229,6 +233,7 @@ AXSTATUS ax_set_default_data(
 */
 AXSTATUS ax_get_data(
 	AX_IN const AX_DATA_ROOT*	root,
+	AX_IN_OPT void* 		additional_data,
 	AX_IN_OUT AX_DATA_NODE*		node
 );
 

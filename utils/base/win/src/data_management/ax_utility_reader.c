@@ -21,8 +21,9 @@ AXSTATUS ax_read_range(
 		AX_SAFE_GET_CHAR_SET(settings_buffer); 
 
 	status = ax_skip_set(
-		&text,
-		*char_set_buffer
+		text,
+		*char_set_buffer,
+		&text
 	);
 	if (AX_ERROR(status)){
 		return status;
@@ -37,8 +38,9 @@ AXSTATUS ax_read_range(
 	}
 
 	status = ax_skip_set(
-		&text,
-		*char_set_buffer
+		text,
+		*char_set_buffer,
+		&text
 	);
 	if (AX_ERROR(status)){
 		return status;
@@ -56,12 +58,12 @@ AXSTATUS ax_read_range(
 		return status;
 	}
 
-	value_buffer_span = (value_buffer_span + 1) * sizeof(wchar_t);
+	value_buffer_span = value_buffer_span * sizeof(wchar_t);
 
 	value_buffer = malloc(value_buffer_span);
 	memcpy(value_buffer, text, value_buffer_span);
 
-	value_buffer[value_buffer_span] = L'\0';
+	value_buffer[value_buffer_span / sizeof(wchar_t)] = L'\0';
 
 	*buffer = value_buffer;
 	*buffer_size = value_buffer_span;
@@ -141,25 +143,24 @@ AXSTATUS ax_skip_span(
 	return AX_SUCCESS;
 }
 AXSTATUS ax_skip_set(
-	AX_IN_OUT const wchar_t**		text,
-	AX_IN AXCHARSET				char_set 
+	AX_IN const wchar_t*			text,
+	AX_IN AXCHARSET				char_set, 
+	AX_OUT const wchar_t**			buffer
 ){
 	if (text == NULL
-	|| *text == NULL
-	|| char_set == NULL){
+	|| char_set == NULL
+	|| buffer == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	const wchar_t* original = *text;
-
 	uint32_t text_index = 0;
-	size_t text_size = _ax_size_w(original);
+	size_t text_size = _ax_size_w(text);
 
 	bool found = false;
 	while (text_index < text_size
-	&& (*text)[text_index] != L'\0'){
+	&& text[text_index] != L'\0'){
 		for (uint32_t i = 0; i < wcslen(char_set); i++){
-			found = (char_set[i] == (*text)[text_index])
+			found = (char_set[i] == text[text_index])
 				? true
 				: false;
 
@@ -175,7 +176,7 @@ AXSTATUS ax_skip_set(
 		text_index++;
 	}
 
-	*text = &original[text_index];
+	*buffer = &text[text_index];
 
 	return AX_SUCCESS;
 }
@@ -289,5 +290,60 @@ AXSTATUS ax_split_text(
 	*buffer = split_array;
 
 	return AX_SUCCESS;
+}
+
+AXSTATUS ax_find_text(
+	AX_IN const wchar_t*			text,
+	AX_IN const wchar_t*			find,
+	AX_OUT const wchar_t**			buffer
+){
+	if (text == NULL
+	|| find == NULL
+	|| buffer == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	uint32_t text_index = 0;
+	uint32_t find_index = 0;
+
+	size_t text_size = _ax_size_w(text);
+	size_t find_size = _ax_size_w(find);
+
+	bool found = false;
+	const wchar_t* occurrence = NULL;
+
+	while (text_index < text_size
+	&& text[text_index] != L'\0'){
+		while(find_index < find_size
+		&& text[text_index] == find[find_index]){
+			if (occurrence == NULL){
+				occurrence = &text[text_index];
+			}
+
+			text_index++;
+			find_index++;
+
+			if (find_index == find_size - 1){
+				found = true;	
+			}
+		}
+
+		if (found == true){
+			break;	
+		}
+
+		find_index = 0;
+		occurrence = NULL;
+		text_index++;
+	}
+	
+	*buffer = 
+		(found == true)
+		? occurrence
+		: text;
+
+	return (found == true)
+		? AX_SUCCESS 
+		: AX_NOT_FOUND;
 }
 

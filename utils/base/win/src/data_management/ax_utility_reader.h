@@ -59,8 +59,9 @@ AXSTATUS ax_skip_span(
 	AX_OUT size_t*				span
 );
 AXSTATUS ax_skip_set(
-	AX_IN_OUT const wchar_t**		text,
-	AX_IN AXCHARSET				char_set 
+	AX_IN const wchar_t*			text,
+	AX_IN AXCHARSET				char_set, 
+	AX_OUT const wchar_t**			buffer
 );
 
 AXSTATUS ax_char_count(
@@ -74,6 +75,12 @@ AXSTATUS ax_split_text(
 	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
 	AX_OUT wchar_t***			buffer,
 	AX_OUT size_t*				buffer_size
+);
+
+AXSTATUS ax_find_text(
+	AX_IN const wchar_t*			text,
+	AX_IN const wchar_t*			find,
+	AX_OUT const wchar_t**			buffer
 );
 
 #endif // !defined(AX_UTILITY_READER_INT)

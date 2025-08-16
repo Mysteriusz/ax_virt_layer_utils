@@ -55,7 +55,7 @@ static AXSTATUS _ax_get_data_dir(
 	wchar_t* buffer_context = NULL;
 	size_t buffer_size = 0;
 
-	uint32_t result = NO_ERROR;
+	LRESULT result = NO_ERROR;
 
 	PathAllocCombine(
 		root->location,
@@ -122,7 +122,7 @@ static AXSTATUS _ax_set_data_dir(
 		return AX_UNKNOWN_CONTEXT;
 	}
 
-	uint32_t result = NO_ERROR;
+	LRESULT result = NO_ERROR;
 
 	HANDLE file = CreateFileW(
 		(wchar_t*)node->context,

@@ -47,34 +47,94 @@ static AXSTATUS _ax_open_data_root_file(
 
 	return AX_SUCCESS;
 }
-
 static AXSTATUS _ax_get_data_file(
 	AX_IN AX_DATA_ROOT*		root,
+	AX_IN wchar_t*			node_label,
 	AX_IN_OUT AX_DATA_NODE*		node
 ){
 	if (root == NULL
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	if (root->type != DATA_TYPE_DIRECTORY){
+	if (root->type != DATA_TYPE_FILE
+	|| root->location == NULL
+	|| node->name == NULL
+	|| node_label == NULL){
 		return AX_INVALID_DATA;
 	}
 
+	AXSTATUS status = AX_SUCCESS;
+	LRESULT result = NO_ERROR;
+
+	wchar_t* file_buffer = NULL;
+	size_t file_buffer_size = 0;
+
+	file_buffer_size = GetFileSize(*(HANDLE*)root->location, NULL);
+	file_buffer = malloc(file_buffer_size);
+
+	DWORD read = 0;
+
+	SetFilePointer(*(HANDLE*)root->location, 0, NULL, FILE_BEGIN);
+
+	bool file_read_success = ReadFile(
+		*(HANDLE*)root->location,
+		file_buffer,
+		(DWORD)file_buffer_size,
+		&read,
+		NULL
+	);
+
+	result = GetLastError();
+	if (file_read_success != true 
+	|| result != NO_ERROR){
+		return result | AX_STATUS_LERROR;
+	}
+
+	wchar_t* label_start = NULL; 
+	status = ax_find_text(file_buffer, node_label, &label_start); 
+	if (AX_ERROR(status)){
+		free(file_buffer);
+		return status;
+	}
+
+	struct AX_READER_SETTINGS settings = (struct AX_READER_SETTINGS){
+		.label = node_label,
+		.char_set = AX_DEFAULT_CHAR_SET,
+	};
+	status = ax_read_range(
+		label_start,
+		&settings,
+		&(wchar_t*)node->value,
+		&node->value_size
+	);
+
+	if (AX_ERROR(status)){
+		free(file_buffer);
+		return status;
+	}
+	
+	struct AX_DATA_FILE_INFO* context_buffer = malloc(sizeof(struct AX_DATA_FILE_INFO));
+	context_buffer->label = _wcsdup(node_label);
+	context_buffer->path = _ax_get_file_path(*(HANDLE*)root->location);
+
+	node->context = context_buffer;
+
+	free(file_buffer);
+
 	return AX_SUCCESS;
 }
-
 static AXSTATUS _ax_set_data_file(
 	AX_IN AX_DATA_ROOT*		root,
 	AX_IN AX_DATA_NODE*		node
 ){
 	if (root == NULL
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
 	if (root->type != DATA_TYPE_FILE
-		|| node->value == NULL){
+	|| node->value == NULL){
 		return AX_INVALID_DATA;
 	}
 
@@ -82,43 +142,50 @@ static AXSTATUS _ax_set_data_file(
 		return AX_UNKNOWN_CONTEXT;
 	}
 
-	uint32_t result = NO_ERROR;
+	LRESULT result = NO_ERROR;
 
-	AX_DATA_FILE_INFO* file_info = (AX_DATA_FILE_INFO*)node->context;
+	wchar_t* label_buffer = ((struct AX_DATA_FILE_INFO*)node->context)->label;
+	bool file_write_success = false; 
 
-	if (file_info->label != NULL){
-
-		// Write label
-		WriteFile(
-			*(HANDLE*)root->location,
-			file_info->label,	
-			(DWORD)_ax_size_w(file_info->label),
-			NULL,
-			NULL
-		);
-
-		result = GetLastError();
-	
-		if (result != NO_ERROR){
-			return result | AX_STATUS_LERROR;
-		}
-	}
-
-	// Write value
-	WriteFile(
+	file_write_success = WriteFile(
 		*(HANDLE*)root->location,
-		node->value,	
-		(DWORD)node->value_size,
+		label_buffer,
+		(DWORD)_ax_size_wc(label_buffer) - sizeof(wchar_t),
 		NULL,
 		NULL
 	);
 
-	result = GetLastError();
-	
-	if (result != NO_ERROR){
+	if ((file_write_success != true
+	|| result != NO_ERROR)
+	&& label_buffer != NULL){
+		return result | AX_STATUS_LERROR;
+	}
+
+	file_write_success = WriteFile(
+		*(HANDLE*)root->location,
+		node->value,
+		(DWORD)node->value_size - sizeof(wchar_t),
+		NULL,
+		NULL
+	);
+
+	if (file_write_success != true
+	|| result != NO_ERROR){
+		return result | AX_STATUS_LERROR;
+	}
+
+	file_write_success = WriteFile(
+		*(HANDLE*)root->location,
+		L"\n",
+		(DWORD)sizeof(wchar_t),
+		NULL,
+		NULL
+	);
+
+	if (file_write_success != true
+	|| result != NO_ERROR){
 		return result | AX_STATUS_LERROR;
 	}
 
 	return AX_SUCCESS;
 }
-

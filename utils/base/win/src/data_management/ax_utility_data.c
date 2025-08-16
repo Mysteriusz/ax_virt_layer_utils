@@ -2,7 +2,7 @@
 
 // Data type gathering handlers
 #include "ax_utility_data_dir.c" // DATA_TYPE_DIRECTORY
-//#include "ax_utility_data_file.c" // DATA_TYPE_FILE
+#include "ax_utility_data_file.c" // DATA_TYPE_FILE
 #include "ax_utility_data_reg.c" // DATA_TYPE_REGISTRY
 
 /*
@@ -29,7 +29,8 @@ AXSTATUS ax_open_data_root(
 		status = _ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
 		break;
 	case DATA_TYPE_FILE:
-		return AX_NOT_IMPLEMENTED;
+		status = _ax_open_data_root_file((AX_DATA_ROOT*)root, (wchar_t*)context);
+		break;
 	case DATA_TYPE_REGISTRY:
 		status = _ax_open_data_root_reg((AX_DATA_ROOT*)root, (wchar_t*)context);
 		break;
@@ -54,8 +55,8 @@ AXSTATUS ax_get_default_data(
 	AX_OUT uint32_t*		node_count
 ){
 	if (root == NULL
-		|| node_array == NULL
-		|| node_count == NULL){
+	|| node_array == NULL
+	|| node_count == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
@@ -77,7 +78,7 @@ AXSTATUS ax_get_default_data(
 
 	// Setup context for all nodes depending on the data type 
 	switch (root->type){
-	case DATA_TYPE_DIRECTORY:
+	case DATA_TYPE_DIRECTORY:{
 		PathAllocCombine(
 			root->location,
 			bsd->name,
@@ -104,10 +105,33 @@ AXSTATUS ax_get_default_data(
 		);
 
 		break;
-	case DATA_TYPE_FILE:{
-		return AX_NOT_IMPLEMENTED;
 	}
-	case DATA_TYPE_REGISTRY:
+	case DATA_TYPE_FILE:{
+		bsd->context = malloc(sizeof(struct AX_DATA_FILE_INFO));
+		upd->context = malloc(sizeof(struct AX_DATA_FILE_INFO));
+		dvp->context = malloc(sizeof(struct AX_DATA_FILE_INFO));
+		ctp->context = malloc(sizeof(struct AX_DATA_FILE_INFO));
+
+		*(struct AX_DATA_FILE_INFO*)bsd->context = (struct AX_DATA_FILE_INFO){
+			.path = _ax_get_file_path(*(HANDLE*)root->location),
+			.label = AX_DATA_NODE_BSD_LABEL,
+		};
+		*(struct AX_DATA_FILE_INFO*)upd->context = (struct AX_DATA_FILE_INFO){
+			.path = _ax_get_file_path(*(HANDLE*)root->location),
+			.label = AX_DATA_NODE_UPD_LABEL,
+		};
+		*(struct AX_DATA_FILE_INFO*)dvp->context = (struct AX_DATA_FILE_INFO){
+			.path = _ax_get_file_path(*(HANDLE*)root->location),
+			.label = AX_DATA_NODE_DVP_LABEL,
+		};
+		*(struct AX_DATA_FILE_INFO*)ctp->context = (struct AX_DATA_FILE_INFO){
+			.path = _ax_get_file_path(*(HANDLE*)root->location),
+			.label = AX_DATA_NODE_CTP_LABEL,
+		};
+
+		break;
+	}
+	case DATA_TYPE_REGISTRY:{
 		bsd->context = malloc(sizeof(uint32_t));
 		upd->context = malloc(sizeof(uint32_t));
 		dvp->context = malloc(sizeof(uint32_t));
@@ -118,10 +142,13 @@ AXSTATUS ax_get_default_data(
 		*((uint32_t*)dvp->context) = REG_SZ;
 		*((uint32_t*)ctp->context) = REG_SZ;
 		break;
+	}
 	case DATA_TYPE_SERVER:
-		return AX_NOT_IMPLEMENTED;
+		status = AX_NOT_IMPLEMENTED;
+		goto CLEANUP;
 	case DATA_TYPE_SECURE_SERVER:
-		return AX_NOT_IMPLEMENTED;
+		status = AX_NOT_IMPLEMENTED;
+		goto CLEANUP;
 	default:
 		status = AX_NOT_IMPLEMENTED;
 		goto CLEANUP;
@@ -142,7 +169,7 @@ AXSTATUS ax_get_default_data(
 	);
 
 	bsd->value = temp;
-	bsd->value_size = (wcslen(temp) + 1) * sizeof(wchar_t);
+	bsd->value_size = _ax_size_wc(temp);
 
 	//
 	// UPDATE DIRECTORY
@@ -155,7 +182,7 @@ AXSTATUS ax_get_default_data(
 	);
 
 	upd->value = temp;
-	upd->value_size = (wcslen(temp) + 1) * sizeof(wchar_t);
+	upd->value_size = _ax_size_wc(temp);
 
 	//
 	// DRIVER PATH
@@ -168,7 +195,7 @@ AXSTATUS ax_get_default_data(
 	);
 
 	dvp->value = temp;
-	dvp->value_size = (wcslen(temp) + 1) * sizeof(wchar_t);
+	dvp->value_size = _ax_size_wc(temp);
 
 	//
 	// CONTROL PATH
@@ -181,7 +208,7 @@ AXSTATUS ax_get_default_data(
 	);
 
 	ctp->value = temp;
-	ctp->value_size = (wcslen(temp) + 1) * sizeof(wchar_t);
+	ctp->value_size = _ax_size_wc(temp);
 
 CLEANUP:
 	free(working_directory);
@@ -239,10 +266,11 @@ AXSTATUS ax_set_default_data(
 
 AXSTATUS ax_get_data(
 	AX_IN const AX_DATA_ROOT*	root,
+	AX_IN_OPT void* 		additional_data,
 	AX_IN_OUT AX_DATA_NODE*		node
 ){
 	if (root == NULL 
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
@@ -253,7 +281,8 @@ AXSTATUS ax_get_data(
 		status = _ax_get_data_dir((AX_DATA_ROOT*)root, node);
 		break;
 	case DATA_TYPE_FILE:
-		return AX_NOT_IMPLEMENTED;
+		status = _ax_get_data_file((AX_DATA_ROOT*)root, (wchar_t*)additional_data, node);
+		break;
 	case DATA_TYPE_REGISTRY:
 		status = _ax_get_data_reg((AX_DATA_ROOT*)root, node);
 		break;
@@ -277,7 +306,7 @@ AXSTATUS ax_set_data(
 	AX_IN const AX_DATA_NODE*	node
 ){
 	if (root == NULL 
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
@@ -288,7 +317,8 @@ AXSTATUS ax_set_data(
 		status = _ax_set_data_dir((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
 		break;
 	case DATA_TYPE_FILE:
-		return AX_NOT_IMPLEMENTED;
+		status = _ax_set_data_file((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
+		break;
 	case DATA_TYPE_REGISTRY:
 		status = _ax_set_data_reg((AX_DATA_ROOT*)root, (AX_DATA_NODE*)node);
 		break;
