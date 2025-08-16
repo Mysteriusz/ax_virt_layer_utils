@@ -7,14 +7,26 @@
 */
 
 static AXSTATUS _ax_open_data_root_reg(
-	AX_IN_OUT AX_DATA_ROOT*		root
+	AX_IN_OUT AX_DATA_ROOT*			root,
+	AX_IN wchar_t*				key
 ){
 	if (root == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	LRESULT result = 0;
-	HKEY buffer;
+	wchar_t** split = NULL;
+	size_t split_size = 0;
+	struct AX_READER_SETTINGS settings = {
+		.label = NULL,
+		.char_set = AX_PATH_CHAR_SET
+	};
+
+	UNREFERENCED_PARAMETER(key);
+	ax_split_text(L"path\\to\\something", &settings, &split, &split_size);
+
+	LRESULT result = NO_ERROR;
+	HKEY buffer = NULL;
+	HKEY lbuffer = NULL;
 
 	result = RegOpenKeyEx(
 		AX_DATA_ROOT_HKEY,
@@ -28,7 +40,6 @@ static AXSTATUS _ax_open_data_root_reg(
 		return result | AX_STATUS_LRESULT;
 	}
 
-	HKEY lbuffer;
 	result = RegCreateKeyExW(
 		buffer,
 		AX_DATA_ROOT_NAME,
@@ -58,27 +69,29 @@ static AXSTATUS _ax_get_data_reg(
 	AX_IN_OUT AX_DATA_NODE*		node
 ){
 	if (root == NULL
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	if (root->type != DATA_TYPE_REGISTRY){
+	if (root->type != DATA_TYPE_REGISTRY
+	|| root->location == NULL
+	|| node->name == NULL){
 		return AX_INVALID_DATA;
 	}
+
+	LRESULT result = NO_ERROR;
 
 	wchar_t* buffer = NULL;
 	uint32_t* buffer_context = NULL;
 	size_t buffer_size = 0;
-
-	LRESULT result = NO_ERROR;
 
 	result = RegQueryValueExW(
 		root->location,
 		node->name,
 		NULL,
 		NULL,
-		(char*)buffer,
-		(uint32_t*)&buffer_size
+		(LPBYTE)buffer,
+		(LPDWORD)&buffer_size
 	); 		
 
 	if (result != NO_ERROR){
@@ -92,9 +105,9 @@ static AXSTATUS _ax_get_data_reg(
 		root->location,
 		node->name,
 		NULL,
-	 	buffer_context,
-		(char*)buffer,
-		(uint32_t*)&buffer_size
+	 	(LPDWORD)buffer_context,
+		(LPBYTE)buffer,
+		(LPDWORD)&buffer_size
 	); 			
 
 	if (result != NO_ERROR){
@@ -112,11 +125,14 @@ static AXSTATUS _ax_set_data_reg(
 	AX_IN AX_DATA_NODE*		node
 ){
 	if (root == NULL 
-		|| node == NULL){
+	|| node == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	if (root->type != DATA_TYPE_REGISTRY){
+	if (root->type != DATA_TYPE_REGISTRY
+	|| root->location == NULL
+	|| node->name == NULL
+	|| node->value == NULL){
 		return AX_INVALID_DATA;
 	}
 
@@ -124,13 +140,15 @@ static AXSTATUS _ax_set_data_reg(
 		return AX_UNKNOWN_CONTEXT;
 	}
 
-	LRESULT result = RegSetValueExW(
+	LRESULT result = NO_ERROR; 
+
+	result = RegSetValueExW(
 		root->location,
 		node->name,
 		0,
 		*(uint32_t*)node->context,
 		node->value,
-		node->value_size
+		(DWORD)node->value_size
 	); 
 
 	if (result != NO_ERROR){

@@ -67,5 +67,8 @@ const UPD_SWITCH_DESCRIPTOR* upd_map_switch(
 	AX_IN const wchar_t*		string
 );
 
+#include "upd_executor.h"
+#include "upd_parser.h"
+
 #endif // !defined(UPD_UTILITY_INT)
 

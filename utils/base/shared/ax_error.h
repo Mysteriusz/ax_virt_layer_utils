@@ -16,6 +16,12 @@
 // Size of the AXSTATUS is to allow different flags at unison with platform-specific error codes 
 typedef unsigned long long AXSTATUS;
 
+/*
+
+	AX Error codes 
+ 
+*/
+
 #define AX_SUCCESS 			0x0000000000000000 // Successfull status
 #define AX_INVALID_COMMAND	 	0x0000000000000001 // Invalid command structure
 #define AX_MEMORY_ERROR 		0x0000000000000002 // Unexpected data error
@@ -30,9 +36,19 @@ typedef unsigned long long AXSTATUS;
 #define AX_INVALID_STACK		0x0000000000000013 // Provided was not as expected
 #define AX_INVALID_STACK_SIZE		0x0000000000000014 // Provided Stack size was incorrect 
 #define AX_UNKNOWN_CONTEXT		0x0000000000000020 // Context of the data was not correct
+#define AX_PARTIAL_ERROR		0x00000000fffffff0 // The function returned too fast but the result if still valid
 #define AX_NOT_IMPLEMENTED		0x00000000ffffffff // TODO Implementation
-// AX Error check 
-#define AX_ERROR(code)			((code != AX_SUCCESS))
+							   
+/*
+
+	AX Error check 
+ 
+*/
+
+// Error check that ignores non-critical or partial errors 
+#define AX_ERROR(code)			((code != AX_SUCCESS) && (code != AX_PARTIAL_ERROR))
+// Error check that accepts only AX_SUCCESS 
+#define AX_ERROR_STRICT(code)		(code != AX_SUCCESS)
 
 #define AX_STATUS_LRESULT 		0x8000000000000000
 #define AX_STATUS_LERROR 		0x4000000000000000
@@ -99,7 +115,6 @@ static void _ax_log_status(
 AX_NORETURN static inline void _ax_crash(
 	void
 ){
-	abort();
 }
 
 #endif // AX_UM

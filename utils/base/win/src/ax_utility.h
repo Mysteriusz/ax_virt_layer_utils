@@ -14,13 +14,18 @@
 #if !defined(AX_UTILITY_INT)
 #define AX_UTILITY_INT
 
+#pragma warning(disable: 4820)
+#pragma warning(disable: 5045)
+
 #if defined(AX_UM) 
 #include "windows.h"
+#include <shellapi.h>
 #elif defined(AX_KM)
 #include "ntddk.h"
 #endif
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>

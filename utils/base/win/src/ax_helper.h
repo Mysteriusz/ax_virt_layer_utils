@@ -3,12 +3,12 @@
 
 #include "ax_utility.h"
 
-static inline size_t _ax_size_w(
+static inline size_t _ax_size_wc(
 	AX_IN const wchar_t*	string	
 ){
 	return (wcslen(string) + 1) * sizeof(wchar_t);
 }
-static inline size_t _ax_size_wf(
+static inline size_t _ax_size_w(
 	AX_IN const wchar_t*	string	
 ){
 	return wcslen(string) + 1;
@@ -23,6 +23,13 @@ static inline void _ax_print_w(
 	AX_IN const wchar_t*	string
 ){
 	printf("%ls\n", string);
+}
+
+static inline bool _ax_check_bit(
+	AX_IN uint64_t 		value,
+	AX_IN uint64_t		flag	
+){
+	return value & flag;
 }
 
 /*
@@ -49,5 +56,6 @@ wchar_t* _ax_expand_path(
 wchar_t* _ax_get_file_path(
 	AX_IN HANDLE 			file
 );
+
 #endif // !defined(AX_HELPER_INT)
 

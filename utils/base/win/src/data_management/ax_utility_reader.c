@@ -17,12 +17,12 @@ AXSTATUS ax_read_range(
 	struct AX_READER_SETTINGS* settings_buffer = 
 		AX_SAFE_GET_SETTINGS(settings); 
 
-	AXSKIPSET* skip_set_buffer = 
-		AX_SAFE_GET_SKIP_SET(settings_buffer); 
+	AXCHARSET* char_set_buffer = 
+		AX_SAFE_GET_CHAR_SET(settings_buffer); 
 
 	status = ax_skip_set(
 		&text,
-		*skip_set_buffer
+		*char_set_buffer
 	);
 	if (AX_ERROR(status)){
 		return status;
@@ -38,7 +38,7 @@ AXSTATUS ax_read_range(
 
 	status = ax_skip_set(
 		&text,
-		*skip_set_buffer
+		*char_set_buffer
 	);
 	if (AX_ERROR(status)){
 		return status;
@@ -49,7 +49,7 @@ AXSTATUS ax_read_range(
 
 	status = ax_skip_span(
 		text,
-		*skip_set_buffer,
+		*char_set_buffer,
 		&value_buffer_span
 	);
 	if (AX_ERROR(status)){
@@ -101,11 +101,11 @@ AXSTATUS ax_skip_text(
 }
 AXSTATUS ax_skip_span(
 	AX_IN const wchar_t*			text,
-	AX_IN AXSKIPSET				skip_set, 
+	AX_IN AXCHARSET				char_set, 
 	AX_OUT size_t*				span
 ){
 	if (text == NULL
-	|| skip_set == NULL
+	|| char_set == NULL
 	|| span == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
@@ -119,8 +119,8 @@ AXSTATUS ax_skip_span(
 	bool found = false;
 	while (text_index < text_size
 		&& text[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(skip_set); i++){
-			found = (skip_set[i] == text[text_index])
+		for (uint32_t i = 0; i < wcslen(char_set); i++){
+			found = (char_set[i] == text[text_index])
 				? true
 				: false;
 
@@ -142,25 +142,24 @@ AXSTATUS ax_skip_span(
 }
 AXSTATUS ax_skip_set(
 	AX_IN_OUT const wchar_t**		text,
-	AX_IN AXSKIPSET				skip_set 
+	AX_IN AXCHARSET				char_set 
 ){
 	if (text == NULL
 	|| *text == NULL
-	|| skip_set == NULL){
+	|| char_set == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
 	const wchar_t* original = *text;
 
 	uint32_t text_index = 0;
-
 	size_t text_size = _ax_size_w(original);
 
 	bool found = false;
 	while (text_index < text_size
-		&& (*text)[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(skip_set); i++){
-			found = (skip_set[i] == (*text)[text_index])
+	&& (*text)[text_index] != L'\0'){
+		for (uint32_t i = 0; i < wcslen(char_set); i++){
+			found = (char_set[i] == (*text)[text_index])
 				? true
 				: false;
 
@@ -177,6 +176,117 @@ AXSTATUS ax_skip_set(
 	}
 
 	*text = &original[text_index];
+
+	return AX_SUCCESS;
+}
+
+AXSTATUS ax_char_count(
+	AX_IN const wchar_t*			text,
+	AX_IN AXCHARSET				char_set,
+	AX_OUT size_t* 				count
+){
+	if (text == NULL
+	|| char_set == NULL
+	|| count == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	uint32_t text_index = 0;
+	size_t text_size = _ax_size_w(text);
+
+	size_t count_buffer = 0;	
+	while (text_index < text_size
+	&& text[text_index] != L'\0'){
+		for (uint32_t i = 0; i < wcslen(char_set); i++){
+			count_buffer = (char_set[i] == text[text_index])
+				? count_buffer + 1
+				: count_buffer;
+		}
+
+		text_index++;
+	}
+
+	*count = count_buffer;
+
+	return AX_SUCCESS;
+}
+
+AXSTATUS ax_split_text(
+	AX_IN const wchar_t*			text,
+	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
+	AX_OUT wchar_t***			buffer,
+	AX_OUT size_t*				buffer_size
+){
+	if (text == NULL
+	|| buffer == NULL
+	|| buffer_size == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	AXSTATUS status = AX_SUCCESS;
+
+	struct AX_READER_SETTINGS* settings_buffer = AX_SAFE_GET_SETTINGS(settings);	
+	AXCHARSET* char_set = AX_SAFE_GET_CHAR_SET(settings_buffer);	
+	size_t text_size = _ax_size_w(text); 
+	uint32_t text_index = 0; 
+
+	bool split = false;
+	uint32_t split_index = 0;	
+	size_t split_size = 0;	
+	wchar_t* split_buffer = 0;	
+
+	size_t split_array_size = 0;
+	size_t split_array_index = 0;
+	wchar_t** split_array = NULL;
+
+	status = ax_char_count(&text[text_index], *char_set, &split_array_size);
+	if (AX_ERROR(status)){
+		return status;
+	}
+
+	split_array_size++;
+	split_array = malloc(split_array_size * sizeof(wchar_t*));
+
+	if (split_array_size == 1){
+		split_array[0] = (wchar_t*)text;
+		return AX_PARTIAL_ERROR;
+	}
+
+	while (text_index < text_size
+	&& split_array_index < split_array_size
+	&& text[text_index] != L'\0'){
+		for (uint32_t i = 0; i < wcslen(*char_set); i++){
+			split = ((*char_set)[i] == text[text_index])
+			? true
+			: false;
+
+			if (split == true){
+				break;
+			}
+		}
+
+		text_index++;
+
+		if (split == true
+		|| text[text_index] == L'\0'){
+			split_size = text_index - split_index;
+			if (text[text_index] != L'\0'){
+				split_size--;
+			}
+
+			split_buffer = malloc((split_size + 1) * sizeof(wchar_t));
+			memcpy(split_buffer, &text[split_index], split_size * sizeof(wchar_t));
+			split_buffer[split_size] = L'\0';
+
+			split_array[split_array_index] = split_buffer;
+
+			split_array_index++;
+			split_index = text_index;
+		}
+	}
+
+	*buffer_size = split_array_size;
+	*buffer = split_array;
 
 	return AX_SUCCESS;
 }

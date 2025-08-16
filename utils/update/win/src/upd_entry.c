@@ -2,9 +2,13 @@
 #include "upd_executor.h"
 #include "ax_control.h"
 
-int main(){
+int main(
+	void
+){
 	int arg_count = 0; 
 	wchar_t** args = CommandLineToArgvW(GetCommandLineW(), &arg_count);
+
+	AXSTATUS status = AX_SUCCESS; 
 
 	// No arguments passed to commandline -> ax_update.exe
 	if (arg_count == 1){
@@ -14,7 +18,7 @@ int main(){
 	UPD_COMMAND* command = NULL;
 	upd_command_parse((const wchar_t**)args, arg_count, &command);
 	AXSTATUS exec_status = 0;
-	AXSTATUS status = upd_execute_command(command, 1, &exec_status, NULL);
+	status = upd_execute_command(command, 1, &exec_status, NULL);
 
 	return 0;
 }

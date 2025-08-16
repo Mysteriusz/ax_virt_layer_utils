@@ -4,7 +4,7 @@ wchar_t* _ax_load_working_directory(
 	void
 ){
 	wchar_t* buffer = NULL;
-	size_t buffer_size = 0;
+	DWORD buffer_size = 0;
 
 	buffer_size = GetCurrentDirectoryW(0, NULL);
 	buffer = malloc((buffer_size + 1) * sizeof(wchar_t));
@@ -29,7 +29,7 @@ wchar_t* _ax_expand_path(
 	}
 
 	wchar_t* buffer = NULL;
-	size_t buffer_size = 0; 
+	DWORD buffer_size = 0; 
 
 	buffer_size = ExpandEnvironmentStringsW(path, NULL, 0);
 	buffer = malloc(buffer_size * sizeof(wchar_t));
@@ -49,7 +49,7 @@ wchar_t* _ax_get_file_path(
 	}
 
 	wchar_t* buffer = NULL;
-	size_t buffer_size = 0; 
+	DWORD buffer_size = 0; 
 
 	buffer_size = GetFinalPathNameByHandleW(file, NULL, 0, FILE_NAME_OPENED);
 	buffer = malloc((buffer_size + 1) * sizeof(wchar_t));

@@ -4,11 +4,13 @@
 AXSTATUS upd_action_install(
 	AX_IN_OPT void*			stack // STACK NOT USED
 ){
+	UNREFERENCED_PARAMETER(stack);
+
 	AXSTATUS status = AX_SUCCESS;
 
 	// Get root of the configuration data
-	const AX_DATA_ROOT root;
-	AX_DATA_TYPE root_type = DATA_TYPE_DIRECTORY;
+	const AX_DATA_ROOT root = {0};
+	AX_DATA_TYPE root_type = DATA_TYPE_REGISTRY;
 	status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		_ax_log_status(
@@ -17,7 +19,7 @@ AXSTATUS upd_action_install(
 			NULL, 
 			L"CRITICAL: Reading root of the default configuration data failed."
 		);
-		//__debugbreak();
+		__debugbreak();
 
 		return status;
 	}
@@ -64,5 +66,6 @@ AXSTATUS upd_action_install(
 AXSTATUS upd_action_update(
 	AX_IN_OPT void*			stack // STACK NOT USED
 ){
+	UNREFERENCED_PARAMETER(stack);
 	return AX_SUCCESS;
 }

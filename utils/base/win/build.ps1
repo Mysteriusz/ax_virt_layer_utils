@@ -9,16 +9,17 @@ $INCLUDE = @(
 	$($FILE_H | select -expandproperty DirectoryName | foreach {"/I"+$_})
 )
 
-$DEFINE = @("/DUNICODE", "/DAX_WINDOWS", "/DAX_UM")
+$DEFINE = @("/DUNICODE", "/DAX_WINDOWS", "/DAX_UM", "/DWIN32_LEAN_AND_MEAN")
 
 $OUTPUT_DIR = "$(Get-Location)\build"
 $OUTPUT_BIN = "ax_utility.lib"
 
 $FILE_O = @()
 foreach ($FILE in $FILE_C) {
-    $O = Join-Path $OUTPUT_DIR ($FILE.BaseName + ".obj")	
-    cl $DEFINE $INCLUDE /c($FILE.FullName) /Fo:$O
-    $FILE_O += $O
+    	$O = Join-Path $OUTPUT_DIR ($FILE.BaseName + ".obj")	
+    	cl $DEFINE $INCLUDE /Qspectre /Wall /WX /c($FILE.FullName) /Fo:$O
+    	if ($lastexitcode -gt 1) {exit}
+    	$FILE_O += $O
 }
 
 lib $FILE_O /OUT:"$OUTPUT_DIR\$OUTPUT_BIN" 

@@ -345,4 +345,3 @@ const wchar_t* upd_skip(
 
 	return null_out ? NULL : current;
 }
-

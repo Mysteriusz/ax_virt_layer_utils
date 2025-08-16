@@ -92,7 +92,7 @@ static AXSTATUS _ax_set_data_file(
 		WriteFile(
 			*(HANDLE*)root->location,
 			file_info->label,	
-			_ax_size_w(file_info->label),
+			(DWORD)_ax_size_w(file_info->label),
 			NULL,
 			NULL
 		);
@@ -108,7 +108,7 @@ static AXSTATUS _ax_set_data_file(
 	WriteFile(
 		*(HANDLE*)root->location,
 		node->value,	
-		node->value_size,
+		(DWORD)node->value_size,
 		NULL,
 		NULL
 	);

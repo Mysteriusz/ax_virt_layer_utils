@@ -1,4 +1,5 @@
 #include "upd_executor.h"
+#include "upd_parser.h"
 
 AXSTATUS upd_execute_command(
 	AX_IN const UPD_COMMAND*	command,
@@ -11,7 +12,7 @@ AXSTATUS upd_execute_command(
 		return AX_INVALID_ARGUMENT;
 	}
 
-	AXSTATUS command_validation = upd_command_validate(command);
+	AXSTATUS command_validation = upd_command_validate(command, 1);
 	if (AX_ERROR(command_validation)){
 		_ax_log_status(AX_INVALID_DATA, 1, NULL, L"COMMAND VALIDATION FAILED");
 		return AX_INVALID_DATA;
@@ -128,4 +129,3 @@ AXSTATUS upd_execute_expression(
 
 	return AX_SUCCESS;
 }
-

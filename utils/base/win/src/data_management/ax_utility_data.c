@@ -27,12 +27,11 @@ AXSTATUS ax_open_data_root(
 	switch (data_type){
 	case DATA_TYPE_DIRECTORY:
 		status = _ax_open_data_root_dir((AX_DATA_ROOT*)root, (wchar_t*)context);
-		_ax_print_w(L"kurwa");
 		break;
 	case DATA_TYPE_FILE:
 		return AX_NOT_IMPLEMENTED;
 	case DATA_TYPE_REGISTRY:
-		status = _ax_open_data_root_reg((AX_DATA_ROOT*)root);
+		status = _ax_open_data_root_reg((AX_DATA_ROOT*)root, (wchar_t*)context);
 		break;
 	case DATA_TYPE_SERVER:
 		return AX_NOT_IMPLEMENTED;
@@ -129,7 +128,6 @@ AXSTATUS ax_get_default_data(
 	}
 
 	wchar_t* temp = NULL;
-	size_t temp_size = 0;
 
 	// Setup all data nodes
 
