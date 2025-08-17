@@ -30,6 +30,7 @@ typedef unsigned long long AXSTATUS;
 #define AX_EXECUTION_ERROR		0x0000000000000005 // Execution failed
 #define AX_NOT_FOUND			0x0000000000000006 // Not found
 #define AX_ACCESS_VIOLATION		0x0000000000000007 // Access was not authorized
+#define AX_INVALID_INDEX		0x0000000000000008 // Provided index was not valid
 #define AX_BUFFER_TOO_SMALL		0x0000000000000010 // Provided buffer was too small
 #define AX_BUFFER_TOO_BIG		0x0000000000000011 // Provided buffer was too big
 #define AX_INVALID_BUFFER_SIZE		0x0000000000000012 // Provided buffer size was incorrect

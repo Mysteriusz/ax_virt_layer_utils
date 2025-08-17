@@ -26,14 +26,13 @@ AXSTATUS upd_action_install(
 
 	wchar_t* buffer = NULL;
 	size_t skipped = 0;
-	struct AX_READER_SETTINGS settings = (struct AX_READER_SETTINGS){
-		.start_index = 2,
-		.end_index = 8
-	};
+	struct AX_READER_SETTINGS settings;
+	settings.char_set = AX_PATH_CHAR_SET;
+
 	status = ax_skip_range(
-		L"some buffer",
-		L"me bu",
-		AX_READ_START_INDEX | AX_READ_END_INDEX,
+		L"\\some buffer\\some\\data\\",
+		L"data\\",
+		AX_READ_AFTER_FIRST | AX_READ_CHAR_SET,
 		&settings,
 		&buffer,
 		&skipped

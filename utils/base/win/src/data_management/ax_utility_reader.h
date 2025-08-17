@@ -6,37 +6,35 @@
 typedef wchar_t			AXCHARSET[];
 
 typedef uint64_t		AXREADFLAG;
+typedef uint8_t			AXREADMODE;
 
 /*
  	Function flow flags.
 
 */
 
-/*
- 
- 	Return first of the characters.
+#define AX_READ_MODE_FIRST(mode) \
+	(mode == AX_READ_BEFORE_FIRST \
+	|| mode == AX_READ_AFTER_FIRST \
+	|| mode == AX_READ_AT_FIRST)
+#define AX_READ_MODE_LAST(mode) \
+	(mode == AX_READ_BEFORE_LAST \
+	|| mode == AX_READ_AFTER_LAST \
+	|| mode == AX_READ_AT_LAST)
 
-	Example:
-		- other<<some>data>>>>other
-		       ^
-		      ret	
+#define AX_READ_MODE_BEFORE(mode) \
+	(mode == AX_READ_BEFORE_FIRST \
+	|| mode == AX_READ_BEFORE_LAST)
+#define AX_READ_MODE_AFTER(mode) \
+	(mode == AX_READ_AFTER_FIRST \
+	|| mode == AX_READ_AFTER_LAST)
+#define AX_READ_MODE_AT(mode) \
+	(mode == AX_READ_AT_FIRST \
+	|| mode == AX_READ_AT_LAST)
 
-*/
-#define AX_READ_FIRST		0x0000000000000001
-
-/*
- 
- 	Return last of the characters.
-
-	Example:
-		- other<<some>data>>>>other
-				     ^
-			            ret	
-	
-	THIS FLAG IS NOT APPLICABLE TO ALL FUNCTIONS.
-
-*/
-#define AX_READ_LAST		0x0000000000000002
+#define AX_READ_MODE_INVALID(mode) \
+	(mode == 0 \
+	|| mode > UINT8_MAX)
 
 /*
  
@@ -47,24 +45,74 @@ typedef uint64_t		AXREADFLAG;
 		      ^
 		     ret	
 
-	THIS FLAG IS NOT APPLICABLE TO ALL FUNCTIONS.
-
 */
-#define AX_READ_BEFORE		0x0000000000000004
+#define AX_READ_BEFORE_FIRST	0x0000000000000001
 
 /*
  
- 	Return after skipping all occurrences.
+ 	Return before the last occurrence.
+
+	Example:
+		- other<<some>data>>>>other
+				 ^
+				ret	
+
+*/
+#define AX_READ_BEFORE_LAST 	0x0000000000000002
+
+/*
+ 
+ 	Return after the first occurrence.
+
+	Example:
+		- other<<some>data>>>>other
+		         ^
+		        ret	
+
+*/
+#define AX_READ_AFTER_FIRST	0x0000000000000003
+
+/*
+ 
+ 	Return after the last occurrence.
 
 	Example:
 		- other<<some>data>>>>other
 				      ^
 				     ret	
 
-	THIS FLAG IS NOT APPLICABLE TO ALL FUNCTIONS.
+*/
+#define AX_READ_AFTER_LAST 	0x0000000000000004
+
+/*
+ 
+ 	Return at the first occurrence.
+
+	Example:
+		- other<<some>data>>>>other
+		       ^
+		      ret	
 
 */
-#define AX_READ_AFTER		0x0000000000000008
+#define AX_READ_AT_FIRST	0x0000000000000005
+
+/*
+ 
+ 	Return at the last occurrence.
+
+	Example:
+		- other<<some>data>>>>other
+				  ^
+				 ret	
+
+*/
+#define AX_READ_AT_LAST 	0x0000000000000006
+
+/*
+
+	AX Universal function control flags. 
+
+*/
 
 /*
  
@@ -79,7 +127,7 @@ typedef uint64_t		AXREADFLAG;
 	This will return AXSTATUS of value AX_PARTIAL_ERROR instead of AX_NOT_FOUND.
 
 */
-#define AX_READ_RETURN		0x0000000000000010
+#define AX_READ_RETURN		0x0000000000000100
 
 /*
  
@@ -126,13 +174,6 @@ struct AX_READER_SETTINGS {
 	uint32_t		end_index;
 };
 
-#define AX_DEFAULT_READER_SETTINGS (struct AX_READER_SETTINGS){ \
-	.label = NULL, \
-	.char_set = {0}, \
-	.start_index = 0, \
-	.end_index = 0, \
-}
-
 #define AX_DEFAULT_CHAR_SET (AXCHARSET(*))(&(AXCHARSET){ \
 	L'\0' \
 })
@@ -142,6 +183,13 @@ struct AX_READER_SETTINGS {
 	L':', \
 	L'\0' \
 })
+
+#define AX_DEFAULT_READER_SETTINGS (struct AX_READER_SETTINGS){ \
+	.label = NULL, \
+	.char_set = AX_DEFAULT_CHAR_SET, \
+	.start_index = 0, \
+	.end_index = 0, \
+}
 
 #define AX_SAFE_GET_SETTINGS(settings_ptr) ( \
 	(struct AX_READER_SETTINGS*) \
@@ -185,7 +233,18 @@ AXSTATUS ax_skip_range(
 	AX_OUT const wchar_t**			buffer,
 	AX_OUT_OPT size_t*			skipped	
 );
+AXSTATUS ax_skip_charset(
+	AX_IN const wchar_t*			text,
+	AX_IN AXCHARSET				char_set,
+	AX_OUT const wchar_t**			buffer,
+	AX_OUT_OPT size_t*			skipped
+);
 
+AXSTATUS ax_mode_offset(
+	AX_IN uint32_t				start_index,
+	AX_IN AXREADMODE			mode,
+	AX_OUT int32_t* 			index_offset
+);
 AXSTATUS ax_compare_range(
 	AX_IN const wchar_t*			text,
 	AX_IN const wchar_t*			word

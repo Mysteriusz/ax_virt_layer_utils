@@ -25,13 +25,6 @@ static inline void _ax_print_w(
 	printf("%ls\n", string);
 }
 
-static inline bool _ax_check_bit(
-	AX_IN uint64_t 		value,
-	AX_IN uint64_t		flag	
-){
-	return value & flag;
-}
-
 static inline void _ax_free_array(
 	AX_IN void**		array,
 	AX_IN size_t		array_size
@@ -40,6 +33,13 @@ static inline void _ax_free_array(
 		free(array[i]);
 	}
 	free(array);
+}
+
+static inline bool _ax_check_bit(
+	AX_IN uint64_t 		value,
+	AX_IN uint64_t		flag	
+){
+	return value & flag;
 }
 
 /*
