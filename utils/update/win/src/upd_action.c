@@ -2,16 +2,16 @@
 
 // TODO: Stack structure that lets user to use different configuration type (AX_DATA_TYPE) 
 AXSTATUS upd_action_install(
-	AX_IN_OPT void*			stack // STACK NOT USED
+	AX_IN_OPT struct UPD_INSTALL_STACK*	stack
 ){
 	UNREFERENCED_PARAMETER(stack);
 
 	AXSTATUS status = AX_SUCCESS;
 
 	// Get root of the configuration data
-	const AX_DATA_ROOT root = {0};
-	AX_DATA_TYPE root_type = DATA_TYPE_FILE;
-	status = ax_open_data_root(&root, &root_type, NULL);
+	//const AX_DATA_ROOT root = {0};
+	//AX_DATA_TYPE root_type = DATA_TYPE_FILE;
+	//status = ax_open_data_root(&root, &root_type, NULL);
 	if (AX_ERROR(status)){
 		_ax_log_status(
 			status,
@@ -24,16 +24,34 @@ AXSTATUS upd_action_install(
 		return status;
 	}
 
+	wchar_t* buffer = NULL;
+	size_t skipped = 0;
+	struct AX_READER_SETTINGS settings = (struct AX_READER_SETTINGS){
+		.start_index = 2,
+		.end_index = 8
+	};
+	status = ax_skip_range(
+		L"some buffer",
+		L"me bu",
+		AX_READ_START_INDEX | AX_READ_END_INDEX,
+		&settings,
+		&buffer,
+		&skipped
+	);
+	_ax_print_w(buffer);
+	_ax_print_s(skipped);
+	_ax_log_status(status, false, NULL, NULL);
+
 	// Set default configuration nodes
-	status = ax_set_default_data(&root);
+	//status = ax_set_default_data(&root);
 	if (AX_ERROR(status)){
-		_ax_log_status(
+		/*_ax_log_status(
 			status,
 			true, 
 			NULL, 
 			L"CRITICAL: Writing default configuration data failed."
-		);
-		__debugbreak();
+		);*/
+		//__debugbreak();
 
 		return status;
 	}

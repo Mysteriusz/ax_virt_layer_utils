@@ -2,6 +2,7 @@
 
 AXSTATUS ax_read_range(
 	AX_IN const wchar_t*			text,
+	AX_IN AXREADFLAG			flags,
 	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
 	AX_OUT wchar_t**			buffer,
 	AX_OUT size_t*				buffer_size
@@ -12,337 +13,276 @@ AXSTATUS ax_read_range(
 		return AX_INVALID_ARGUMENT;
 	}
 
-	AXSTATUS status = AX_SUCCESS;
+	/*
+	 	Setup all buffers.
+	*/
 
 	struct AX_READER_SETTINGS* settings_buffer = 
 		AX_SAFE_GET_SETTINGS(settings); 
-
-	AXCHARSET* char_set_buffer = 
-		AX_SAFE_GET_CHAR_SET(settings_buffer); 
-
-	status = ax_skip_set(
-		text,
-		*char_set_buffer,
-		&text
-	);
-	if (AX_ERROR(status)){
-		return status;
-	}
+	AXCHARSET* char_set_buffer =
+		AX_SAFE_GET_CHAR_SET(settings_buffer, flags);
+	uint32_t min_index = 
+		AX_SAFE_GET_MIN_INDEX(settings_buffer, flags); 
+	uint32_t max_index =
+		AX_SAFE_GET_MAX_INDEX(text, settings_buffer, flags); 
 	
-	status = ax_skip_text(
-		&text,
-		settings_buffer->label
-	);
-	if (AX_ERROR(status)){
-		return status;
-	}
+	/*
+	 	Set the start index and char to min_index which can be user defined.
 
-	status = ax_skip_set(
-		text,
-		*char_set_buffer,
-		&text
-	);
-	if (AX_ERROR(status)){
-		return status;
-	}
+		Example:
+			FOR text = L"some text buffer" 
+			AND flags |= AX_READ_START_INDEX
+			AND settings->min_index = 2
+				
+			- text_index = 2;
+			- text_char = L"me text buffer";
+	*/
+	uint32_t text_index = min_index;
+	const wchar_t* text_char = &text[min_index];	
 
-	wchar_t* value_buffer = NULL;
-	size_t value_buffer_span = 0;
-
-	status = ax_skip_span(
-		text,
-		*char_set_buffer,
-		&value_buffer_span
-	);
-	if (AX_ERROR(status)){
-		return status;
-	}
-
-	value_buffer_span = value_buffer_span * sizeof(wchar_t);
-
-	value_buffer = malloc(value_buffer_span);
-	memcpy(value_buffer, text, value_buffer_span);
-
-	value_buffer[value_buffer_span / sizeof(wchar_t)] = L'\0';
-
-	*buffer = value_buffer;
-	*buffer_size = value_buffer_span;
-
-	return AX_SUCCESS;
-}
-
-AXSTATUS ax_skip_text(
-	AX_IN_OUT const wchar_t**		text,
-	AX_IN wchar_t*				skip
-){
-	if (text == NULL
-	|| *text == NULL
-	|| skip == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	const wchar_t* original = *text;
-
-	uint32_t text_index = 0;
-	uint32_t skip_index = 0;
-
-	size_t text_size = _ax_size_w(original);
-	size_t skip_size = _ax_size_w(skip);
-
-	while(text_index < text_size
-		&& skip_index < skip_size
-		&& (*text)[text_index] == skip[skip_index]
-		&& (*text)[text_index] != L'\0'){
-		text_index++;
-		skip_index++;
-	}
-
-	*text = &original[text_index];
-
-	return AX_SUCCESS;
-}
-AXSTATUS ax_skip_span(
-	AX_IN const wchar_t*			text,
-	AX_IN AXCHARSET				char_set, 
-	AX_OUT size_t*				span
-){
-	if (text == NULL
-	|| char_set == NULL
-	|| span == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	const wchar_t* original = text;
-
-	uint32_t text_index = 0;
-
-	size_t text_size = _ax_size_w(original);
-
+	// Will indicate if there was any occurrances of the character
 	bool found = false;
-	while (text_index < text_size
-		&& text[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(char_set); i++){
-			found = (char_set[i] == text[text_index])
-				? true
-				: false;
 
-			if (found == true){
-				break;
-			}
-		}
+	/*
+		Until text_index is in range between min_index and max_index
 
-		if (found == true){
-			break;
-		}
+		Example:
+			FOR text = L"some buffer"
+			AND min_index = 2
+			AND max_index = 8
+			AND flags |= AX_READ_CHAR_SET
+			AND char_set_buffer = { L'f', L'\0' }
 
-		text_index++;
-	}
-
-	*span = &original[text_index] - original;
-
-	return AX_SUCCESS;
-}
-AXSTATUS ax_skip_set(
-	AX_IN const wchar_t*			text,
-	AX_IN AXCHARSET				char_set, 
-	AX_OUT const wchar_t**			buffer
-){
-	if (text == NULL
-	|| char_set == NULL
-	|| buffer == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	uint32_t text_index = 0;
-	size_t text_size = _ax_size_w(text);
-
-	bool found = false;
-	while (text_index < text_size
-	&& text[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(char_set); i++){
-			found = (char_set[i] == text[text_index])
-				? true
-				: false;
-
-			if (found == true){
-				break;
-			}
-		}
-
-		if (found == false){
-			break;
-		}
-
-		text_index++;
-	}
-
-	*buffer = &text[text_index];
-
-	return AX_SUCCESS;
-}
-
-AXSTATUS ax_char_count(
-	AX_IN const wchar_t*			text,
-	AX_IN AXCHARSET				char_set,
-	AX_OUT size_t* 				count
-){
-	if (text == NULL
-	|| char_set == NULL
-	|| count == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	uint32_t text_index = 0;
-	size_t text_size = _ax_size_w(text);
-
-	size_t count_buffer = 0;	
-	while (text_index < text_size
-	&& text[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(char_set); i++){
-			count_buffer = (char_set[i] == text[text_index])
-				? count_buffer + 1
-				: count_buffer;
-		}
-
-		text_index++;
-	}
-
-	*count = count_buffer;
-
-	return AX_SUCCESS;
-}
-
-AXSTATUS ax_split_text(
-	AX_IN const wchar_t*			text,
-	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
-	AX_OUT wchar_t***			buffer,
-	AX_OUT size_t*				buffer_size
-){
-	if (text == NULL
-	|| buffer == NULL
-	|| buffer_size == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	AXSTATUS status = AX_SUCCESS;
-
-	struct AX_READER_SETTINGS* settings_buffer = AX_SAFE_GET_SETTINGS(settings);	
-	AXCHARSET* char_set = AX_SAFE_GET_CHAR_SET(settings_buffer);	
-	size_t text_size = _ax_size_w(text); 
-	uint32_t text_index = 0; 
-
-	bool split = false;
-	uint32_t split_index = 0;	
-	size_t split_size = 0;	
-	wchar_t* split_buffer = 0;	
-
-	size_t split_array_size = 0;
-	size_t split_array_index = 0;
-	wchar_t** split_array = NULL;
-
-	status = ax_char_count(&text[text_index], *char_set, &split_array_size);
-	if (AX_ERROR(status)){
-		return status;
-	}
-
-	split_array_size++;
-	split_array = malloc(split_array_size * sizeof(wchar_t*));
-
-	if (split_array_size == 1){
-		split_array[0] = (wchar_t*)text;
-		return AX_PARTIAL_ERROR;
-	}
-
-	while (text_index < text_size
-	&& split_array_index < split_array_size
-	&& text[text_index] != L'\0'){
-		for (uint32_t i = 0; i < wcslen(*char_set); i++){
-			split = ((*char_set)[i] == text[text_index])
+			Processing will occur only within L"me buff".
+			And buffer returned will be L"me bu" as L'f' character is included in char_set_buffer. 
+	*/
+	while (text_index >= min_index
+	&& text_index < max_index){
+		// Set found to the result of the check. 
+		found = (ax_in_charset(*text_char, *char_set_buffer) == AX_SUCCESS)
 			? true
 			: false;
 
-			if (split == true){
-				break;
-			}
+		if (found == true){
+			break;
 		}
 
+		text_char++;
 		text_index++;
-
-		if (split == true
-		|| text[text_index] == L'\0'){
-			split_size = text_index - split_index;
-			if (text[text_index] != L'\0'){
-				split_size--;
-			}
-
-			split_buffer = malloc((split_size + 1) * sizeof(wchar_t));
-			memcpy(split_buffer, &text[split_index], split_size * sizeof(wchar_t));
-			split_buffer[split_size] = L'\0';
-
-			split_array[split_array_index] = split_buffer;
-
-			split_array_index++;
-			split_index = text_index;
-		}
+	}
+	
+	// If character in the set wasnt found and flags are not forcing return by AX_READ_RETURN
+	if (found == false
+	&& _ax_check_bit(flags, AX_READ_RETURN) == false){
+		return AX_NOT_FOUND;
 	}
 
-	*buffer_size = split_array_size;
-	*buffer = split_array;
+	/*
+		If found the size if equal to the difference between the last processed index and first processed index.
 
-	return AX_SUCCESS;
+		Example:
+			FOR text = L"some buffer"
+			AND min_index = 2
+			AND text_index = 8
+
+			IF found = true
+
+			some buffer
+			  ^   |  	
+			 min  |
+			      ^
+			     text 
+			
+			This would be resolved as: (7 - 2) = 5 
+
+			IF found = false 
+
+			This would be resolved as: (11 - 1) = 10 (wcslen(text))
+	*/
+	size_t range_buffer_size = 
+		(found == true)
+		? text_index - min_index
+		: _ax_size_w(text) - 1;
+
+	// Allocate the buffer and add 1 character as null-terminator.
+	wchar_t* range_buffer = malloc((range_buffer_size + 1) * sizeof(wchar_t));
+	assert(range_buffer != NULL);
+
+	// Copy from original text to the buffer.
+	memcpy(range_buffer, &text[min_index], range_buffer_size * sizeof(wchar_t));
+	range_buffer[range_buffer_size] = L'\0';
+	
+	// Write-back the data.
+	*buffer = range_buffer;
+	*buffer_size = range_buffer_size;
+
+	return (found == true)
+		? AX_SUCCESS
+		: AX_PARTIAL_ERROR;
 }
 
-AXSTATUS ax_find_text(
+AXSTATUS ax_skip_range(
 	AX_IN const wchar_t*			text,
-	AX_IN const wchar_t*			find,
-	AX_OUT const wchar_t**			buffer
+	AX_IN const wchar_t*			skip,
+	AX_IN AXREADFLAG			flags,
+	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
+	AX_OUT const wchar_t**			buffer,
+	AX_OUT_OPT size_t*			skipped	
 ){
 	if (text == NULL
-	|| find == NULL
 	|| buffer == NULL){
 		return AX_INVALID_ARGUMENT;
 	}
 
-	uint32_t text_index = 0;
-	uint32_t find_index = 0;
+	struct AX_READER_SETTINGS* settings_buffer = 
+		AX_SAFE_GET_SETTINGS(settings); 
+	AXCHARSET* char_set_buffer =
+		AX_SAFE_GET_CHAR_SET(settings_buffer, flags);
+	uint32_t min_index = 
+		AX_SAFE_GET_MIN_INDEX(settings_buffer, flags); 
+	uint32_t max_index =
+		AX_SAFE_GET_MAX_INDEX(text, settings_buffer, flags); 
 
-	size_t text_size = _ax_size_w(text);
-	size_t find_size = _ax_size_w(find);
+	/*
+	 	Set the start index and char to min_index which can be user defined.
+
+		Example:
+			FOR text = L"some text buffer" 
+			AND flags |= AX_READ_START_INDEX
+			AND settings->min_index = 2
+				
+			- text_index = 2;
+			- text_char = L"me text buffer";
+	*/
+	uint32_t text_index = min_index; 
+	const wchar_t* text_char = &text[min_index];
+
+	size_t text_size = _ax_size_w(text_char) - 1;
+	size_t skip_size = _ax_size_w(skip) - 1;
+
+	if (skip_size > text_size){
+		return AX_BUFFER_TOO_BIG;
+	}
 
 	bool found = false;
-	const wchar_t* occurrence = NULL;
 
-	while (text_index < text_size
-	&& text[text_index] != L'\0'){
-		while(find_index < find_size
-		&& text[text_index] == find[find_index]){
-			if (occurrence == NULL){
-				occurrence = &text[text_index];
-			}
+	while (text_index >= min_index
+	&& text_index < max_index){
+		// Check if char_set_buffer has the current character.
+		bool in_charset = (ax_in_charset(*text_char, *char_set_buffer) == AX_SUCCESS);
 
-			text_index++;
-			find_index++;
+		// Check if current character extends to the entire skip buffer.	
+		found = (ax_compare_range(text_char, skip) == AX_SUCCESS)
+			? true
+			: false;
 
-			if (find_index == find_size - 1){
-				found = true;	
-			}
+		// If is not the charset character AND is found then move to the write-back.
+		if (in_charset == false
+		&& found == true){
+			break;
 		}
 
-		if (found == true){
-			break;	
-		}
-
-		find_index = 0;
-		occurrence = NULL;
-		text_index++;
+		text_index++;	
+		text_char++;	
 	}
-	
+
+	// If character in the set wasnt found and flags are not forcing return by AX_READ_RETURN
+	if (found == false
+	&& _ax_check_bit(flags, AX_READ_RETURN) == false){
+		return AX_NOT_FOUND;
+	}
+
+	/*
+		If found the size if equal to the difference between the last processed index and first processed index.
+
+		Example:
+			FOR text = L"some buffer"
+			AND skip = L"me bu"
+			AND skip_size = 5
+			AND text_index = 2
+
+			IF found = true
+
+			some buffer
+			  ^   |
+		         text |
+			      ^
+			     skip
+			
+			This would be resolved as: &text[2 + 5] = L"ffer"
+
+			IF found = false 
+			
+			This would be resolved as: &text[0] = L"some buffer" 
+	*/
 	*buffer = 
 		(found == true)
-		? occurrence
+		? &text[text_index + skip_size]
 		: text;
 
+	// Size of all skipped characters.
+	if (skipped != NULL){
+		*skipped = 
+			(found == true)
+			? skip_size + text_index 
+			: 0;
+	}
+
 	return (found == true)
+		? AX_SUCCESS
+		: AX_PARTIAL_ERROR;
+}
+
+AXSTATUS ax_compare_range(
+	AX_IN const wchar_t*			text,
+	AX_IN const wchar_t*			word
+){
+	if (text == NULL
+	|| word == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	bool found = false;
+
+	const wchar_t* text_char = text;
+	const wchar_t* word_char = word;
+
+	while(*text_char == *word_char
+	&& *text_char != L'\0'){
+		word_char++;
+		text_char++;
+
+		if (*word_char == L'\0'){
+			found = true;	
+			break;
+		}
+	}
+
+	return (found == true) 
+		? AX_SUCCESS 
+		: AX_NOT_FOUND;
+}
+
+AXSTATUS ax_in_charset(
+	AX_IN const wchar_t			value,
+	AX_IN AXCHARSET				char_set
+){
+	if (char_set == NULL){
+		return AX_INVALID_ARGUMENT;
+	}
+
+	bool found = false;
+	wchar_t* current = char_set;
+
+	while(*current != L'\0'){
+		if (*current == value){
+			found = true;	
+			break;
+		}
+		current++;
+	}
+
+	return (found == true) 
 		? AX_SUCCESS 
 		: AX_NOT_FOUND;
 }

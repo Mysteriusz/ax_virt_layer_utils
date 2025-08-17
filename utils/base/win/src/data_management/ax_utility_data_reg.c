@@ -11,7 +11,7 @@ static AXSTATUS _ax_create_data_root_reg(
 		return AX_INVALID_ARGUMENT;
 	}
 
-	AXSTATUS status = AX_SUCCESS;
+	//AXSTATUS status = AX_SUCCESS;
 	LSTATUS result = NO_ERROR;	
 
 	HKEY system_buffer = NULL;
@@ -28,7 +28,7 @@ static AXSTATUS _ax_create_data_root_reg(
 		return result | AX_STATUS_LRESULT; 
 	}
 	
-	wchar_t** path_array = NULL;
+	/*wchar_t** path_array = NULL;
 	size_t path_array_size = 0;
 	struct AX_READER_SETTINGS path_settings = {
 		.label = NULL,
@@ -38,9 +38,10 @@ static AXSTATUS _ax_create_data_root_reg(
 	status = ax_split_text(path, &path_settings, &path_array, &path_array_size);
 	if (AX_ERROR(status)){
 		return status;
-	}
+	}*/
 
 	HKEY current_buffer = NULL;	
+	/*
 	HKEY previous_buffer = system_buffer;	
 	for (uint32_t i = 0; i < path_array_size; i++){
 		result = RegCreateKeyExW(
@@ -66,6 +67,7 @@ static AXSTATUS _ax_create_data_root_reg(
 		}
 	}
 	_ax_free_array(path_array, path_array_size);
+	*/
 	
 	*new_key = current_buffer;
 

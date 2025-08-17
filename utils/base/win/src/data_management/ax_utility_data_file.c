@@ -91,23 +91,23 @@ static AXSTATUS _ax_get_data_file(
 		return result | AX_STATUS_LERROR;
 	}
 
-	wchar_t* label_start = NULL; 
-	status = ax_find_text(file_buffer, node_label, &label_start); 
+	//wchar_t* label_start = NULL; 
+	//status = ax_find_text(file_buffer, node_label, &label_start); 
 	if (AX_ERROR(status)){
 		free(file_buffer);
 		return status;
 	}
 
-	struct AX_READER_SETTINGS settings = (struct AX_READER_SETTINGS){
+	/*struct AX_READER_SETTINGS settings = (struct AX_READER_SETTINGS){
 		.label = node_label,
 		.char_set = AX_DEFAULT_CHAR_SET,
-	};
-	status = ax_read_range(
+	};*/
+	/*status = ax_read_range(
 		label_start,
 		&settings,
 		&(wchar_t*)node->value,
 		&node->value_size
-	);
+	);*/
 
 	if (AX_ERROR(status)){
 		free(file_buffer);
