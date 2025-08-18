@@ -22,7 +22,7 @@ foreach ($FILE in $FILE_C) {
     	$FILE_O += $O
 }
 
-lib $FILE_O /OUT:"$OUTPUT_DIR\$OUTPUT_BIN" 
+lib $FILE_O /OUT:"$OUTPUT_DIR\$OUTPUT_BIN" /VERBOSE
 
 $OUTPUT_H = $env:AX_VIRT_H
 [string[]]$OUTPUT_FILE_H = @(

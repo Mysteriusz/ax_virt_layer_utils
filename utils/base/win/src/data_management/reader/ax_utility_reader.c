@@ -1,4 +1,5 @@
 #include "ax_utility_reader.h"
+#include "ax_utility_reader_help.h"
 
 AXSTATUS ax_read_range(
 	AX_IN const wchar_t*			text,
@@ -94,8 +95,6 @@ AXSTATUS ax_read_range(
 		? (_ax_size_w(text) - 1) - (occurrence_index + offset)
 		: _ax_size_w(text);
 
-	printf("%i\n",offset); 
-
 	wchar_t* range_buffer = malloc((range_buffer_size + 1) * sizeof(wchar_t));
 	memcpy(range_buffer, occurrence_char + offset, range_buffer_size * sizeof(wchar_t));
 
@@ -115,7 +114,7 @@ AXSTATUS ax_skip_range(
 	AX_IN AXREADFLAG			flags,
 	AX_IN_OPT struct AX_READER_SETTINGS*	settings,
 	AX_OUT const wchar_t**			buffer,
-	AX_OUT_OPT size_t*			skipped	
+	AX_OUT_OPT uint32_t*			skipped	
 ){
 	if (text == NULL
 	|| buffer == NULL){
@@ -199,15 +198,15 @@ AXSTATUS ax_skip_range(
 		return status;
 	}
 
-
 	if (AX_READ_MODE_AFTER(mode)){
-		occurrence_char += _ax_size_w(skip) - 2;
-		occurrence_index += (uint32_t)(_ax_size_w(skip) - 2);
+		occurrence_char += wcslen(skip) - 1;
+		occurrence_index += (uint32_t)(wcslen(skip) - 1);
 	}
 
 	const wchar_t* skipped_buffer = occurrence_char + offset;
-	size_t skipped_index = occurrence_index + offset;
-	size_t skipped_char_count = 0;
+	uint32_t skipped_index = occurrence_index + offset;
+
+	uint32_t skipped_char_count = 0;
 
 	status = ax_skip_charset(
 		skipped_buffer,
@@ -226,7 +225,6 @@ AXSTATUS ax_skip_range(
 		? skipped_buffer 
 		: text;
 
-	// Amount of all skipped characters.
 	if (skipped != NULL){
 		*skipped = 
 			(found == true)
@@ -243,7 +241,7 @@ AXSTATUS ax_skip_charset(
 	AX_IN const wchar_t*			text,
 	AX_IN AXCHARSET				char_set,
 	AX_OUT const wchar_t**			buffer,
-	AX_OUT_OPT size_t*			skipped
+	AX_OUT_OPT uint32_t*			skipped
 ){
 	if (text == NULL
 	|| char_set == NULL
@@ -259,98 +257,9 @@ AXSTATUS ax_skip_charset(
 
 	*buffer = text_char;
 	if (skipped != NULL){
-		*skipped = text_char - text;
+		*skipped = (uint32_t)(text_char - text);
 	}
 
 	return AX_SUCCESS;
-}
-AXSTATUS ax_mode_offset(
-	AX_IN uint32_t				start_index,
-	AX_IN AXREADMODE			mode,
-	AX_OUT int32_t* 			index_offset
-){
-	int32_t index_buffer = 0;
-	switch (mode){
-	case AX_READ_BEFORE_FIRST:
-		index_buffer = (start_index != 0)
-			? -1
-			: 0; 
-		break;
-	case AX_READ_BEFORE_LAST:
-		index_buffer = (start_index != 0)
-			? -1
-			: 0; 
-		break;
-	case AX_READ_AFTER_FIRST:
-		index_buffer = 1;
-		break;
-	case AX_READ_AFTER_LAST:
-		index_buffer = 1;
-		break;
-	case AX_READ_AT_FIRST:
-		index_buffer = 0;
-		break;
-	case AX_READ_AT_LAST:
-		index_buffer = 0;
-		break;
-	default:
-		return AX_INVALID_DATA;
-	}
-
-	*index_offset = index_buffer;
-	return AX_SUCCESS;
-}
-AXSTATUS ax_compare_range(
-	AX_IN const wchar_t*			text,
-	AX_IN const wchar_t*			word
-){
-	if (text == NULL
-	|| word == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	bool found = false;
-
-	const wchar_t* text_char = text;
-	const wchar_t* word_char = word;
-
-	while(*text_char == *word_char
-	&& *text_char != L'\0'){
-		word_char++;
-		text_char++;
-
-		if (*word_char == L'\0'){
-			found = true;	
-			break;
-		}
-	}
-
-	return (found == true) 
-		? AX_SUCCESS 
-		: AX_NOT_FOUND;
-}
-
-AXSTATUS ax_in_charset(
-	AX_IN const wchar_t			value,
-	AX_IN AXCHARSET				char_set
-){
-	if (char_set == NULL){
-		return AX_INVALID_ARGUMENT;
-	}
-
-	bool found = false;
-	wchar_t* current = char_set;
-
-	while(*current != L'\0'){
-		if (*current == value){
-			found = true;	
-			break;
-		}
-		current++;
-	}
-
-	return (found == true) 
-		? AX_SUCCESS 
-		: AX_NOT_FOUND;
 }
 

@@ -29,9 +29,8 @@ AXSTATUS upd_action_install(
 	struct AX_READER_SETTINGS settings;
 	settings.char_set = AX_PATH_CHAR_SET;
 
-	status = ax_skip_range(
+	status = ax_read_range(
 		L"\\some buffer\\some\\data\\",
-		L"data\\",
 		AX_READ_AFTER_FIRST | AX_READ_CHAR_SET,
 		&settings,
 		&buffer,
