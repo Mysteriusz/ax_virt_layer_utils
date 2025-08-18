@@ -1,5 +1,4 @@
 #include "ax_utility_reader.h"
-#include "ax_utility_reader_help.h"
 
 AXSTATUS ax_read_range(
 	AX_IN const wchar_t*			text,
@@ -57,6 +56,10 @@ AXSTATUS ax_read_range(
 			occurrence_index = text_index;
 		}
 
+		if (_ax_check_bit(flags, AX_READ_IN_PLACE) == true){
+			break;
+		}
+
 		if (AX_READ_MODE_FIRST(mode)
 		&& found == true){
 			break;
@@ -75,8 +78,8 @@ AXSTATUS ax_read_range(
 		? true
 		: false;
 	
-	if (found == false
-	&& _ax_check_bit(flags, AX_READ_RETURN) == false){
+	if (_ax_check_bit(flags, AX_READ_RETURN) == false
+	&& found == false){
 		return AX_NOT_FOUND;
 	}
 
@@ -92,8 +95,8 @@ AXSTATUS ax_read_range(
 
 	size_t range_buffer_size = 
 		(found == true)
-		? (_ax_size_w(text) - 1) - (occurrence_index + offset)
-		: _ax_size_w(text);
+		? (_ax_size_w(&text[min_index]) - 1) - (occurrence_index + offset)
+		: _ax_size_w(&text[min_index]);
 
 	wchar_t* range_buffer = malloc((range_buffer_size + 1) * sizeof(wchar_t));
 	memcpy(range_buffer, occurrence_char + offset, range_buffer_size * sizeof(wchar_t));
@@ -163,6 +166,10 @@ AXSTATUS ax_skip_range(
 		if (found == true){
 			occurrence_char = text_char;
 			occurrence_index = text_index;
+		}
+
+		if (_ax_check_bit(flags, AX_READ_IN_PLACE) == true){
+			break;
 		}
 
 		if (AX_READ_MODE_FIRST(mode)

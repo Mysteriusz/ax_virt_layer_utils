@@ -127,7 +127,14 @@ typedef uint8_t			AXREADMODE;
 	This will return AXSTATUS of value AX_PARTIAL_ERROR instead of AX_NOT_FOUND.
 
 */
-#define AX_READ_RETURN		0x0000000000000100
+#define AX_READ_RETURN		0x0000000000010000
+
+/*
+ 
+	Execute in place without searching.
+
+*/
+#define AX_READ_IN_PLACE	0x0000000000020000
 
 /*
  
@@ -216,6 +223,7 @@ struct AX_READER_SETTINGS {
 	: AX_DEFAULT_CHAR_SET \
 )
 
+#include "ax_utility_reader_help.h"
 
 AXSTATUS ax_read_range(
 	AX_IN const wchar_t*			text,
