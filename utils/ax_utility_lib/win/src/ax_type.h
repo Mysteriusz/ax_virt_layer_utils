@@ -51,6 +51,8 @@ typedef union{
 	u8 unsig_8;
 } iu64;
 
+#define chkf(v,f)	(((v) & (f)) != 0)
+
 // Characters
 
 #if defined(AX_WIN32)

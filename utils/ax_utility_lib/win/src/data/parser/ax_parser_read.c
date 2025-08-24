@@ -74,7 +74,7 @@ axres split_by(
 	bool ret_size = ((size != nullptr) && (buf == nullptr));
 	if (!ret_size){
 		if (size == nullptr
-		&& buf == nullptr){
+		|| buf == nullptr){
 			return AX_INV_BUF;
 		}
 	}

@@ -27,6 +27,7 @@
 #define AX_UMERR(r) 			(r > AX_SUCC)
 
 #define AX_LOG_HEAD 			L"--------AX_LOG--------"
+
 static void ax_log(
 	axres res
 ){
@@ -35,6 +36,17 @@ static void ax_log(
 
 	return;
 }
+
+#if defined(AX_WIN32)
+
+static void ax_log_lstat(
+	LSTATUS stat
+){
+	ax_log(stat);
+	_putws(L"--------LSTATUS--------");
+}
+
+#endif // defined(AX_WIN32)
 
 #endif // !defined(AX_ERROR_INT)
 

@@ -19,5 +19,5 @@ foreach ($file in $file_c){
 	$file_o += $temp
 }
 
-clang $flags $define $file_lib_u $file_h_u $($file_h | foreach {"-I"+$_.DirectoryName}) $file_o -o "$build_dir\ax_update.exe" "-Wl,/subsystem:console" 
+clang $flags $define $file_lib_u $file_h_u $($file_h | foreach {"-I"+$_.DirectoryName}) $file_o -ladvapi32 -o "$build_dir\ax_update.exe" "-Wl,/subsystem:console" 
 

@@ -5,6 +5,7 @@ CompileFlags:
     - -WX
     - -Wno-pragma-pack
     - -Wno-unused-function
+    - -Wno-unused-const-variable
 
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/build"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/build/headers"

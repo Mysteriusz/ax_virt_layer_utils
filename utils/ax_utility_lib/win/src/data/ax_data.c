@@ -2,6 +2,7 @@
 
 axres open_data(
 	_in c16			*uri,
+	_in i64			rule,
 	_out data_handle	*hdl
 ){
 	if (uri == nullptr){
@@ -14,7 +15,7 @@ axres open_data(
 	axres res = AX_SUCC;
 	
 	if (starts_with(uri, URI_REG) == AX_SUCC){
-		res = open_data_reg(uri, hdl);
+		res = open_data_reg(uri, rule, hdl);
 	}else if (starts_with(uri, URI_DIR) == AX_SUCC){
 		return AX_NOT_IMP;
 	}else if (starts_with(uri, URI_FILE) == AX_SUCC){

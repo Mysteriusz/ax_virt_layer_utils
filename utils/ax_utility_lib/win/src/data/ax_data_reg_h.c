@@ -31,36 +31,76 @@ HKEY res_hive(
 	}
 }
 HKEY res_path(
-	_in c16			**path_d
+	_in c16			**path_d,
+	_in u32			count,
+	_in i64			rule
 ){
-	if (path_d == nullptr){
+	if (path_d == nullptr
+	|| count == 0){
 		return null;
 	}
 	
 	HKEY hive = res_hive(path_d[0]);
-	unref(hive);
 
-	return hive;
+	HKEY buf = hive; 
+	LSTATUS stat = ERROR_SUCCESS;
+
+	u32 dwSamDesired = (chkf(rule, URI_RULE_ADM)) // Shit ass Windows naming convention
+		? KEY_ALL_ACCESS
+		: KEY_READ;
+
+	for (u32 i = 1; i < count; i++){
+		if (chkf(rule, URI_RULE_CRT)){
+			stat = RegCreateKeyExW(
+				buf,
+				path_d[i],
+				0,
+				null,
+				0,
+				dwSamDesired, 
+				nullptr,
+				&buf,
+				nullptr
+			);
+		}
+		else{
+			stat = RegOpenKeyExW(
+				buf,
+				path_d[i],
+				0,
+				dwSamDesired, 
+				&buf
+			);
+		}
+
+		if (stat != ERROR_SUCCESS){
+			ax_log_lstat(stat);
+			return null;
+		}
+	}
+
+	return buf;
 }
 
 static void *_con_reg_data(
-	_in const c16		*path
+	_in data_handle		*hdl
 ){
-	if (path == nullptr){
+	if (hdl == nullptr
+	|| hdl->con.path == nullptr){
 		return null;
 	}
 
 	c16 **path_d = nullptr; 
 	u32 path_s = 0; 
 
-	split_by(path, L"\\/", &path_s, path_d);  
+	split_by(hdl->con.path, L"\\/", &path_s, path_d);  
 	path_d = malloc(path_s * sizeof(c16*));
-	split_by(path, L"\\/", &path_s, path_d);  
+	split_by(hdl->con.path, L"\\/", &path_s, path_d);  
 
-	HKEY t = res_path(path_d);
-	printf("%p\n", t);
+	HKEY t = res_path(path_d, path_s, hdl->con.rule);
 
 	c_split_by(path_d, path_s);
+	free(path_d);
 
 	return (void*)t;
 }

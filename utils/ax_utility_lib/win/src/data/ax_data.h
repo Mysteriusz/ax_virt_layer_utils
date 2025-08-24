@@ -25,9 +25,17 @@ typedef struct _data_handle data_handle;
 
 typedef struct _data_con{
 	u8 			id; // Context identifier
-	c16			*path;
-	void			*data;
-	bool 			is_open;
+	c16			*path; // Path of the initial URI
+	i64			rule; // Rules of the handle
+	bool 			is_open; // Is handle active
+	/*
+		FOR id == CON_REG
+			data = HKEY
+		FOR id == CON_DIR
+		FOR id == CON_FILE
+	*/
+	void			*data; // System defined context data
+	void			*user_data; // User defined context data
 } data_con;
 
 /*
@@ -36,13 +44,13 @@ typedef struct _data_con{
 
 */
 
-typedef axres (*data_read)(
-	_in data_handle		hdl,	
-	_out u32		size,
+typedef axres (*read_data)(
+	_in data_handle		*hdl,	
+	_out u32		*size,
 	_in_out void		*buf
 );
 struct data_ops{
-	data_read 		read;
+	read_data 		read;
 };
 
 /*
@@ -60,8 +68,12 @@ typedef struct _data_handle{
 #define URI_DIR 		L"dir://"
 #define URI_FILE 		L"file://"
 
+#define URI_RULE_ADM		0x0001 // Request full access (KEY_ALL_ACCESS for the (HKEY)hdl->con.data)
+#define URI_RULE_CRT		0x0002 // Enforce creation of the uri (if doesn`t already exist)
+
 axres open_data(
 	_in c16			*uri,
+	_in i64			rule,
 	_out data_handle	*hdl
 );
 axres close_data(
@@ -77,19 +89,20 @@ axres close_data(
 #if !defined(AX_DATA_REG_INT) && defined(AX_WIN32)
 #define AX_DATA_REG_INT
 
-axres ops_read_reg(
-	_in data_handle		hdl,	
-	_out u32		size,
+axres read_data_reg(
+	_in data_handle		*hdl,	
+	_out u32		*size,
 	_in_out void		*buf
 );
 
 // Default registry data_ops structure
 static const struct data_ops _ops_reg = { 
-	.read = ops_read_reg 
+	.read = read_data_reg 
 };
 
 axres open_data_reg(
 	_in c16			*uri,
+	_in i64			rule,
 	_out data_handle	*hdl
 );
 axres close_data_reg(
