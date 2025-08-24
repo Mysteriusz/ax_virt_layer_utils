@@ -65,6 +65,10 @@ axres contains(
 	_in const c16 		*text,
 	_in const c16		value	
 );
+axres compare(
+	_in const c16 		*a,
+	_in const c16		*b	
+);
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
@@ -173,6 +177,17 @@ axres read_word(
 	_in const c16 		*text,
 	_out u32		*size,
 	_in_out c16		**buf
+);
+
+axres split_by(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out u32		*size, // Evaluate by using (size * sizeof(c16*))
+	_in_out c16		**buf
+);
+axres c_split_by(
+	_in c16			**buf,
+	_in u32			size
 );
 
 #endif // !defined(AX_PARSER_READ_INT)

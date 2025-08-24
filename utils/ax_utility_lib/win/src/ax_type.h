@@ -3,6 +3,10 @@
 
 #include <stdio.h>
 
+#if defined(AX_WIN32)
+#include <windows.h>
+#endif
+
 #define _in
 #define _in_opt
 

@@ -8,6 +8,8 @@ axres ops_read_reg(
 	return AX_SUCC;
 }
 
+#include "ax_data_reg_h.c"
+
 axres open_data_reg(
 	_in c16			*uri,
 	_in_out data_handle	*hdl
@@ -33,7 +35,9 @@ axres open_data_reg(
 	}
 	
 	hdl->con.id = CON_REG;
-	hdl->con.data = malloc(10); // TODO: Interface for KM allocations for different systems
+	hdl->con.path = _wcsdup(path);
+	hdl->con.data = _con_reg_data(path);
+	hdl->con.is_open = true;
 	hdl->ops = &_ops_reg; 
 
 	return AX_SUCC;
@@ -45,7 +49,10 @@ axres close_data_reg(
 		return AX_INV_ARG; 
 	}
 
-	free(hdl->con.data);
+	if (hdl->con.path != nullptr){
+		free(hdl->con.path);
+		free(hdl->con.path);
+	}
 
 	return AX_SUCC;
 }

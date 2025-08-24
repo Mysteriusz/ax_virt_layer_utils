@@ -46,6 +46,27 @@ axres contains(
 		: AX_NOT_FND;
 }
 
+axres compare(
+	_in const c16 		*a,
+	_in const c16		*b	
+){
+	if (a == nullptr
+	|| b == nullptr){
+		return AX_INV_ARG;
+	}
+
+	while(*a != L'\0'
+	&& *b != L'\0'
+	&& *a == *b){
+		a++;
+		b++;
+	}
+
+	return (*a == *b)
+		? AX_SUCC
+		: AX_NOT_FND;
+}
+
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,

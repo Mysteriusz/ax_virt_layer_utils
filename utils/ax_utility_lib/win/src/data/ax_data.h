@@ -13,12 +13,21 @@ typedef struct _data_handle data_handle;
 
 */
 
+#if defined(AX_WIN32)
+
 #define CON_REG 		0x01
+#define CON_REG_SIZE 		sizeof(HKEY)
+
+#endif
+
 #define CON_DIR 		0x02
 #define CON_FILE 		0x03
+
 typedef struct _data_con{
 	u8 			id; // Context identifier
-	void 			*data; // Context user-defined data
+	c16			*path;
+	void			*data;
+	bool 			is_open;
 } data_con;
 
 /*
