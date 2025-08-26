@@ -8,6 +8,12 @@
 #define HIVE_CR			L"HKEY_CLASSES_ROOT"
 #define HIVE_CC			L"HKEY_CURRENT_CONFIG"
 
+#define RULE_TO_SAM(rule) \
+	(chkf(rule, URI_RULE_ADM) \
+	 ? KEY_ALL_ACCESS \
+	 : KEY_READ \
+) 
+
 HKEY res_hive(
 	_in const c16		*value
 ){
@@ -45,12 +51,9 @@ HKEY res_path(
 	HKEY buf = hive; 
 	LSTATUS stat = ERROR_SUCCESS;
 
-	u32 dwSamDesired = (chkf(rule, URI_RULE_ADM)) // Shit ass Windows naming convention
-		? KEY_ALL_ACCESS
-		: KEY_READ;
-
+	u32 dwSamDesired = RULE_TO_SAM(rule);
 	for (u32 i = 1; i < count; i++){
-		if (chkf(rule, URI_RULE_CRT)){
+		if (chkf(rule, URI_RULE_CREATE)){
 			stat = RegCreateKeyExW(
 				buf,
 				path_d[i],

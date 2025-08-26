@@ -1,4 +1,5 @@
 #include "ax_data.h"
+#include "ax_data_reg_h.c"
 
 axres read_data_reg(
 	_in data_handle		*hdl,	
@@ -21,18 +22,21 @@ axres read_data_reg(
 		}
 	}
 	
-	if (hdl->con.data == nullptr
-	|| hdl->con.user_data == nullptr){
+	if (DATA_HANDLE_V(hdl)){
 		return AX_INV_DATA;
+	}
+	if (chkf(hdl->con.rule, URI_RULE_READ) == false){
+		return AX_ACC_DEN;	
 	}
 
 	LSTATUS stat = ERROR_SUCCESS;
+	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
 
 	stat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
-		(c16*)hdl->con.user_data,
+		desc->lpValueName,
 		nullptr,
-		nullptr,
+		&desc->dwType,
 		buf,
 		(LPDWORD)size
 	);
@@ -44,8 +48,59 @@ axres read_data_reg(
 
 	return AX_SUCC;
 }
+axres write_data_reg(
+	_in data_handle		*hdl,	
+	_in u32			size,
+	_in void		*buf
+){
+	if (hdl == nullptr
+	|| buf == nullptr){
+		return AX_INV_ARG;
+	}
 
-#include "ax_data_reg_h.c"
+	if (DATA_HANDLE_V(hdl)){
+		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
+		return AX_INV_DATA;
+	}
+	if (chkf(hdl->con.rule, URI_RULE_WRITE) == false){
+		return AX_ACC_DEN;	
+	}
+
+	u32 dwSamDesired = RULE_TO_SAM(hdl->con.rule);			
+	unref(dwSamDesired);
+
+	LSTATUS lstat = ERROR_SUCCESS;
+	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
+
+	// Existence check
+	lstat = RegQueryValueExW(
+		(HKEY)hdl->con.data,
+		desc->lpValueName,
+		0,
+		nullptr,
+		nullptr,
+		nullptr	
+	);
+	if ((lstat == ERROR_FILE_NOT_FOUND
+	&& chkf(hdl->con.rule, URI_RULE_CREATE))
+	|| lstat == ERROR_SUCCESS){
+		lstat = RegSetValueExW(
+			(HKEY)hdl->con.data,
+			desc->lpValueName,
+			0,
+			desc->dwType,
+			buf,
+			size
+		);
+	}
+
+	if (lstat != ERROR_SUCCESS){
+		ax_log_lstat(lstat);
+		return AX_INV_DATA;
+	}
+
+	return AX_SUCC;
+}
 
 axres open_data_reg(
 	_in c16			*uri,
@@ -82,6 +137,7 @@ axres open_data_reg(
 
 	return AX_SUCC;
 }
+
 axres close_data_reg(
 	_in data_handle 	*hdl
 ){
