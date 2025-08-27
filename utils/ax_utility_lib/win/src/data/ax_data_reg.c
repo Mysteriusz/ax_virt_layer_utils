@@ -66,9 +66,6 @@ axres write_data_reg(
 		return AX_ACC_DEN;	
 	}
 
-	u32 dwSamDesired = RULE_TO_SAM(hdl->con.rule);			
-	unref(dwSamDesired);
-
 	LSTATUS lstat = ERROR_SUCCESS;
 	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
 
@@ -114,17 +111,9 @@ axres open_data_reg(
 		return AX_INV_BUF;
 	}
 
-	if (starts_with(uri, URI_REG) != AX_SUCC){
-		return AX_INV_DATA;
-	}
-	
-	axres res = AX_SUCC;
-
-	const c16 *path = nullptr;	
-
-	res = skip_word(uri, URI_REG, &path);
-	if (AX_ERR(res)){
-		return res;
+	const c16 *path = nullptr;
+	if (URI_V(URI_REG, uri, path)){
+		return AX_INV_DATA; 
 	}
 
 	hdl->ops = &_ops_reg; 

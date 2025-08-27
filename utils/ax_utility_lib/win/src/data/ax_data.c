@@ -17,7 +17,7 @@ axres open_data(
 	if (starts_with(uri, URI_REG) == AX_SUCC){
 		res = open_data_reg(uri, rule, hdl);
 	}else if (starts_with(uri, URI_DIR) == AX_SUCC){
-		return AX_NOT_IMP;
+		res = open_data_dir(uri, rule, hdl);
 	}else if (starts_with(uri, URI_FILE) == AX_SUCC){
 		return AX_NOT_IMP;
 	}else{
@@ -42,7 +42,7 @@ axres close_data(
 	if (hdl->con.id == CON_REG){
 		res = close_data_reg(hdl);
 	}else if (hdl->con.id == CON_DIR){
-		return AX_NOT_IMP;
+		res = close_data_dir(hdl);
 	}else if (hdl->con.id == CON_FILE){
 		return AX_NOT_IMP;
 	}else{

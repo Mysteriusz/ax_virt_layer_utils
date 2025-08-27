@@ -1,0 +1,19 @@
+CompileFlags:
+  Add:
+    - -xc
+    - -Wall
+    - -WX
+    - -Wno-pragma-pack
+    - -Wno-unused-function
+
+    - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src"
+    - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data"
+    - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data/parser"
+    - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/full"
+
+    - "-DAX_WIN32"
+    - "-DAX_UM"
+
+Diagnostics:
+  Suppress:
+    - "unused-includes"
