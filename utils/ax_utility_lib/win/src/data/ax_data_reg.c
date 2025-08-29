@@ -1,6 +1,39 @@
 #include "ax_data.h"
 #include "ax_data_reg_h.c"
 
+axres push_data_reg(
+	_in data_handle 	*hdl,
+	_in u32			type,
+	_in const c16		*name
+){
+	if (hdl == nullptr
+	|| name == nullptr){
+		return AX_INV_ARG;
+	}
+
+	data_reg_desc *desc = malloc(sizeof(data_reg_desc));
+	desc->dwType = type;
+	desc->lpValueName = _wcsdup(name);
+
+	hdl->con.user_data = desc;
+
+	return AX_SUCC;
+}
+axres pop_data_reg(
+	_in data_handle 	*hdl
+){
+	if (hdl == nullptr
+	|| hdl->con.user_data == nullptr){
+		return AX_INV_ARG;
+	}
+
+	data_reg_desc *desc = (data_reg_desc*)hdl->con.user_data;
+	free((void*)desc->lpValueName);
+	free(desc);
+
+	return AX_SUCC;
+}
+
 axres read_data_reg(
 	_in data_handle		*hdl,	
 	_out u32		*size,
@@ -22,7 +55,7 @@ axres read_data_reg(
 		}
 	}
 	
-	if (DATA_HANDLE_V(hdl)){
+	if (data_handle_inv(hdl)){
 		return AX_INV_DATA;
 	}
 	if (chkf(hdl->con.rule, URI_RULE_READ) == false){
@@ -58,7 +91,7 @@ axres write_data_reg(
 		return AX_INV_ARG;
 	}
 
-	if (DATA_HANDLE_V(hdl)){
+	if (data_handle_inv(hdl)){
 		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
 		return AX_INV_DATA;
 	}

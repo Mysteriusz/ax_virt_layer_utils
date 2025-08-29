@@ -5,7 +5,7 @@ axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out c16		*buf
 ){
 	if (text == nullptr
 	|| charset == nullptr){
@@ -39,7 +39,7 @@ axres read_until(
 	if (buf_size == 0){
 		return AX_INV_DATA;
 	}
-	memcpy(*buf, start, buf_size * sizeof(c16));
+	memcpy(buf, start, buf_size * sizeof(c16));
 
 	return AX_SUCC;
 }
@@ -47,16 +47,63 @@ axres read_until(
 axres read_line(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out c16		*buf
 ){
 	return read_until(text, CHARSET_NL, size, buf);
 }
 axres read_word(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out c16		*buf
 ){
 	return read_until(text, CHARSET_WS, size, buf);
+}
+
+#include <stdarg.h>
+axres join_with(
+	_in _eval c16		*buf,
+	_in_out u32		*size,
+	_in u32 		n,
+	...
+){
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	va_list args;
+	va_start(args, n);
+
+	c16 *arg = nullptr;
+	u32 buf_size = 0;
+	u32 buf_offset = 0;
+	for (u32 i = 0; i < n; i++){
+		arg = va_arg(args, c16*);
+		buf_size += _c16len(arg);
+
+		if (!ret_size
+		&& *size <= buf_size){
+			return AX_BUF_TOO_SMALL;
+		}
+
+		if (!ret_size){
+			memcpy(&buf[buf_offset], arg, _c16len_b(arg));
+		}
+		buf_offset += _c16len(arg);
+	}
+	va_end(args);
+	
+	buf_size++;
+	if (ret_size){
+		*size = buf_size;
+		return AX_SUCC;
+	}
+	buf[buf_size - 1] = '\0';
+
+	return AX_SUCC;
 }
 
 axres split_by(
@@ -147,3 +194,4 @@ axres c_split_by(
 
 	return AX_SUCC;
 }
+

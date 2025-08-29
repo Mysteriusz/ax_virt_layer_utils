@@ -5,6 +5,8 @@ CompileFlags:
     - -WX
     - -Wno-pragma-pack
     - -Wno-unused-function
+    - -Wno-unknown-pragmas
+    - -std=c23
 
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data"

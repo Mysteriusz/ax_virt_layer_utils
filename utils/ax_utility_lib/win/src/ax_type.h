@@ -2,6 +2,7 @@
 #define AX_TYPE_INT
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #if defined(AX_WIN32)
 #include <windows.h>
@@ -16,12 +17,10 @@
 #define _in_out
 #define _in_out_opt
 
+#define _eval
+
 #define null 		(0)
 #define nullptr 	((void*)0)
-
-typedef char bool;
-#define true 		1
-#define false 		0
 
 #define unref(p)	((void)p)
 

@@ -1,6 +1,6 @@
 $build_dir = "$PSScriptRoot\build"
 
-$flags = @("-Wall", "-Werror", "-O2", "-c", "-Wno-unused-function")
+$flags = @("-Wall", "-Werror", "-O2", "-c", "-Wno-unused-function", "-std=c23")
 $define = @("-DAX_WIN32", "-DAX_UM")
 
 $file_h = gci "$PSScriptRoot\src\" -recurse -file -filter "*.h"

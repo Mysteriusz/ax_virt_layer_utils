@@ -56,3 +56,33 @@ axres close_data(
 	return AX_SUCC;
 }
 
+bool data_handle_inv(
+	_in data_handle		*hdl
+){
+	// Validate handle pointer
+	if (hdl == nullptr){
+		return true;
+	}
+	// Validate hdl->ops
+	if (hdl->ops == nullptr
+	|| hdl->ops->read == nullptr
+	|| hdl->ops->write == nullptr){
+		return true;
+	}
+
+	// Validate hdl->con
+	// con.data CAN be nullptr ONLY 
+	// when con.id is CON_DIR since it doesnt store any data other than con.path 
+	bool con_data_v = (hdl->con.id == CON_DIR)
+		? (hdl->con.data == nullptr)
+		: (hdl->con.data != nullptr);
+
+	if (hdl->con.path == null
+	|| hdl->con.is_open == false // Valid only when open
+	|| !con_data_v){
+		return true;
+	}
+
+	return false; // valid
+}
+

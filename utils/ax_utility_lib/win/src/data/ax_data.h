@@ -71,28 +71,12 @@ typedef struct _data_handle{
 	data_con 		con; // Context structure
 	const struct data_ops 	*ops; // Operator table
 } data_handle;
-// Data handle validation helper
+// Data handle invalidation check 
 // TRUE if INVALID 
 // FALSE if VALID 
-#define DATA_HANDLE_V(hdl) ({ \
-	data_con con = (hdl)->con; \
-	const struct data_ops *ops = (hdl)->ops; \
-	bool con_data_v = (con.id == CON_DIR) \
-		? (con.data == nullptr) \
-		: (con.data != nullptr); \
-	bool con_v = ( \
-		(con.path != nullptr) \
-		&& (con.is_open == true) \
-		&& con_data_v \
-	); \
-	bool ops_v = ( \
-		(ops != nullptr) \
-		&& (ops->read != nullptr) \
-		&& (ops->write != nullptr) \
-	); \
-	bool v = !(con_v && ops_v); \
-	v; \
-})
+bool data_handle_inv(
+	_in data_handle		*hdl
+);
 
 #define URI_REG 		L"reg://"
 #define URI_DIR 		L"dir://"
@@ -128,6 +112,20 @@ axres close_data(
 #if !defined(AX_DATA_REG_INT) && defined(AX_WIN32)
 #define AX_DATA_REG_INT
 
+typedef struct _data_reg_desc{
+	DWORD		dwType; // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-value-types
+	LPCWSTR		lpValueName; // Pointer to the name buffer
+} data_reg_desc;
+
+axres push_data_reg(
+	_in data_handle 	*hdl,
+	_in u32			type,
+	_in const c16		*name
+);
+axres pop_data_reg(
+	_in data_handle 	*hdl
+);
+
 /*
 
  	Operations table interface intances
@@ -146,24 +144,6 @@ axres write_data_reg(
 	_in void		*buf
 );
 
-typedef struct _data_reg_desc{
-	DWORD		dwType; // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-value-types
-	LPCWSTR		lpValueName; // Pointer to the name buffer
-} data_reg_desc;
-
-// Auto push data to the handle user_data variable.
-#define	PUSH_DATA_REG(hdl, type, name)({ \
-	data_reg_desc *desc = malloc(sizeof(data_reg_desc)); \
-	desc->dwType = (type); \
-	desc->lpValueName = name; \
-	((hdl)->con).user_data = desc; \
-})
-// Auto clears data from the handle user_data variable.
-#define POP_DATA_REG(hdl)({ \
-	if (((hdl)->con).user_data != nullptr){ \
-		free(((hdl)->con).user_data); \
-	} \
-})
 
 // Default registry data_ops structure
 static const struct data_ops _ops_reg = { 
@@ -184,6 +164,15 @@ axres close_data_reg(
 
 #if !defined(AX_DATA_DIR_INT)
 #define AX_DATA_DIR_INT 
+
+axres push_data_dir(
+	_in data_handle 	*hdl,
+	_in const c16		*ext,
+	_in const c16		*name
+);
+axres pop_data_dir(
+	_in data_handle 	*hdl
+);
 
 /*
 
@@ -208,26 +197,6 @@ static const struct data_ops _ops_dir = {
 	.read = read_data_dir,
 	.write = write_data_dir 
 };
-
-// Auto push data to the handle user_data variable.
-#define	PUSH_DATA_DIR(hdl, ext, name)({ \
-	u32 path_len = _c16len(((hdl)->con).path) * sizeof(c16); \
-	u32 name_len = _c16len((name)) * sizeof(c16); \
-	u32 ext_len = _c16len((ext)) * sizeof(c16); \
-\
-	c16 *fpath = malloc(path_len + name_len + ext_len + sizeof(c16)); \
-\
-	memcpy(fpath, ((hdl)->con).path, path_len); \
-	memcpy(&fpath[path_len / sizeof(c16)], (name), name_len); \
-	memcpy(&fpath[(path_len + name_len) / sizeof(c16)], (ext), ext_len); \
-	((hdl)->con).user_data = fpath; \
-})
-// Auto clears data from the handle user_data variable.
-#define POP_DATA_DIR(hdl)({ \
-	if (((hdl)->con).user_data != nullptr){ \
-		free(((hdl)->con).user_data); \
-	} \
-})
 
 axres open_data_dir(
 	_in c16			*uri,

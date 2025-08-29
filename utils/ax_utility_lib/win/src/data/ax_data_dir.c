@@ -4,6 +4,48 @@
 #include <wchar.h>
 #include <errno.h>
 
+axres push_data_dir(
+	_in data_handle 	*hdl,
+	_in const c16		*ext,
+	_in const c16		*name
+){
+	if (hdl == nullptr
+	|| ext == nullptr
+	|| name == nullptr){
+		return AX_INV_ARG;
+	}
+
+	axres res = AX_SUCC;
+	c16 *path = nullptr;
+	u32 size = 0;
+
+	res = join_with(path, &size, 3, hdl->con.path, name, ext);
+	if (AX_ERR(res)){
+		return res;
+	}
+	path = malloc(size * sizeof(c16));
+	res = join_with(path, &size, 3, hdl->con.path, name, ext);
+	if (AX_ERR(res)){
+		free(path);
+		return res;
+	}
+
+	hdl->con.user_data = path;
+
+	return AX_SUCC;
+}
+axres pop_data_dir(
+	_in data_handle 	*hdl
+){
+	if (hdl == nullptr
+	|| hdl->con.user_data == nullptr){
+		return AX_INV_ARG;
+	}
+
+	free(hdl->con.user_data);
+	return AX_SUCC;
+}
+
 axres read_data_dir(
 	_in data_handle		*hdl,	
 	_out u32		*size,
@@ -21,7 +63,7 @@ axres write_data_dir(
 		return AX_INV_ARG;
 	}
 
-	if (DATA_HANDLE_V(hdl)){
+	if (data_handle_inv(hdl)){
 		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
 		return AX_INV_DATA;
 	}
@@ -32,11 +74,17 @@ axres write_data_dir(
 	errno_t err = 0;
 	FILE *file = malloc(sizeof(FILE));
 	const c16 *mode = chkf(hdl->con.rule, URI_RULE_CREATE)
-		? L"w"
-		: L"r+";
+		? L"w" // Read/Write Create
+		: L"r+"; // Read/Write !Create
 
 	err = _wfopen_s(&file, hdl->con.user_data, mode);
-	if (err != 0){
+
+	// If file did not exist and 	
+	// lacked write access (URI_RULE_CREATE)
+	if (err == ENOENT
+	&& compare(mode, L"r+") == AX_SUCC){
+		return AX_ACC_DEN;
+	} else if (err != 0){
 		return AX_INV_DATA;
 	}
 

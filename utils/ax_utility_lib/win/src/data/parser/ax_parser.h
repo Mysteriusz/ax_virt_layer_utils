@@ -21,6 +21,11 @@ static u32 _c16len(
 
 	return len;
 }
+static u32 _c16len_b(
+	_in const c16 		*text
+){
+	return _c16len(text) * sizeof(c16);
+}
 
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
 #define dif_c16(s,e)		(((c16*)e - (c16*)s))
@@ -166,24 +171,31 @@ axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out _eval c16	*buf
 );
 axres read_line(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out _eval c16	*buf
 );
 axres read_word(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out _eval c16	*buf
+);
+
+axres join_with(
+	_in _eval c16		*buf,
+	_in_out u32		*size,
+	_in u32 		n,
+	...
 );
 
 axres split_by(
 	_in const c16		*text,
 	_in const c16		*charset,
 	_out u32		*size, // Evaluate by using (size * sizeof(c16*))
-	_in_out c16		**buf
+	_in_out _eval c16	**buf
 );
 axres c_split_by(
 	_in c16			**buf,
