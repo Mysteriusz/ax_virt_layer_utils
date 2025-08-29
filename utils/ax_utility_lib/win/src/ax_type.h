@@ -17,7 +17,17 @@
 #define _in_out
 #define _in_out_opt
 
-#define _eval
+/*
+	Indicates that variable HAS to be evaluated by caller POST initial call 
+
+	Example:
+		DECL: foo(u32 *size, c16 *buf);
+
+		foo(&size, buffer); // Initial call
+		buffer = allocate(size); // POST evaluation may differ depending on the function specs
+		foo(&size, buffer); // Recall evaluated
+*/
+#define _eval 
 
 #define null 		(0)
 #define nullptr 	((void*)0)

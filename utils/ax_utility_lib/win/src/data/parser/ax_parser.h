@@ -194,8 +194,8 @@ axres join_with(
 axres split_by(
 	_in const c16		*text,
 	_in const c16		*charset,
-	_out u32		*size, // Evaluate by using (size * sizeof(c16*))
-	_in_out _eval c16	**buf
+	_out u32		*size, 
+	_in_out _eval c16	**buf // Evaluate by using (size * sizeof(c16*))
 );
 axres c_split_by(
 	_in c16			**buf,

@@ -10,10 +10,23 @@ typedef struct _data_con data_con;
 
 typedef axres (*read_data)(
 	_in data_handle		*hdl,	
-	_out u32		*size,
-	_in_out void		*buf
+	_in_out u32		*size,
+	_in_out _eval void	*buf // Evaluate by malloc(size)
 );
 typedef axres (*write_data)(
+	_in data_handle		*hdl,	
+	_in u32			size,
+	_in void		*buf
+);
+
+// Invalidate common checks
+axres read_data_inv(
+	_in data_handle		*hdl,	
+	_in u32			*size,
+	_in void		*buf,
+	_out bool		*ret // Indicator of early size only return
+);
+axres write_data_inv(
 	_in data_handle		*hdl,	
 	_in u32			size,
 	_in void		*buf
@@ -134,8 +147,8 @@ axres pop_data_reg(
 // ops.read
 axres read_data_reg(
 	_in data_handle		*hdl,	
-	_out u32		*size,
-	_in_out void		*buf
+	_in_out u32		*size,
+	_in_out _eval void	*buf
 );
 // ops.write
 axres write_data_reg(
@@ -183,7 +196,7 @@ axres pop_data_dir(
 axres read_data_dir(
 	_in data_handle		*hdl,	
 	_out u32		*size,
-	_in_out void		*buf
+	_in_out _eval void	*buf
 );
 // ops.write
 axres write_data_dir(

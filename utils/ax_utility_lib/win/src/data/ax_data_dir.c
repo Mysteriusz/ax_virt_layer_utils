@@ -1,5 +1,6 @@
 #include "ax_data.h"
 #include "ax_error.h"
+
 #include <stdio.h>
 #include <wchar.h>
 #include <errno.h>
@@ -48,9 +49,41 @@ axres pop_data_dir(
 
 axres read_data_dir(
 	_in data_handle		*hdl,	
-	_out u32		*size,
-	_in_out void		*buf
+	_in_out u32		*size,
+	_in_out _eval void	*buf
 ){
+	bool ret_size = false;
+	axres res = read_data_inv(hdl, size, buf, &ret_size);
+	if (AX_ERR(res)){
+		return res;
+	}
+
+	errno_t err = 0;
+	FILE *file = malloc(sizeof(FILE));
+
+	err = _wfopen_s(&file, hdl->con.user_data, L"r");
+	if (err == ENOENT){
+		return AX_INV_DATA;
+	} 
+
+	// Get file size 
+	fseek(file, 0, SEEK_END);
+	u32 fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	// Validate buffer size 
+	res = _ax_buf_err(fsize, *size);
+	// Check size and return correct one 
+	if (AX_ERR(res)
+	&& ret_size){
+		*size = fsize;
+		return AX_SUCC;
+	} else if (AX_ERR(res)){
+		return res;
+	}
+
+	fread(buf, 1, *size, file);
+
 	return AX_SUCC;
 }
 axres write_data_dir(
@@ -58,24 +91,16 @@ axres write_data_dir(
 	_in u32			size,
 	_in void		*buf
 ){
-	if (hdl == nullptr
-	|| buf == nullptr){
-		return AX_INV_ARG;
-	}
-
-	if (data_handle_inv(hdl)){
-		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
-		return AX_INV_DATA;
-	}
-	if (chkf(hdl->con.rule, URI_RULE_WRITE) == false){
-		return AX_ACC_DEN;	
+	axres res = write_data_inv(hdl, size, buf);
+	if (AX_ERR(res)){
+		return res;
 	}
 
 	errno_t err = 0;
 	FILE *file = malloc(sizeof(FILE));
 	const c16 *mode = chkf(hdl->con.rule, URI_RULE_CREATE)
-		? L"w" // Read/Write Create
-		: L"r+"; // Read/Write !Create
+		? L"w+" // Read/Write/Create
+		: L"r+"; // Read/Write
 
 	err = _wfopen_s(&file, hdl->con.user_data, mode);
 
@@ -124,6 +149,12 @@ axres open_data_dir(
 axres close_data_dir(
 	_in data_handle 	*hdl
 ){
+	if (data_handle_inv(hdl)){
+		return AX_INV_ARG;
+	}
+
+	free(hdl->con.path);
+
 	return AX_SUCC;
 }
 

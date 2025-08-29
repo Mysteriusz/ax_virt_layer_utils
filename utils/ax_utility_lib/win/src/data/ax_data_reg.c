@@ -36,34 +36,38 @@ axres pop_data_reg(
 
 axres read_data_reg(
 	_in data_handle		*hdl,	
-	_out u32		*size,
-	_in_out void		*buf
+	_in_out u32		*size,
+	_in_out _eval void	*buf
 ){
-	if (size == nullptr){
-		return AX_INV_ARG;
-	}
-
-	bool ret_size = ((size != nullptr) && (buf == nullptr));
-	if (!ret_size){
-		if (hdl == nullptr){
-			return AX_INV_ARG;
-		}
-
-		if (size == nullptr
-		|| buf == nullptr){
-			return AX_INV_BUF;
-		}
-	}
-	
-	if (data_handle_inv(hdl)){
-		return AX_INV_DATA;
-	}
-	if (chkf(hdl->con.rule, URI_RULE_READ) == false){
-		return AX_ACC_DEN;	
+	bool ret_size = false;
+	axres res = read_data_inv(hdl, size, buf, &ret_size);
+	if (AX_ERR(res)){
+		return res;
 	}
 
 	LSTATUS stat = ERROR_SUCCESS;
 	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
+
+	// Query needed buffer size
+	DWORD fsize = 0;
+	stat = RegQueryValueExW(
+		(HKEY)hdl->con.data,
+		desc->lpValueName,
+		nullptr,
+		nullptr,
+		nullptr,
+		&fsize
+	);
+	// Validate buffer size 
+	res = _ax_buf_err(fsize, *size);
+	// Check size and return correct one 
+	if (AX_ERR(res)
+	&& ret_size){
+		*size = fsize;
+		return AX_SUCC;
+	} else if (AX_ERR(res)){
+		return res;
+	}
 
 	stat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
@@ -86,17 +90,9 @@ axres write_data_reg(
 	_in u32			size,
 	_in void		*buf
 ){
-	if (hdl == nullptr
-	|| buf == nullptr){
-		return AX_INV_ARG;
-	}
-
-	if (data_handle_inv(hdl)){
-		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
-		return AX_INV_DATA;
-	}
-	if (chkf(hdl->con.rule, URI_RULE_WRITE) == false){
-		return AX_ACC_DEN;	
+	axres res = write_data_inv(hdl, size, buf);
+	if (AX_ERR(res)){
+		return res;
 	}
 
 	LSTATUS lstat = ERROR_SUCCESS;
@@ -163,14 +159,11 @@ axres open_data_reg(
 axres close_data_reg(
 	_in data_handle 	*hdl
 ){
-	if (hdl == nullptr){
+	if (data_handle_inv(hdl)){
 		return AX_INV_ARG; 
 	}
 
-	if (hdl->con.path != nullptr){
-		free(hdl->con.path);
-	}
-
+	free(hdl->con.path);
 	CloseHandle((HKEY)hdl->con.data);
 
 	return AX_SUCC;

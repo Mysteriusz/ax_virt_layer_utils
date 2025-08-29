@@ -18,6 +18,21 @@
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)
 #define AX_BUF_TOO_BIG 			((axres)0x11)
+static inline axres _ax_buf_err(
+	u32 		size,
+	u32 		buf_size	
+){
+#if defined(AX_STRICT_BUF_SIZE)
+	if (size < buf_size){
+		return AX_BUF_TOO_BIG;
+	}
+#endif
+	if (size > buf_size){
+		return AX_BUF_TOO_SMALL;
+	}
+
+	return AX_SUCC;
+}
 
 #define AX_NOT_FND 			((axres)0x20)
 #define AX_NOT_IMP 			((axres)0x21)

@@ -1,5 +1,63 @@
 #include "ax_data.h"
 
+axres read_data_inv(
+	_in data_handle		*hdl,	
+	_in u32			*size,
+	_in void		*buf,
+	_out bool		*ret
+){
+	// default arg validation
+	if (size == nullptr
+	|| ret == nullptr){
+		return AX_INV_ARG;
+	}
+
+	// data_handle validation
+	if (data_handle_inv(hdl)){
+		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
+		return AX_INV_DATA;
+	}
+	if (chkf(hdl->con.rule, URI_RULE_READ) == false){
+		return AX_ACC_DEN;	
+	}
+	if (hdl->con.user_data == nullptr){
+		return AX_INV_ARG;
+	}
+
+	// ret_size check
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	*ret = ret_size;
+	return AX_SUCC;
+}
+axres write_data_inv(
+	_in data_handle		*hdl,	
+	_in u32			size,
+	_in void		*buf
+){
+	if (buf == nullptr){
+		return AX_INV_BUF;
+	}
+	if (data_handle_inv(hdl)){
+		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
+		return AX_INV_DATA;
+	}
+	if (chkf(hdl->con.rule, URI_RULE_WRITE) == false){
+		return AX_ACC_DEN;	
+	}
+	if (hdl->con.user_data == nullptr){
+		return AX_INV_ARG;
+	}
+
+	return AX_SUCC;
+}
+
 axres open_data(
 	_in c16			*uri,
 	_in i64			rule,
