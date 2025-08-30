@@ -182,21 +182,21 @@ axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*size,
-	_in_out _eval c16	*buf
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_line(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out _eval c16	*buf
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_word(
 	_in const c16 		*text,
 	_out u32		*size,
-	_in_out _eval c16	*buf
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 
 axres join_with(
-	_in _eval c16		*buf,
+	_in _eval c16		*buf, // Evaluate by using (size * sizeof(c16))
 	_in_out u32		*size,
 	_in u32 		n,
 	...
