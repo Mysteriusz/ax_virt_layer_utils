@@ -77,7 +77,7 @@ axres open_data(
 	}else if (starts_with(uri, URI_DIR) == AX_SUCC){
 		res = open_data_dir(uri, rule, hdl);
 	}else if (starts_with(uri, URI_FILE) == AX_SUCC){
-		return AX_NOT_IMP;
+		res = open_data_file(uri, rule, hdl);
 	}else{
 		return AX_INV_DATA;
 	}

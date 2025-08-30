@@ -85,27 +85,49 @@ HKEY res_path(
 	return buf;
 }
 
-static void *_con_reg_data(
-	_in data_handle		*hdl
+axres con_reg_data(
+	_in data_handle		*hdl,
+	_out HKEY		*buf
 ){
 	if (hdl == nullptr
 	|| hdl->con.path == nullptr){
-		return null;
+		return AX_INV_ARG;
 	}
+	if (buf == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
 
 	c16 **path_d = nullptr; 
 	u32 path_s = 0; 
 
-	split_by(hdl->con.path, L"\\/", &path_s, path_d);  
-	path_d = malloc(path_s * sizeof(c16*));
-	split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	// Split path into keys to follow 
+	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	if (AX_ERR(res)){
+		return res;
+	}
 
+	path_d = malloc(path_s * sizeof(c16*));
+
+	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	if (AX_ERR(res)){
+		return res;
+	}
+
+	// Resolve key handle from array
 	HKEY t = res_path(path_d, path_s, hdl->con.rule);
+	if (t == null){
+		ax_log_msg(AX_INV_DATA, L"Resolving registry path failed");
+		return AX_INV_DATA;
+	}
 
 	c_split_by(path_d, path_s);
 	free(path_d);
 
-	return (void*)t;
+	*buf = t;
+
+	return AX_SUCC;
 }
 
 #endif

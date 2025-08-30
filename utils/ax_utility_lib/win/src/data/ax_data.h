@@ -101,6 +101,37 @@ bool data_handle_inv(
 #define URI_RULE_READ		0x0004 // Allow for reading 
 #define URI_RULE_WRITE		0x0008 // Allow for writing
 
+#define RULE_EVAL_N 		4
+#define RULE_EVAL(r)		(struct eval_node[]){ \
+	(struct eval_node){ \
+	 	.func = ( \
+			chkf((r), URI_RULE_CREATE) \
+			&& chkf((r), URI_RULE_READ) \
+			&& chkf((r), URI_RULE_WRITE) \
+		), \
+		.ret = L"w+" \
+	}, \
+	(struct eval_node){ \
+	 	.func = ( \
+			chkf((r), URI_RULE_READ) \
+			&& chkf((r), URI_RULE_WRITE) \
+		), \
+		.ret = L"r+" \
+	}, \
+	(struct eval_node){ \
+	 	.func = ( \
+			chkf((r), URI_RULE_READ) \
+		), \
+		.ret = L"r" \
+	}, \
+	(struct eval_node){ \
+	 	.func = ( \
+			chkf((r), URI_RULE_WRITE) \
+		), \
+		.ret = L"w" \
+	} \
+}
+
 // URI scheme validation
 #define URI_V(uri_md, uri, uri_p)( \
 	(starts_with(uri, uri_md) != AX_SUCC) \
@@ -221,6 +252,53 @@ axres close_data_dir(
 );
 
 #endif // !defined(AX_DATA_DIR_INT)
+
+#if !defined(AX_DATA_FILE_INT)
+#define AX_DATA_FILE_INT
+
+axres push_data_file(
+	_in data_handle 	*hdl,
+	_in const c16		*label,
+	_in const c16		*delim
+);
+axres pop_data_file(
+	_in data_handle 	*hdl
+);
+ 
+/*
+
+ 	Operations table interface intances
+
+*/
+// ops.read
+axres read_data_file(
+	_in data_handle		*hdl,	
+	_out u32		*size,
+	_in_out _eval void	*buf
+);
+// ops.write
+axres write_data_file(
+	_in data_handle		*hdl,	
+	_in u32			size,
+	_in void		*buf
+);
+
+// Default file data_ops table 
+static const struct data_ops _ops_file = { 
+	.read = read_data_file,
+	.write = write_data_file 
+};
+
+axres open_data_file(
+	_in c16			*uri,
+	_in i64			rule,
+	_out data_handle	*hdl
+);
+axres close_data_file(
+	_in data_handle 	*hdl
+);
+
+#endif // !defined(AX_DATA_FILE_INT)
 
 #endif // !defined(AX_DATA_INT)
 

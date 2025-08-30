@@ -140,6 +140,8 @@ axres open_data_reg(
 		return AX_INV_BUF;
 	}
 
+	axres res = AX_SUCC;
+
 	const c16 *path = nullptr;
 	if (URI_V(URI_REG, uri, path)){
 		return AX_INV_DATA; 
@@ -151,7 +153,13 @@ axres open_data_reg(
 	hdl->con.path = _wcsdup(path);
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
-	hdl->con.data = _con_reg_data(hdl);
+
+	res = con_reg_data(hdl, (HKEY*)&hdl->con.data);
+	if (AX_ERR(res)){
+		free(hdl->con.path);
+		memset(hdl, 0x00, sizeof(data_handle));
+		return res;
+	}
 
 	return AX_SUCC;
 }

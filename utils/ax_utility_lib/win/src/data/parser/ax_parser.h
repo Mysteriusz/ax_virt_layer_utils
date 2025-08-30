@@ -102,6 +102,17 @@ axres find_substr(
 	_out const c16		**loc 
 );
 
+struct eval_node{
+	bool 			func; 
+	c16 			*ret;
+};
+// Finds eval_node and returns its value
+axres find_eval_node(
+	_in u32			n,
+	_in struct eval_node	*nodes,
+	_out c16		**ret
+);
+
 #endif // !defined(AX_PARSER_FIND_INT)
 
 /*

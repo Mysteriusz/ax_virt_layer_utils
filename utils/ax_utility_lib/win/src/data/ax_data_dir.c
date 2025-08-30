@@ -83,6 +83,7 @@ axres read_data_dir(
 	}
 
 	fread(buf, 1, *size, file);
+	fclose(file);
 
 	return AX_SUCC;
 }

@@ -39,6 +39,8 @@ static inline axres _ax_buf_err(
 
 #define AX_ACC_DEN			((axres)0x40)
 
+#define AX_UNK_ERR 			((axres)0x80)
+
 #define AX_ERR(r) 			(r != AX_SUCC)
 #define AX_KMERR(r) 			(r < AX_SUCC)
 #define AX_UMERR(r) 			(r > AX_SUCC)
@@ -51,6 +53,23 @@ static void ax_log(
 	_putws(AX_LOG_HEAD);
 	printf("%lld\n", res);
 }
+static void ax_log_errno(
+	errno_t			err
+){
+	ax_log(err);
+	_putws(L"--------ERRNO_T--------");
+}
+
+#if defined(AX_WIN32)
+
+static void ax_log_lstat(
+	LSTATUS 		stat
+){
+	ax_log(stat);
+	_putws(L"--------LSTATUS--------");
+}
+
+#endif // defined(AX_WIN32)
 
 static void ax_log_msg(
 	axres 			res,
@@ -60,19 +79,6 @@ static void ax_log_msg(
 	_putws(L"Message buffer:");
 	_putws(msg);
 }
-
-#if defined(AX_WIN32)
-
-#define AX_LOG_HEAD_LSTAT 		L"--------LSTATUS--------"
-
-static void ax_log_lstat(
-	LSTATUS 		stat
-){
-	ax_log(stat);
-	_putws(AX_LOG_HEAD_LSTAT);
-}
-
-#endif // defined(AX_WIN32)
 
 #endif // !defined(AX_ERROR_INT)
 

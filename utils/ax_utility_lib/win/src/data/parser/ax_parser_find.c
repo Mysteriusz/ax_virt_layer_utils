@@ -56,3 +56,30 @@ axres find_substr(
 		: AX_NOT_FND;
 }
 
+axres find_eval_node(
+	_in u32			n,
+	_in struct eval_node	*nodes,
+	_out c16		**ret
+){
+	if (nodes == nullptr){
+		return AX_INV_ARG; 
+	}
+	if (ret == nullptr){
+		return AX_INV_BUF; 
+	}
+
+	struct eval_node curr = nodes[0];
+	for (u32 i = 0; i < n; i++){
+		if (curr.func == true){
+			*ret = curr.ret;
+			break;
+		}
+		curr = nodes[i];
+	}
+	if (*ret == nullptr){
+		return AX_NOT_FND;
+	}
+
+	return AX_SUCC;
+}
+
