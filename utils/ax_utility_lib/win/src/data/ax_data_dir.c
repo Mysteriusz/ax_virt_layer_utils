@@ -1,10 +1,6 @@
 #include "ax_data.h"
 #include "ax_error.h"
 
-#include <stdio.h>
-#include <wchar.h>
-#include <errno.h>
-
 axres push_data_dir(
 	_in data_handle 	*hdl,
 	_in const c16		*ext,
@@ -18,18 +14,23 @@ axres push_data_dir(
 
 	axres res = AX_SUCC;
 	c16 *path = nullptr;
+
+#if defined(AX_UM)
 	u32 size = 0;
 
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
 	if (AX_ERR(res)){
 		return res;
 	}
-	path = malloc(size * sizeof(c16));
+	path = axmalloc(size * sizeof(c16));
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
 	if (AX_ERR(res)){
-		free(path);
+		axfree(path);
 		return res;
 	}
+#elif defined(AX_KM)
+	unref(res);
+#endif
 
 	hdl->con.user_data = path;
 
@@ -43,7 +44,7 @@ axres pop_data_dir(
 		return AX_INV_ARG;
 	}
 
-	free(hdl->con.user_data);
+	axfree(hdl->con.user_data);
 	return AX_SUCC;
 }
 
@@ -58,7 +59,8 @@ axres read_data_dir(
 		return res;
 	}
 
-	errno_t err = 0;
+#if defined(AX_UM)
+	axres err = 0;
 	FILE *file = malloc(sizeof(FILE));
 
 	err = _wfopen_s(&file, hdl->con.user_data, L"r");
@@ -84,6 +86,8 @@ axres read_data_dir(
 
 	fread(buf, 1, *size, file);
 	fclose(file);
+#elif defined(AX_KM)
+#endif
 
 	return AX_SUCC;
 }
@@ -97,8 +101,9 @@ axres write_data_dir(
 		return res;
 	}
 
+#if defined(AX_UM)
 	errno_t err = 0;
-	FILE *file = malloc(sizeof(FILE));
+	FILE *file = axmalloc(sizeof(FILE));
 	const c16 *mode = chkf(hdl->con.rule, URI_RULE_CREATE)
 		? L"w+" // Read/Write/Create
 		: L"r+"; // Read/Write
@@ -116,6 +121,8 @@ axres write_data_dir(
 
 	fwrite(buf, size, 1, file);
 	fclose(file);
+#elif defined(AX_KM)
+#endif
 
 	return AX_SUCC;
 }
@@ -154,7 +161,7 @@ axres close_data_dir(
 		return AX_INV_ARG;
 	}
 
-	free(hdl->con.path);
+	axfree(hdl->con.path);
 
 	return AX_SUCC;
 }

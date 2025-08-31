@@ -1,4 +1,5 @@
 #include "ax_utility.h"
+#include "noded.h"
 
 int main(
 	void
@@ -7,7 +8,7 @@ int main(
 
 	data_handle hdl = {0};
 	c16 *ptr = L"my_value";
-	/*open_data(
+	open_data(
 		L"reg://HKEY_LOCAL_MACHINE//Software//AX_VIRTUALIZATION", 
 		URI_RULE_WRITE | URI_RULE_READ | URI_RULE_ADM,
 		&hdl
@@ -17,6 +18,10 @@ int main(
 	c16* b = nullptr;
 
 	push_data_reg(&hdl, REG_SZ, L"base_directory");
+	res = hdl.ops->write(&hdl, sizeof(L"my_value"), ptr);
+	pop_data_reg(&hdl);
+
+	push_data_reg(&hdl, REG_SZ, L"base_directory");
 
 	res = hdl.ops->read(&hdl, &s, b);
 	b = malloc(s);
@@ -24,9 +29,6 @@ int main(
 
 	pop_data_reg(&hdl);
 
-	push_data_reg(&hdl, REG_SZ, L"base_directory");
-	res = hdl.ops->write(&hdl, sizeof(L"my_value"), ptr);
-	pop_data_reg(&hdl);*/
 
 	/*open_data(
 		L"dir://C://", 
@@ -49,14 +51,13 @@ int main(
 
 	pop_data_dir(&hdl);*/
 
-	res = open_data(
+	/*res = open_data(
 		L"file://C://ax_info.yml", 
 		URI_RULE_READ | URI_RULE_WRITE,
 		&hdl
-	);
-	ax_log(res);
-	printf("%ls\n", hdl.con.path); 
+	);*/
 
+	ax_log(res);
 	close_data(&hdl);
 
 	return 0;

@@ -2,19 +2,21 @@
 
 #if defined(AX_WIN32)
 
-#define HIVE_CU			L"HKEY_CURRENT_USER"
-#define HIVE_U			L"HKEY_USERS"
-#define HIVE_LM			L"HKEY_LOCAL_MACHINE"
-#define HIVE_CR			L"HKEY_CLASSES_ROOT"
-#define HIVE_CC			L"HKEY_CURRENT_CONFIG"
-
 #define RULE_TO_SAM(rule) \
 	(chkf(rule, URI_RULE_ADM) \
 	 ? KEY_ALL_ACCESS \
 	 : KEY_READ \
 ) 
 
-HKEY res_hive(
+#if defined(AX_UM)
+
+#define HIVE_CU			L"HKEY_CURRENT_USER"
+#define HIVE_U			L"HKEY_USERS"
+#define HIVE_LM			L"HKEY_LOCAL_MACHINE"
+#define HIVE_CR			L"HKEY_CLASSES_ROOT"
+#define HIVE_CC			L"HKEY_CURRENT_CONFIG"
+
+void *res_hive(
 	_in const c16		*value
 ){
 	if (value == nullptr){
@@ -36,43 +38,62 @@ HKEY res_hive(
 		return null;
 	}
 }
-HKEY res_path(
-	_in c16			**path_d,
-	_in u32			count,
-	_in i64			rule
+#endif // defined(AX_UM)
+void *res_path(
+	_in data_handle 	*hdl
 ){
-	if (path_d == nullptr
-	|| count == 0){
-		return null;
+	if (hdl == nullptr){
+		return nullptr;
 	}
-	
-	HKEY hive = res_hive(path_d[0]);
 
-	HKEY buf = hive; 
+	axres res = AX_SUCC;
+	HANDLE *buf = nullptr; 
+
+#if defined(AX_UM)
+	u32 path_s = 0;
+	c16 **path_d = nullptr; 
+
+	// Split path into keys to follow 
+	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	if (AX_ERR(res)){
+		ax_log(res);
+		return nullptr;
+	}
+
+	path_d = axmalloc(path_s * sizeof(c16*));
+
+	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	if (AX_ERR(res)){
+		ax_log(res);
+		return nullptr;
+	}
+	HANDLE hive = res_hive(path_d[0]);
+
+	buf = hive; 
 	LSTATUS stat = ERROR_SUCCESS;
 
-	u32 dwSamDesired = RULE_TO_SAM(rule);
-	for (u32 i = 1; i < count; i++){
-		if (chkf(rule, URI_RULE_CREATE)){
+	u32 dwSamDesired = RULE_TO_SAM(hdl->con.rule);
+	for (u32 i = 1; i < path_s; i++){
+		if (chkf(hdl->con.rule, URI_RULE_CREATE)){
 			stat = RegCreateKeyExW(
-				buf,
+				(HKEY)buf,
 				path_d[i],
 				0,
 				null,
 				0,
 				dwSamDesired, 
 				nullptr,
-				&buf,
+				(PHKEY)&buf,
 				nullptr
 			);
 		}
 		else{
 			stat = RegOpenKeyExW(
-				buf,
+				(HKEY)buf,
 				path_d[i],
 				0,
 				dwSamDesired, 
-				&buf
+				(PHKEY)&buf
 			);
 		}
 
@@ -81,13 +102,58 @@ HKEY res_path(
 			return null;
 		}
 	}
+// TODO:
+#elif defined(AX_KM)
+	unref(res);
+
+	c16 *path_d = nullptr;
+	ACCESS_MASK mask = RULE_TO_SAM(hdl->con.rule);        
+
+	UNICODE_STRING str = {0};
+	RtlInitUnicodeString(
+		&str, 
+		path_d
+	);
+
+	// Initialize attributes for the root handle
+	OBJECT_ATTRIBUTES root_attr = {0};   
+	InitializeObjectAttributes(
+		&root_attr,
+		&str,
+		OBJ_EXCLUSIVE,
+		nullptr,
+		nullptr
+	);
+
+	HANDLE root = null;
+	ZwCreateDirectoryObject(
+		&root,
+		DIRECTORY_CREATE_SUBDIRECTORY | DIRECTORY_CREATE_OBJECT,
+		&root_attr
+	);
+
+	OBJECT_ATTRIBUTES buf_attr = {0};   
+	InitializeObjectAttributes(
+		&buf_attr,
+		&str,
+		OBJ_EXCLUSIVE,
+		root,
+		nullptr
+	);
+
+	ZwOpenKey(
+		&buf, 
+		mask,
+		&buf_attr
+	);
+#endif 
 
 	return buf;
 }
 
 axres con_reg_data(
 	_in data_handle		*hdl,
-	_out HKEY		*buf
+	_out HANDLE 		*buf
 ){
 	if (hdl == nullptr
 	|| hdl->con.path == nullptr){
@@ -97,33 +163,12 @@ axres con_reg_data(
 		return AX_INV_BUF;
 	}
 
-	axres res = AX_SUCC;
-
-	c16 **path_d = nullptr; 
-	u32 path_s = 0; 
-
-	// Split path into keys to follow 
-	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
-	if (AX_ERR(res)){
-		return res;
-	}
-
-	path_d = malloc(path_s * sizeof(c16*));
-
-	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
-	if (AX_ERR(res)){
-		return res;
-	}
-
 	// Resolve key handle from array
-	HKEY t = res_path(path_d, path_s, hdl->con.rule);
+	HANDLE t = res_path(hdl);
 	if (t == null){
 		ax_log_msg(AX_INV_DATA, L"Resolving registry path failed");
 		return AX_INV_DATA;
 	}
-
-	c_split_by(path_d, path_s);
-	free(path_d);
 
 	*buf = t;
 

@@ -1,12 +1,31 @@
 #if !defined(AX_TYPE_INT)
 #define AX_TYPE_INT
 
-#include <stdio.h>
-#include <stdbool.h>
+#if defined(AX_KM) && defined(AX_UM)
+#error "Cannot define both AX_UM and AX_KM"
+#elif !defined(AX_UM) && !defined(AX_KM)
+#error "Undefined target build mode. (AX_UM/AX_KM)"
+#endif
+
+#if defined(AX_WIN32) && defined(AX_LINUX)
+#error "Cannot define both AX_WIN32 and AX_LINUX"
+#elif !defined(AX_WIN32) && !defined(AX_LINUX)
+#error "Undefined target system. (AX_WIN32/AX_LINUX)"
+#endif
+
+#if defined(AX_KM)
+#define AX_STRICT_BUF_SIZE 
+#endif
 
 #if defined(AX_WIN32)
+
+#if defined(AX_UM)
 #include <windows.h>
+#elif defined(AX_KM)
+#include <ntddk.h>
 #endif
+
+#endif // defined(AX_WIN32)
 
 #define _in
 #define _in_opt
@@ -33,6 +52,11 @@
 #define nullptr 	((void*)0)
 
 #define unref(p)	((void)p)
+
+#include <stdbool.h>
+#if defined(AX_UM)
+#include <stdio.h>
+#endif
 
 // Numerical 
 

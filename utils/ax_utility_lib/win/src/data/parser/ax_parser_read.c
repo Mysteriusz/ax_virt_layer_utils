@@ -1,5 +1,4 @@
 #include "ax_parser.h"
-#include <string.h>
 
 axres read_until(
 	_in const c16 		*text,
@@ -59,6 +58,7 @@ axres read_word(
 	return read_until(text, CHARSET_WS, size, buf);
 }
 
+#if !defined(AX_KM)
 #include <stdarg.h>
 axres join_with(
 	_in _eval c16		*buf,
@@ -105,6 +105,7 @@ axres join_with(
 
 	return AX_SUCC;
 }
+#endif // !defined(AX_KM)
 
 axres split_by(
 	_in const c16		*text,
@@ -159,7 +160,7 @@ axres split_by(
 
 		if (dif_size > 0
 		&& !ret_size){
-			c16 *t = malloc((dif_size + 1) * sizeof(c16));
+			c16 *t = axmalloc((dif_size + 1) * sizeof(c16));
 			memcpy(t, start, dif_size * sizeof(c16)); 
 			t[dif_size] = L'\0';
 
@@ -189,7 +190,7 @@ axres c_split_by(
 	}
 
 	for (u32 i = 0; i < size; i++){
-		free((void*)buf[i]);
+		axfree((void*)buf[i]);
 	}
 
 	return AX_SUCC;

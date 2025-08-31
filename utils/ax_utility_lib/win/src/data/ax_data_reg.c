@@ -11,9 +11,9 @@ axres push_data_reg(
 		return AX_INV_ARG;
 	}
 
-	data_reg_desc *desc = malloc(sizeof(data_reg_desc));
-	desc->dwType = type;
-	desc->lpValueName = _wcsdup(name);
+	data_reg_desc *desc = axmalloc(sizeof(data_reg_desc));
+	desc->type = type;
+	desc->name = _wcsdup(name);
 
 	hdl->con.user_data = desc;
 
@@ -28,8 +28,10 @@ axres pop_data_reg(
 	}
 
 	data_reg_desc *desc = (data_reg_desc*)hdl->con.user_data;
-	free((void*)desc->lpValueName);
-	free(desc);
+	if (desc->name != nullptr){
+		axfree(desc->name);
+	}
+	axfree(desc);
 
 	return AX_SUCC;
 }
@@ -45,6 +47,7 @@ axres read_data_reg(
 		return res;
 	}
 
+#if defined(AX_UM)
 	LSTATUS stat = ERROR_SUCCESS;
 	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
 
@@ -52,7 +55,7 @@ axres read_data_reg(
 	DWORD fsize = 0;
 	stat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
-		desc->lpValueName,
+		desc->name,
 		nullptr,
 		nullptr,
 		nullptr,
@@ -71,9 +74,9 @@ axres read_data_reg(
 
 	stat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
-		desc->lpValueName,
+		desc->name,
 		nullptr,
-		&desc->dwType,
+		(DWORD*)&desc->type,
 		buf,
 		(LPDWORD)size
 	);
@@ -82,6 +85,7 @@ axres read_data_reg(
 		ax_log_lstat(stat);
 		return AX_INV_DATA;
 	}
+#endif // defined(AX_UM)
 
 	return AX_SUCC;
 }
@@ -95,13 +99,14 @@ axres write_data_reg(
 		return res;
 	}
 
+#if defined(AX_UM)
 	LSTATUS lstat = ERROR_SUCCESS;
 	data_reg_desc *desc = ((data_reg_desc*)(hdl->con.user_data));
 
 	// Existence check
 	lstat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
-		desc->lpValueName,
+		desc->name,
 		0,
 		nullptr,
 		nullptr,
@@ -112,9 +117,9 @@ axres write_data_reg(
 	|| lstat == ERROR_SUCCESS){
 		lstat = RegSetValueExW(
 			(HKEY)hdl->con.data,
-			desc->lpValueName,
+			desc->name,
 			0,
-			desc->dwType,
+			desc->type,
 			buf,
 			size
 		);
@@ -124,6 +129,7 @@ axres write_data_reg(
 		ax_log_lstat(lstat);
 		return AX_INV_DATA;
 	}
+#endif // defined(AX_UM)
 
 	return AX_SUCC;
 }
@@ -154,9 +160,9 @@ axres open_data_reg(
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
 
-	res = con_reg_data(hdl, (HKEY*)&hdl->con.data);
+	res = con_reg_data(hdl, &hdl->con.data);
 	if (AX_ERR(res)){
-		free(hdl->con.path);
+		axfree(hdl->con.path);
 		memset(hdl, 0x00, sizeof(data_handle));
 		return res;
 	}
@@ -171,8 +177,12 @@ axres close_data_reg(
 		return AX_INV_ARG; 
 	}
 
-	free(hdl->con.path);
+	axfree(hdl->con.path);
+#if defined(AX_UM)
 	CloseHandle((HKEY)hdl->con.data);
+#elif defined(AX_KM)
+	ZwClose((HANDLE)hdl->con.data);
+#endif
 
 	return AX_SUCC;
 }

@@ -49,7 +49,7 @@ static u32 _c16len_b(
 			return AX_INV_ARG;
 		}
 		if (size == nullptr
-		&& buf == nullptr){
+		|| buf == nullptr){
 			return AX_INV_BUF;
 		}
 	}
@@ -61,6 +61,12 @@ static u32 _c16len_b(
  	Internal interface
 
 */
+
+typedef struct _text_settings{
+	c16 		*spac; 
+	c16 		*label;
+	c16 		*suf;
+} text_settings;
 
 axres starts_with(
 	_in const c16		*text,
@@ -195,12 +201,14 @@ axres read_word(
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 
+#if !defined(AX_KM)
 axres join_with(
 	_in _eval c16		*buf, // Evaluate by using (size * sizeof(c16))
 	_in_out u32		*size,
 	_in u32 		n,
 	...
 );
+#endif
 
 axres split_by(
 	_in const c16		*text,

@@ -3,7 +3,9 @@
 
 #include "ax_parser.h"
 
-#include <stdlib.h>
+#if defined(AX_UM)
+#include <stdio.h>
+#endif
 
 typedef struct _data_handle data_handle; 
 typedef struct _data_con data_con; 
@@ -157,8 +159,8 @@ axres close_data(
 #define AX_DATA_REG_INT
 
 typedef struct _data_reg_desc{
-	DWORD		dwType; // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-value-types
-	LPCWSTR		lpValueName; // Pointer to the name buffer
+	u32		type; // https://learn.microsoft.com/en-us/windows/win32/sysinfo/registry-value-types
+	c16		*name; // Pointer to the name buffer
 } data_reg_desc;
 
 axres push_data_reg(
@@ -255,6 +257,12 @@ axres close_data_dir(
 
 #if !defined(AX_DATA_FILE_INT)
 #define AX_DATA_FILE_INT
+
+// Defines the syntax in which value is stored.
+// TODO: XML,CSV,YAML and more formats support.
+enum data_form{
+	DF_NODED = 0,
+};
 
 axres push_data_file(
 	_in data_handle 	*hdl,

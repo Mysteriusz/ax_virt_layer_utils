@@ -2,6 +2,50 @@
 #include "ax_error.h"
 #include "ax_data_file_h.c"
 
+axres push_data_file(
+	_in data_handle 	*hdl,
+	_in const c16		*label,
+	_in const c16		*delim
+){
+	if (hdl == nullptr
+	|| label == nullptr
+	|| delim == nullptr){
+		return AX_INV_ARG;
+	}
+
+	return AX_SUCC;
+}
+axres pop_data_file(
+	_in data_handle 	*hdl
+){
+	if (hdl == nullptr
+	|| hdl->con.user_data == nullptr){
+		return AX_INV_ARG;
+	}
+
+	return AX_SUCC;
+}
+
+axres read_data_file(
+	_in data_handle		*hdl,	
+	_out u32		*size,
+	_in_out _eval void	*buf
+){
+	return AX_SUCC;
+}
+axres write_data_file(
+	_in data_handle		*hdl,	
+	_in u32			size,
+	_in void		*buf
+){
+	axres res = write_data_inv(hdl, size, buf);
+	if (AX_ERR(res)){
+		return res;
+	}
+
+	return AX_SUCC;
+}
+
 axres open_data_file(
 	_in c16			*uri,
 	_in i64			rule,
@@ -28,9 +72,9 @@ axres open_data_file(
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
 
-	res = con_file_data(hdl, (FILE**)&hdl->con.data);
+	res = con_file_data(hdl, &hdl->con.data);
 	if (AX_ERR(res)){
-		free(hdl->con.path);
+		axfree(hdl->con.path);
 		memset(hdl, 0x00, sizeof(data_handle));
 		return res;
 	}
@@ -44,23 +88,8 @@ axres close_data_file(
 		return AX_INV_ARG;
 	}
 
-	free(hdl->con.path);
+	axfree(hdl->con.path);
 
-	return AX_SUCC;
-}
-
-axres read_data_file(
-	_in data_handle		*hdl,	
-	_out u32		*size,
-	_in_out _eval void	*buf
-){
-	return AX_SUCC;
-}
-axres write_data_file(
-	_in data_handle		*hdl,	
-	_in u32			size,
-	_in void		*buf
-){
 	return AX_SUCC;
 }
 
