@@ -57,9 +57,11 @@ typedef struct _data_con{
 	bool 			is_open; // Is handle active
 	/*
 		FOR id == CON_REG
-			data = HKEY
+			data = HANDLE as HKEY
 		FOR id == CON_DIR
+			data = nullptr 
 		FOR id == CON_FILE
+			data = io_file* 
 	*/
 	void			*data; // System defined context data
 	void			*user_data; // User defined context data
@@ -71,6 +73,18 @@ typedef struct _data_con{
 
 */
 
+/*
+ 	Every data_ops function must be validated by its 
+	invalidation function before executing main logic.
+
+	Example:
+		def read_data(args)
+			if err([read_data]_inv(args))
+				ret
+
+			**main logic**
+			
+*/
 struct data_ops{
 	read_data 		read;
 	write_data 		write;
@@ -103,35 +117,20 @@ bool data_handle_inv(
 #define URI_RULE_READ		0x0004 // Allow for reading 
 #define URI_RULE_WRITE		0x0008 // Allow for writing
 
-#define RULE_EVAL_N 		4
-#define RULE_EVAL(r)		(struct eval_node[]){ \
-	(struct eval_node){ \
-	 	.func = ( \
-			chkf((r), URI_RULE_CREATE) \
-			&& chkf((r), URI_RULE_READ) \
-			&& chkf((r), URI_RULE_WRITE) \
-		), \
-		.ret = L"w+" \
-	}, \
-	(struct eval_node){ \
-	 	.func = ( \
-			chkf((r), URI_RULE_READ) \
-			&& chkf((r), URI_RULE_WRITE) \
-		), \
-		.ret = L"r+" \
-	}, \
-	(struct eval_node){ \
-	 	.func = ( \
-			chkf((r), URI_RULE_READ) \
-		), \
-		.ret = L"r" \
-	}, \
-	(struct eval_node){ \
-	 	.func = ( \
-			chkf((r), URI_RULE_WRITE) \
-		), \
-		.ret = L"w" \
-	} \
+inline io_file_acc rule_to_io(
+	_in i64			rule
+){
+	io_file_acc ret = 0;
+	if (chkf(rule, URI_RULE_READ)){
+		ret |= IO_FILE_R;
+	}
+	if (chkf(rule, URI_RULE_WRITE)){
+		ret |= IO_FILE_W;
+	}
+	if (chkf(rule, URI_RULE_CREATE)){
+		ret |= IO_FILE_C;
+	}
+	return ret;
 }
 
 // URI scheme validation

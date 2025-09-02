@@ -11,3 +11,5 @@ for ($i = 0; $i -lt $build_order.length; $i++){
 	}
 }
 
+& "$location\winrun.ps1"
+

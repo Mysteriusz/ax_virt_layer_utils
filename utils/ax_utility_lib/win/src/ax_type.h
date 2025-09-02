@@ -20,6 +20,7 @@
 #if defined(AX_WIN32)
 
 #if defined(AX_UM)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif defined(AX_KM)
 #include <ntddk.h>

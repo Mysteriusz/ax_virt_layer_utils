@@ -89,6 +89,8 @@ axres close_data_file(
 	}
 
 	axfree(hdl->con.path);
+	io_fc(hdl->con.data);
+	axfree(hdl->con.data);
 
 	return AX_SUCC;
 }

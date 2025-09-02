@@ -8,7 +8,8 @@ int main(
 
 	data_handle hdl = {0};
 	c16 *ptr = L"my_value";
-	open_data(
+
+	/*open_data(
 		L"reg://HKEY_LOCAL_MACHINE//Software//AX_VIRTUALIZATION", 
 		URI_RULE_WRITE | URI_RULE_READ | URI_RULE_ADM,
 		&hdl
@@ -27,10 +28,10 @@ int main(
 	b = malloc(s);
 	res = hdl.ops->read(&hdl, &s, b);
 
-	pop_data_reg(&hdl);
+	pop_data_reg(&hdl);*/
 
 
-	/*open_data(
+	open_data(
 		L"dir://C://", 
 		URI_RULE_READ | URI_RULE_WRITE | URI_RULE_CREATE,
 		&hdl
@@ -43,13 +44,13 @@ int main(
 	c16 *buf = nullptr;
 
 	res = hdl.ops->read(&hdl, &s, buf);
-	buf = malloc(s);
+	buf = axmalloc(s);
 	res = hdl.ops->read(&hdl, &s, buf);
 
 	ax_log(res);
 	printf("%ls\n", buf);
 
-	pop_data_dir(&hdl);*/
+	pop_data_dir(&hdl);
 
 	/*res = open_data(
 		L"file://C://ax_info.yml", 
@@ -57,7 +58,6 @@ int main(
 		&hdl
 	);*/
 
-	ax_log(res);
 	close_data(&hdl);
 
 	return 0;

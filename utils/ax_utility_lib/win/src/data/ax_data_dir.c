@@ -15,7 +15,6 @@ axres push_data_dir(
 	axres res = AX_SUCC;
 	c16 *path = nullptr;
 
-#if defined(AX_UM)
 	u32 size = 0;
 
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
@@ -28,9 +27,6 @@ axres push_data_dir(
 		axfree(path);
 		return res;
 	}
-#elif defined(AX_KM)
-	unref(res);
-#endif
 
 	hdl->con.user_data = path;
 
@@ -59,35 +55,29 @@ axres read_data_dir(
 		return res;
 	}
 
-#if defined(AX_UM)
-	axres err = 0;
-	FILE *file = malloc(sizeof(FILE));
+	io_file	file = {0};	
 
-	err = _wfopen_s(&file, hdl->con.user_data, L"r");
-	if (err == ENOENT){
-		return AX_INV_DATA;
+	res = io_fo(hdl->con.user_data, IO_FILE_R, &file);
+	if (AX_ERR(res)){
+		return res;
 	} 
 
-	// Get file size 
-	fseek(file, 0, SEEK_END);
-	u32 fsize = ftell(file);
-	fseek(file, 0, SEEK_SET);
-
 	// Validate buffer size 
-	res = _ax_buf_err(fsize, *size);
+	res = _ax_buf_err(file.size, *size);
 	// Check size and return correct one 
 	if (AX_ERR(res)
 	&& ret_size){
-		*size = fsize;
+		*size = file.size;
+		io_fc(&file);
 		return AX_SUCC;
-	} else if (AX_ERR(res)){
+	} else if (AX_ERR(res)){ // Buffer size is invalid
+		*size = file.size;
+		io_fc(&file);
 		return res;
 	}
 
-	fread(buf, 1, *size, file);
-	fclose(file);
-#elif defined(AX_KM)
-#endif
+	io_fr(&file, *size, buf);
+	io_fc(&file);
 
 	return AX_SUCC;
 }
@@ -101,28 +91,22 @@ axres write_data_dir(
 		return res;
 	}
 
-#if defined(AX_UM)
-	errno_t err = 0;
-	FILE *file = axmalloc(sizeof(FILE));
-	const c16 *mode = chkf(hdl->con.rule, URI_RULE_CREATE)
-		? L"w+" // Read/Write/Create
-		: L"r+"; // Read/Write
+	io_file file = {0};
 
-	err = _wfopen_s(&file, hdl->con.user_data, mode);
+	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), &file);
 
 	// If file did not exist and 	
 	// lacked write access (URI_RULE_CREATE)
-	if (err == ENOENT
-	&& compare(mode, L"r+") == AX_SUCC){
-		return AX_ACC_DEN;
-	} else if (err != 0){
-		return AX_INV_DATA;
+	if (AX_ERR(res)){
+		return res;
 	}
 
-	fwrite(buf, size, 1, file);
-	fclose(file);
-#elif defined(AX_KM)
-#endif
+	res = io_fw(&file, size, buf);
+	if (AX_ERR(res)){
+		return res;
+	}
+
+	io_fc(&file);
 
 	return AX_SUCC;
 }

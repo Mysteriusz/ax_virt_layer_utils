@@ -19,22 +19,6 @@ static void ax_log(
 	io_i64(res);
 }
 
-static inline axres _ax_buf_err(
-	u32 		size,
-	u32 		buf_size	
-){
-#if defined(AX_STRICT_BUF_SIZE)
-	if (size < buf_size){
-		return AX_BUF_TOO_BIG;
-	}
-#endif
-	if (size > buf_size){
-		return AX_BUF_TOO_SMALL;
-	}
-
-	return AX_SUCC;
-}
-
 #if defined(AX_WIN32)
 
 static void ax_log_lstat(

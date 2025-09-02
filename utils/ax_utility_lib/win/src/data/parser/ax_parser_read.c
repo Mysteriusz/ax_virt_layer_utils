@@ -58,8 +58,6 @@ axres read_word(
 	return read_until(text, CHARSET_WS, size, buf);
 }
 
-#if !defined(AX_KM)
-#include <stdarg.h>
 axres join_with(
 	_in _eval c16		*buf,
 	_in_out u32		*size,
@@ -105,7 +103,6 @@ axres join_with(
 
 	return AX_SUCC;
 }
-#endif // !defined(AX_KM)
 
 axres split_by(
 	_in const c16		*text,
