@@ -32,13 +32,12 @@ int main(
 
 
 	open_data(
-		L"dir://C://", 
-		URI_RULE_READ | URI_RULE_WRITE | URI_RULE_CREATE,
+		L"dir://C://update//", 
+		URI_RULE_READ | URI_RULE_WRITE,
 		&hdl
 	);
 
 	push_data_dir(&hdl, L".noded", L"base_directory");
-	res = hdl.ops->write(&hdl, sizeof(L"my_value"), ptr);
 
 	u32 s = 0;
 	c16 *buf = nullptr;
@@ -47,11 +46,11 @@ int main(
 	buf = axmalloc(s);
 	res = hdl.ops->read(&hdl, &s, buf);
 
-	ax_log(res);
-	printf("%ls\n", buf);
+	res = hdl.ops->write(&hdl, sizeof(L"teststr") - sizeof(c16), L"teststr");
+
+	io_str(buf);
 
 	pop_data_dir(&hdl);
-
 	/*res = open_data(
 		L"file://C://ax_info.yml", 
 		URI_RULE_READ | URI_RULE_WRITE,

@@ -14,9 +14,17 @@ axres io_fex(
 		return AX_INV_DATA;
 	}
 	fclose(file);
+
 #elif defined(AX_KM)
-// TODO
+
+#if defined(AX_WIN32)
+	// TODO: 
+#elif defined(AX_LINUX)
+	// TODO: 
 #endif
+
+#endif
+
 	return AX_SUCC;
 }
 
@@ -54,13 +62,13 @@ axres io_fo(
 	if (err == ENOENT){
 		return AX_NOT_FND;
 	} else if (err != 0){
-		return err;
+		return AX_INV_DATA;
 	}
 
 	// Get size
-	fseek(file, 0, SEEK_END);
-	size = ftell(file);
-	fseek(file, 0, SEEK_SET);
+	_fseeki64(file, 0, SEEK_END);
+	size = _ftelli64(file);
+	_fseeki64(file, 0, SEEK_SET);
 
 #elif defined(AX_KM)
 
@@ -91,7 +99,7 @@ axres io_fc(
 	errno_t err = 0;
 	err = fclose(file->hdl);
 	if (err != 0){
-		return err;
+		return AX_UNK_ERR;
 	}
 
 #elif defined(AX_KM)
@@ -123,11 +131,15 @@ axres io_fr(
 
 #if defined(AX_UM)
 
-	errno_t err = 0;
-	err = fread(buf, size, 1, file->hdl);	
-	if (err != 0){
-		return AX_INV_DATA;
+	// Skip BOM
+	u16 bom = 0;
+	fread(&bom, sizeof(c16), 1, file->hdl);
+	if (bom != 0xfeff
+	&& bom != 0xfffe){
+		_fseeki64(file->hdl, 0, SEEK_SET);
 	}
+
+	fread(buf, sizeof(c16), size, file->hdl);	
 
 #elif defined(AX_KM)
 

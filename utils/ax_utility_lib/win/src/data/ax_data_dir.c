@@ -66,17 +66,17 @@ axres read_data_dir(
 	res = _ax_buf_err(file.size, *size);
 	// Check size and return correct one 
 	if (AX_ERR(res)
-	&& ret_size){
+	|| ret_size){
 		*size = file.size;
 		io_fc(&file);
 		return AX_SUCC;
-	} else if (AX_ERR(res)){ // Buffer size is invalid
-		*size = file.size;
-		io_fc(&file);
+	}
+
+	res = io_fr(&file, *size, buf);
+	if (AX_ERR(res)){
 		return res;
 	}
 
-	io_fr(&file, *size, buf);
 	io_fc(&file);
 
 	return AX_SUCC;
@@ -94,9 +94,8 @@ axres write_data_dir(
 	io_file file = {0};
 
 	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), &file);
-
 	// If file did not exist and 	
-	// lacked write access (URI_RULE_CREATE)
+	// lacked create access (URI_RULE_CREATE)
 	if (AX_ERR(res)){
 		return res;
 	}

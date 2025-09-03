@@ -15,6 +15,9 @@ typedef axres (*read_data)(
 	_in_out u32		*size,
 	_in_out _eval void	*buf // Evaluate by malloc(size)
 );
+/*
+ 	When writing REMEMBER to that string should not be null-terminated unless it`s an expected file ending
+*/
 typedef axres (*write_data)(
 	_in data_handle		*hdl,	
 	_in u32			size,

@@ -13,22 +13,25 @@ typedef u16 io_file_acc;
 enum io_file_acc{
 	IO_FILE_R = 0x01,
 	IO_FILE_W = 0x02,
-	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_C = 0x04,
+	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
+	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
 };
 
-static inline const wchar_t *io_file_conv(
+static inline const c16 *io_file_conv(
 	_in io_file_acc 		acc	
 ){
-	io_file_acc facc = acc & ~IO_FILE_C;
-
-	switch(facc){
+	switch(acc){
 	case IO_FILE_R:
-		return L"r";
+		return L"rb";
 	case IO_FILE_W:
-		return L"w";
+		return L"ab";
 	case IO_FILE_RW:
-		return L"w+";
+		return L"ab+";
+	case IO_FILE_C:
+		return L"wb";
+	case IO_FILE_RWC:
+		return L"w+b";
 	default:
 		return nullptr;
 	}
