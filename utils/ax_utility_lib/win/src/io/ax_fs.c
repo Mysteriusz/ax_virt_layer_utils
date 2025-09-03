@@ -2,7 +2,7 @@
 #include "ax_error.h"
 
 axres io_fex(
-	_in c16			*path	
+	_in const c16		*path	
 ){
 #if defined(AX_UM)
 	FILE *file = nullptr;
@@ -11,7 +11,7 @@ axres io_fex(
 		if (err == ENOENT){
 			return AX_NOT_FND;
 		}
-		return AX_INV_DATA;
+		return AX_INV_FILE;
 	}
 	fclose(file);
 
@@ -29,7 +29,7 @@ axres io_fex(
 }
 
 axres io_fo(
-	_in c16			*path,
+	_in const c16		*path,
 	_in io_file_acc		acc,
 	_out io_file		*buf
 ){
@@ -80,6 +80,7 @@ axres io_fo(
 
 #endif
 
+	buf->offset = 0;
 	buf->path = _wcsdup(path);
 	buf->acc = acc;
 	buf->hdl = file;			
@@ -91,7 +92,7 @@ axres io_fc(
 	_in io_file		*file
 ){
 	if (file == nullptr){
-		return AX_INV_ARG;
+		return AX_INV_FILE;
 	}
 
 #if defined(AX_UM)
@@ -117,17 +118,20 @@ axres io_fc(
 axres io_fr(
 	_in io_file		*file,
 	_in u64			size,
-	_in_out void 		*buf
+	_in_out void 		*buf,
+	_out_opt u64		*read
 ){
 	if (file == nullptr){
-		return AX_INV_ARG;
+		return AX_INV_FILE;
 	}
 	if (buf == nullptr){
 		return AX_INV_BUF;
 	}
+#if defined(AX_STRICT_BUF_SIZE)
 	if (size > file->size){
 		return AX_BUF_TOO_BIG;
 	}
+#endif
 
 #if defined(AX_UM)
 
@@ -139,7 +143,14 @@ axres io_fr(
 		_fseeki64(file->hdl, 0, SEEK_SET);
 	}
 
-	fread(buf, sizeof(c16), size, file->hdl);	
+	u64 r = 0;
+	_fseeki64(file->hdl, file->offset, SEEK_CUR);
+	r = fread(buf, 1, size, file->hdl);	
+	_fseeki64(file->hdl, 0, SEEK_SET);
+
+	if (read != nullptr){
+		*read = r;
+	}
 
 #elif defined(AX_KM)
 
@@ -157,10 +168,11 @@ axres io_fr(
 axres io_fw(
 	_in io_file		*file,
 	_in u64			size,
-	_in void 		*buf
+	_in void 		*buf,
+	_out_opt u64		*writ
 ){
 	if (file == nullptr){
-		return AX_INV_ARG;
+		return AX_INV_FILE;
 	}
 	if (buf == nullptr){
 		return AX_INV_BUF;
@@ -168,9 +180,14 @@ axres io_fw(
 
 #if defined(AX_UM)
 
-	u64 writ = fwrite(buf, size, 1, file->hdl);	
-	if (writ == 0){
-		return AX_INV_DATA;
+	u64 w = 0;
+
+	_fseeki64(file->hdl, file->offset, SEEK_SET);
+	w = fwrite(buf, size, 1, file->hdl);	
+	_fseeki64(file->hdl, 0, SEEK_SET);
+
+	if (writ != nullptr){
+		*writ = w;
 	}
 
 #elif defined(AX_KM)

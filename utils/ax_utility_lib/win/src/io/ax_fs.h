@@ -41,6 +41,7 @@ typedef struct _io_file{
 	c16			*path;
 	io_file_acc		acc;
 	u64 			size;
+	u64			offset;
 #if defined(AX_UM)
 	FILE			*hdl;
 #elif defined(AX_KM)
@@ -57,12 +58,12 @@ typedef struct _io_file{
 
 // Check file existance 
 axres io_fex(
-	_in c16			*path	
+	_in const c16		*path	
 );
 
 // Open file 
 axres io_fo(
-	_in c16			*path,
+	_in const c16		*path,
 	_in io_file_acc		acc,
 	_out io_file		*buf
 );
@@ -74,13 +75,15 @@ axres io_fc(
 axres io_fr(
 	_in io_file		*file,
 	_in u64			size,
-	_in_out void 		*buf
+	_in_out void 		*buf,
+	_out_opt u64		*read // Bytes read
 );
 // Write file
 axres io_fw(
 	_in io_file		*file,
 	_in u64			size,
-	_in void 		*buf
+	_in void 		*buf,
+	_out_opt u64		*writ // Bytes written
 );
 
 #endif // AX_IO_FS_INT

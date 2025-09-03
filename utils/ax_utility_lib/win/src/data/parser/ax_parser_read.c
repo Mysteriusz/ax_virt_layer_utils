@@ -94,6 +94,7 @@ axres join_with(
 	}
 	va_end(args);
 	
+	// Add null-terminator
 	buf_size++;
 	if (ret_size){
 		*size = buf_size;

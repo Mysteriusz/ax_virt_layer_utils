@@ -124,8 +124,8 @@ function Install{
 	#Sign -machine $machine
 	SetupDirectory -machine $machine
 
-	$tocopy = [string[]](
-	"$($global:UPDATE_BUILD)\$($global:UPDATE_FILE)"
+	$tocopy = [string[]]@(
+		$(gci -path $($global:UPDATE_BUILD) -file).FullName
 	)
 	
 	cpi -path $tocopy -destination "$($machine.destination)\update" -tosession $machine.pss -force | out-null

@@ -72,7 +72,7 @@ axres read_data_dir(
 		return AX_SUCC;
 	}
 
-	res = io_fr(&file, *size, buf);
+	res = io_fr(&file, *size, buf, nullptr);
 	if (AX_ERR(res)){
 		return res;
 	}
@@ -100,7 +100,7 @@ axres write_data_dir(
 		return res;
 	}
 
-	res = io_fw(&file, size, buf);
+	res = io_fw(&file, size, buf, nullptr);
 	if (AX_ERR(res)){
 		return res;
 	}

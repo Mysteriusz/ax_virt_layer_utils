@@ -80,9 +80,8 @@ typedef struct _noded_doc noded_doc;
 typedef struct _noded_sect noded_sect;
 typedef struct _noded_kvp noded_kvp;
 
-/*
 typedef struct _noded_doc{
-	FILE			*file;
+	io_file			*file;
 	noded_sect		*root; 		
 } noded_doc;
 typedef struct _noded_sect{
@@ -90,6 +89,7 @@ typedef struct _noded_sect{
 	u32			line;
 	noded_sect		*next;
 } noded_sect;
+// kvp - key-value-pair
 typedef struct _node_kvp{
 	c16			*key;
 	u32			line;
@@ -97,18 +97,46 @@ typedef struct _node_kvp{
 	noded_sect		*sect;
 	struct node_kvp		*next;
 } node_kvp;
+
+/*
+ 	noded_doc related
 */
 
+axres noded_load_doc(
+	_in const c16		*path,
+	_out noded_doc		**doc
+);
+axres noded_unload_doc(
+	_in noded_doc		*doc
+);
+axres noded_inv_doc(
+	_in noded_doc		*doc
+);
+
+/*
+ 	noded_sect related
+*/
+
+#define NODED_SECT_SET 		L"["
+#define NODED_SECT_END 		L"]"
+#define NODED_SECT_PTR 		L":"
+
+#define NODED_SEARCH_CHUNK	0x512
 axres noded_load_sect(
-	_in c16				*path,
-	_out u32 			*size,
-	_out noded_sect			*buf
+	_in const c16		*path,
+	_in const c16		*sect_name, 
+	_out noded_sect		**sect
 );
-axres noded_load_kvp(
-	_in noded_doc		*doc,
-	_in u32 		sect_i,
-	_in_out noded_kvp	*buf
+axres noded_find_sect(
+	_in io_file		*file,
+	_in const c16		*sect_name, 
+	_out u32		*sect_size,
+	_out void		**sect_root
 );
+
+/*
+ 	noded_kvp related
+*/
 
 #endif // !defined(AX_PARSER_NODED_INT)
 
