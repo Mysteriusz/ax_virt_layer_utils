@@ -37,9 +37,12 @@ axres noded_load_sect(
 		return res;
 	}
 
-	u32 sect_size = 0;	
-	c16 *sect_root = nullptr;
-	noded_find_sect(&file, sect_name, &sect_size, (void**)&sect_root);
+	u64 sect_off = 0;	
+	res = noded_find_sect(&file, sect_name, &sect_off);
+	if (AX_ERR(res)){
+		io_fc(&file);	
+		return res;
+	}
 
 	io_fc(&file);	
 
@@ -48,16 +51,10 @@ axres noded_load_sect(
 axres noded_find_sect(
 	_in io_file		*file,
 	_in const c16		*sect_name, 
-	_out u32		*sect_size,
-	_out void		**sect_root
+	_out u64		*offset
 ){
 	if (file == nullptr){
 		return AX_INV_FILE;
-	}
-	
-	if (sect_size == nullptr
-	|| sect_root == nullptr){
-		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
@@ -74,8 +71,13 @@ axres noded_find_sect(
 		+ _c16len(NODED_SECT_PTR)
 		+ 1 // null-terminator
 	);
-	c16 *label = axmalloc(label_size * sizeof(c16));
+	u32 label_size_b = label_size * sizeof(c16); 
 
+	if (label_size_b > NODED_SECT_BOUND){
+		return AX_BUF_TOO_BIG;
+	}
+
+	c16 *label = axmalloc(label_size_b);
 	res = join_with(
 		label,
 		&label_size,
@@ -89,14 +91,34 @@ axres noded_find_sect(
 		return res;
 	}
 
-	//c16 *data = axmalloc(NODED_SEARCH_CHUNK);
-	c16 *data = nullptr;
 	u64 read = 0;
-	// Read first chunk
-	res = io_fr(file, NODED_SEARCH_CHUNK, data, &read);
+	c16 *data = nullptr;
+	const c16 *occ = nullptr;
 
-	ax_log(res);
-	ax_log(read);
+	// Read chunks until found
+	do{
+		if (data != nullptr){
+			axfree(data);
+		}
+
+		data = axmalloc(NODED_SEARCH_CHUNK);
+		
+		res = io_fr(file, NODED_SEARCH_CHUNK, data, &read);
+		if (AX_ERR(res)){
+			axfree(data);
+			return res;
+		}
+		file->offset += NODED_SEARCH_CHUNK - label_size_b;
+	} while(find_substr(data, label, &occ) == AX_NOT_FND
+	&& file->offset < file->size);
+
+	file->offset = 0;
+
+	if (occ == nullptr){
+		return AX_NOT_FND;
+	}
+
+	io_str(occ);
 
 	return AX_SUCC;
 }
