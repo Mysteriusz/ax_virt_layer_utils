@@ -1,9 +1,10 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
-//
-// These macros should be used in palaces where there is need for multi-platform support AND multi-build support.
-// 
+
+/*
+ 	These macros should be used when writing multi-platform/multi-build memory abstraction.
+*/
 
 #if defined(AX_UM)
 

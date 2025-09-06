@@ -44,8 +44,6 @@ axres noded_load_sect(
 		return res;
 	}
 
-	io_fc(&file);	
-
 	return AX_SUCC;
 }
 axres noded_find_sect(
@@ -91,34 +89,6 @@ axres noded_find_sect(
 		return res;
 	}
 
-	u64 read = 0;
-	c16 *data = nullptr;
-	const c16 *occ = nullptr;
-
-	// Read chunks until found
-	do{
-		if (data != nullptr){
-			axfree(data);
-		}
-
-		data = axmalloc(NODED_SEARCH_CHUNK);
-		
-		res = io_fr(file, NODED_SEARCH_CHUNK, data, &read);
-		if (AX_ERR(res)){
-			axfree(data);
-			return res;
-		}
-		file->offset += NODED_SEARCH_CHUNK - label_size_b;
-	} while(find_substr(data, label, &occ) == AX_NOT_FND
-	&& file->offset < file->size);
-
-	file->offset = 0;
-
-	if (occ == nullptr){
-		return AX_NOT_FND;
-	}
-
-	io_str(occ);
 
 	return AX_SUCC;
 }

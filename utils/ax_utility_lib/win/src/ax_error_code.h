@@ -3,8 +3,8 @@
 
 /*
  
-   	axres >= 1 -> result is an error in user-mode
-   	axres <= -1 -> result is an error in kernel-mode
+   	axres >= 1 -> user-mode error
+   	axres <= -1 -> kernel-mode error
    	
 */
 

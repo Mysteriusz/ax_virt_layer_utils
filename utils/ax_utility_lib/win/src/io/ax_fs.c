@@ -1,9 +1,97 @@
 #include "ax_fs.h"
 #include "ax_error.h"
 
+bool io_file_inv(
+	_in io_file 		*file
+){
+	if (file == nullptr){
+		return true;
+	}
+	if (file->path == nullptr
+	|| AX_ERR(io_fex(file->path))){
+		return true;
+	}
+	if (file->hdl == nullptr){
+		return true;
+	}
+
+	return false;
+}
+
+axres io_fbom(
+	_in const c16		*path,
+	_out io_file_enc	*buf
+){
+	if (path == nullptr){
+		return AX_INV_ARG;
+	}
+	if (buf == nullptr){
+		return AX_INV_BUF;
+	}
+
+#if defined(AX_UM)
+	FILE *file = nullptr;
+	errno_t err = _wfopen_s(&file, path, L"r"); 
+	if (err != 0){
+		if (err == ENOENT){
+			return AX_NOT_FND;
+		}
+		return AX_INV_FILE;
+	}
+	
+	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
+	u64 read = fread(bom, 4, 1, file);
+
+	io_file_enc enc = UTF16LE;
+
+	// Read size CAN be UTF32
+	if (read == 4){
+		if(memcmp(bom, addr(UTF32LE_BOM), 4) == 0){
+			enc = UTF32LE;
+		}else if(memcmp(bom, addr(UTF32BE_BOM), 4) == 0){
+			enc = UTF32BE;
+		}
+	}
+	// Read size CAN be UTF8
+	if (read >= 3){
+		if(memcmp(bom, addr(UTF8_BOM), 3) == 0){
+			enc = UTF8;
+		}
+	}
+	// Read size CAN be UTF16
+	if (read >= 2){
+		if(memcmp(bom, addr(UTF16LE_BOM), 2) == 0){
+			enc = UTF16LE;
+		}else if(memcmp(bom, addr(UTF16BE_BOM), 2) == 0){
+			enc = UTF16BE;
+		}
+	}
+
+	*buf = enc;
+
+	axfree(bom);
+	fclose(file);
+
+#elif defined(AX_KM)
+
+#if defined(AX_WIN32)
+	// TODO: 
+#elif defined(AX_LINUX)
+	// TODO: 
+#endif
+
+#endif
+
+	return AX_SUCC;
+}
+
 axres io_fex(
 	_in const c16		*path	
 ){
+	if (path == nullptr){
+		return AX_INV_ARG;
+	}
+
 #if defined(AX_UM)
 	FILE *file = nullptr;
 	errno_t err = _wfopen_s(&file, path, L"r"); 
@@ -138,8 +226,8 @@ axres io_fr(
 	// Skip BOM
 	u16 bom = 0;
 	fread(&bom, sizeof(c16), 1, file->hdl);
-	if (bom != 0xfeff
-	&& bom != 0xfffe){
+	if (bom != 0xfeff // UTF-16BE
+	&& bom != 0xfffe){ // UTF-16LE
 		_fseeki64(file->hdl, 0, SEEK_SET);
 	}
 

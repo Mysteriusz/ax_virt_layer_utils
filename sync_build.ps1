@@ -1,3 +1,7 @@
+param(
+	[switch]$wr
+)
+
 $build_order = [string[]]@(
 	"utils\ax_utility_lib\win\build.ps1"
 	"utils\ax_update_exe\win\build.ps1"
@@ -11,5 +15,7 @@ for ($i = 0; $i -lt $build_order.length; $i++){
 	}
 }
 
-& "$location\winrun.ps1"
+if ($wr){
+	& "$location\winrun.ps1"
+}
 

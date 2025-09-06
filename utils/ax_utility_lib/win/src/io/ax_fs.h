@@ -4,6 +4,8 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
+#define IO_FILE_CHUNK 0x400
+
 typedef u16 io_file_acc;
 /*
  	IMPORTANT!
@@ -16,6 +18,20 @@ enum io_file_acc{
 	IO_FILE_C = 0x04,
 	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
+};
+
+#define UTF16LE_BOM 	0xFFFE
+#define UTF16BE_BOM	0xFEFF
+#define UTF32LE_BOM	0xFFFE0000
+#define UTF32BE_BOM	0x0000FEFF
+#define UTF8_BOM	0xEFBBBF
+typedef u32 io_file_enc;
+enum io_file_enc{
+	UTF16LE = 0, // UTF-16LE is set as default encoding if not provided 
+	UTF16BE = 1,
+	UTF32LE = 2,
+	UTF32BE = 3,
+	UTF8 = 4,
 };
 
 static inline const c16 *io_file_conv(
@@ -41,7 +57,6 @@ typedef struct _io_file{
 	c16			*path;
 	io_file_acc		acc;
 	u64 			size;
-	u64			offset;
 #if defined(AX_UM)
 	FILE			*hdl;
 #elif defined(AX_KM)
@@ -53,8 +68,18 @@ typedef struct _io_file{
 #endif
 
 #endif
-
+	io_file_enc 		enc; // Optional field (default = UTF16LE)
+	u64			offset; // Optional field (default = 0) ** RESETS AFTER R/W OPERATIONS **
 } io_file;
+bool io_file_inv(
+	_in io_file 		*file
+);
+
+// Get file byte order mark (Encoding)
+axres io_fbom(
+	_in const c16		*path,
+	_out io_file_enc	*buf
+);
 
 // Check file existance 
 axres io_fex(

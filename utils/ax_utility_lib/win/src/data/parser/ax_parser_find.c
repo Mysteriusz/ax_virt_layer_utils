@@ -23,7 +23,8 @@ axres find_char(
 axres find_substr(
 	_in const c16 		*text,
 	_in const c16 		*substr,
-	_out const c16		**loc 
+	_out const c16		**loc,
+	_out_opt const c16	**sub_loc 
 ){
 	if (text == nullptr
 	|| substr == nullptr){
@@ -35,51 +36,42 @@ axres find_substr(
 	}
 
 	const c16 *text_char = text;
+	const c16 *sub_char = substr;
 
-	bool found = false;
-	while(in_c16(text,text_char)
-	&& found == false){
-		found = (starts_with(text_char,substr) == AX_SUCC)
-			? true
-			: false;
-		if (found == false){
-			text_char++;
+	const c16 *loc_start = substr;
+
+	while(in_c16(text, text_char)
+	&& in_c16(substr, sub_char)){
+		if (*sub_char == *text_char){
+			if (loc_start == nullptr){
+				loc_start = text_char;
+			}
+
+			sub_char++;
+
+			if (*sub_char == L'\0'){
+				break;
+			}
+		}else{
+			loc_start = nullptr;
+			sub_char = substr;	
 		}
+
+		text_char++;
 	}
 
-	if (found == true){
-		*loc = text_char;
+	bool part_found = (sub_char > substr); // Partial find
+	bool found = (*sub_char == L'\0'); // Full find
+
+	if (found){
+		*loc = loc_start;
+	}
+	if (part_found){
+		*sub_loc = sub_char;
 	}
 
-	return (found == true)
+	return (found || part_found)
 		? AX_SUCC
 		: AX_NOT_FND;
-}
-
-axres find_eval_node(
-	_in u32			n,
-	_in struct eval_node	*nodes,
-	_out c16		**ret
-){
-	if (nodes == nullptr){
-		return AX_INV_ARG; 
-	}
-	if (ret == nullptr){
-		return AX_INV_BUF; 
-	}
-
-	struct eval_node curr = nodes[0];
-	for (u32 i = 0; i < n; i++){
-		if (curr.func == true){
-			*ret = curr.ret;
-			break;
-		}
-		curr = nodes[i];
-	}
-	if (*ret == nullptr){
-		return AX_NOT_FND;
-	}
-
-	return AX_SUCC;
 }
 

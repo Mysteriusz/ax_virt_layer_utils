@@ -53,6 +53,7 @@
 #define nullptr 	((void*)0)
 
 #define unref(p)	((void)p)
+#define addr(v)		(&(long long[]){v})
 
 #include <stdbool.h>
 #if defined(AX_UM)
@@ -92,7 +93,7 @@ typedef union{
 #if defined(AX_WIN32)
 typedef unsigned char c8; // ansi
 typedef unsigned short c16; // unicode
-#elif defined(AX_LIN) 
+#elif defined(AX_LINUX) 
 typedef signed char c8; // ansi
 typedef signed short c16; // unicode
 #endif

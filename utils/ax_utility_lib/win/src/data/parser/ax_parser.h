@@ -4,8 +4,6 @@
 #include "ax_type.h"
 #include "ax_error.h"
 
-#include <string.h>
-
 static u32 _c16len(
 	_in const c16 		*text
 ){
@@ -28,8 +26,10 @@ static u32 _c16len_b(
 }
 
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
-#define dif_c16(s,e)		(((c16*)e - (c16*)s))
+#define dif_c16(s,e)		((c16*)e - (c16*)s)
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
+
+#define dif_b(s,e)		((u8*)e - (u8*)s)
 
 /*
  
@@ -62,12 +62,6 @@ static u32 _c16len_b(
 
 */
 
-typedef struct _text_settings{
-	c16 		*spac; 
-	c16 		*label;
-	c16 		*suf;
-} text_settings;
-
 axres starts_with(
 	_in const c16		*text,
 	_in const c16		*str
@@ -94,29 +88,23 @@ axres trim(
 */
 
 #if !defined(AX_PARSER_FIND_INT)
-#define AX_PARSER_FIND_INT
+#define AX_PARSER_FIND_INt
 
 axres find_char(
 	_in const c16 		*text,
 	_in const c16 		val	
 );
 
-// TODO: Can be optimized
 axres find_substr(
 	_in const c16 		*text,
 	_in const c16 		*substr,
-	_out const c16		**loc 
+	_out const c16		**loc, // *text substr start location
+	_out_opt const c16	**sub_loc  // *substr partially found location
 );
-
-struct eval_node{
-	bool 			func; 
-	c16 			*ret;
-};
-// Finds eval_node and returns its value
-axres find_eval_node(
-	_in u32			n,
-	_in struct eval_node	*nodes,
-	_out c16		**ret
+axres find_substr_f(
+	_in io_file		*file,
+	_in const c16 		*substr,
+	_out u64		*file_off 
 );
 
 #endif // !defined(AX_PARSER_FIND_INT)

@@ -123,7 +123,6 @@ axres noded_inv_doc(
 #define NODED_SECT_PTR 		L":"
 
 #define NODED_SECT_BOUND 	0x200
-#define NODED_SEARCH_CHUNK	0x400
 axres noded_load_sect(
 	_in const c16		*path,
 	_in const c16		*sect_name, 
