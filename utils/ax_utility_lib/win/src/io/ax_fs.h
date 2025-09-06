@@ -33,8 +33,22 @@ enum io_file_enc{
 	UTF32BE = 3,
 	UTF8 = 4,
 };
+static inline u32 _enc_size(
+	_in io_file_enc 		enc
+){
+	switch(enc){
+	case UTF8:
+		return 1;
+	case UTF16LE ... UTF16BE:
+		return 2;
+	case UTF32LE ... UTF32BE:
+		return 4;
+	default:
+		return 0;
+	}
+}
 
-static inline const c16 *io_file_conv(
+static inline const c16 *_io_file_conv(
 	_in io_file_acc 		acc	
 ){
 	switch(acc){

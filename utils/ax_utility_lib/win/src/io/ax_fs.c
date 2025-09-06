@@ -140,7 +140,7 @@ axres io_fo(
 	errno_t err = 0;
 	u64 size = 0;
 
-	const c16 *mode = io_file_conv(acc);
+	const c16 *mode = _io_file_conv(acc);
 	if (mode == nullptr){
 		return AX_INV_CODE;
 	}
@@ -269,7 +269,6 @@ axres io_fw(
 #if defined(AX_UM)
 
 	u64 w = 0;
-
 	_fseeki64(file->hdl, file->offset, SEEK_SET);
 	w = fwrite(buf, size, 1, file->hdl);	
 	_fseeki64(file->hdl, 0, SEEK_SET);

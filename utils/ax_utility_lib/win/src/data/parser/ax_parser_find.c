@@ -37,7 +37,6 @@ axres find_substr(
 
 	const c16 *text_char = text;
 	const c16 *sub_char = substr;
-
 	const c16 *loc_start = substr;
 
 	while(in_c16(text, text_char)
@@ -46,7 +45,6 @@ axres find_substr(
 			if (loc_start == nullptr){
 				loc_start = text_char;
 			}
-
 			sub_char++;
 
 			if (*sub_char == L'\0'){
@@ -60,17 +58,17 @@ axres find_substr(
 		text_char++;
 	}
 
-	bool part_found = (sub_char > substr); // Partial find
-	bool found = (*sub_char == L'\0'); // Full find
+	bool found = (*sub_char == L'\0') // Full find
+		|| ((sub_char > substr) && (*text_char == L'\0')); // Part find
 
 	if (found){
 		*loc = loc_start;
-	}
-	if (part_found){
-		*sub_loc = sub_char;
+		if (sub_loc != nullptr){
+			*sub_loc = sub_char;
+		}
 	}
 
-	return (found || part_found)
+	return (found)
 		? AX_SUCC
 		: AX_NOT_FND;
 }
