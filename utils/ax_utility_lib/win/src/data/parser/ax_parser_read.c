@@ -56,6 +56,7 @@ axres read_word(
 	return read_until(text, CHARSET_WS, size, buf);
 }
 
+#include <stdarg.h>
 axres join_with(
 	_in _eval c16		*buf,
 	_in_out u32		*size,
@@ -70,12 +71,14 @@ axres join_with(
 		}
 	}
 
-	c16 **args = (c16**)(&n + 1);
-	c16 *arg = args[0];
+	va_list args;
+	va_start(args, n);
 
+	c16 *arg = nullptr;
 	u32 buf_size = 0;
 	u32 buf_offset = 0;
 	for (u32 i = 0; i < n; i++){
+		arg = va_arg(args, c16*);
 		buf_size += _c16len(arg);
 
 		if (!ret_size
@@ -87,8 +90,9 @@ axres join_with(
 			memcpy(&buf[buf_offset], arg, _c16len_b(arg));
 		}
 		buf_offset += _c16len(arg);
-		arg++;
 	}
+
+	va_end(args);
 	
 	// Add null-terminator
 	buf_size++;

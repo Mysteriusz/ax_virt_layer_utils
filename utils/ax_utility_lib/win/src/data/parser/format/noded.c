@@ -26,14 +26,38 @@ axres noded_load_sect(
 	res = noded_find_sect(&file, sect_name, &sect_off);
 	axcheck(res);
 
-	res = skip_line_f(&file, &sect_off);
+	u64 sect_size = 0;
+	res = noded_size_sect(&file, sect_off, &sect_size);
 	axcheck(res);
 
-	file.offset = sect_off;
+	io_fc(&file);
 
-	c16 *buf = axmalloc(100);
-	io_fr(&file, 100, buf, nullptr);
-	io_str(buf);
+	return AX_SUCC;
+}
+axres noded_size_sect(
+	_in io_file		*file,
+	_in u64 		sect_off,
+	_out u64		*size
+){
+	if (io_file_inv(file)){
+		return AX_INV_FILE;
+	}
+	if (size == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	u64 init_off = file->offset;
+
+	u64 curr_off = sect_off;
+	res = skip_line_f(file, &curr_off);
+	axcheck(res);
+
+	file->offset = curr_off;
+
+	// Reset file offset
+	file->offset = init_off;	
 
 	return AX_SUCC;
 }

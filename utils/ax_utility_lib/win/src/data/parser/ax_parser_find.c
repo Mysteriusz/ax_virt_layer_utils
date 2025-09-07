@@ -35,9 +35,10 @@ axres find_substr(
 		return AX_INV_BUF;
 	}
 
+	const c16 *loc_start = text;
+
 	const c16 *text_char = text;
 	const c16 *sub_char = substr;
-	const c16 *loc_start = substr;
 
 	while(in_c16(text, text_char)
 	&& in_c16(substr, sub_char)){
