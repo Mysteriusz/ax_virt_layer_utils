@@ -1,5 +1,6 @@
 param(
-	[switch]$wr
+	[switch]$wr,
+	[switch]$km
 )
 
 $build_order = [string[]]@(

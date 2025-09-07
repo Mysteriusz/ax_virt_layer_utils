@@ -17,9 +17,7 @@ axres con_file_data(
 #if defined(AX_UM)
 
 	res = io_fo(hdl->con.path, rule_to_io(hdl->con.rule), file); 
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 #elif defined(AX_KM)
 	unref(res);

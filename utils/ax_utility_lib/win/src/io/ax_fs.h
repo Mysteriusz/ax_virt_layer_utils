@@ -27,21 +27,35 @@ enum io_file_acc{
 #define UTF8_BOM	0xEFBBBF
 typedef u32 io_file_enc;
 enum io_file_enc{
-	UTF16LE = 0, // UTF-16LE is set as default encoding if not provided 
-	UTF16BE = 1,
-	UTF32LE = 2,
-	UTF32BE = 3,
-	UTF8 = 4,
+	UTF8LE = 10,
+	UTF8 = 11,
+	UTF8BE = 12,
+
+	UTF16LE = 20, // default encoding if not provided 
+	UTF16 = 21, 
+	UTF16BE = 22,
+
+	UTF32LE = 40,
+	UTF32 = 41,
+	UTF32BE = 42,
 };
 static inline u32 _enc_size(
 	_in io_file_enc 		enc
 ){
 	switch(enc){
+	case UTF8LE:
 	case UTF8:
+	case UTF8BE:
 		return 1;
-	case UTF16LE ... UTF16BE:
+
+	case UTF16LE:
+	case UTF16:
+	case UTF16BE:
 		return 2;
-	case UTF32LE ... UTF32BE:
+
+	case UTF32LE:
+	case UTF32:
+	case UTF32BE:
 		return 4;
 	default:
 		return 0;

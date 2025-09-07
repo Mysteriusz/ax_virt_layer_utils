@@ -43,9 +43,7 @@ axres read_data_reg(
 ){
 	bool ret_size = false;
 	axres res = read_data_inv(hdl, size, buf, &ret_size);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 #if defined(AX_UM)
 	LSTATUS stat = ERROR_SUCCESS;
@@ -68,9 +66,7 @@ axres read_data_reg(
 	&& ret_size){
 		*size = fsize;
 		return AX_SUCC;
-	} else if (AX_ERR(res)){
-		return res;
-	}
+	} else axcheck(res);
 
 	stat = RegQueryValueExW(
 		(HKEY)hdl->con.data,
@@ -95,9 +91,7 @@ axres write_data_reg(
 	_in void		*buf
 ){
 	axres res = write_data_inv(hdl, size, buf);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 #if defined(AX_UM)
 	LSTATUS lstat = ERROR_SUCCESS;
@@ -161,11 +155,10 @@ axres open_data_reg(
 	hdl->con.is_open = true;
 
 	res = con_reg_data(hdl, &hdl->con.data);
-	if (AX_ERR(res)){
-		axfree(hdl->con.path);
-		memset(hdl, 0x00, sizeof(data_handle));
-		return res;
-	}
+	axcheck(res,
+		axfree(hdl->con.path),
+		memset(hdl, 0x00, sizeof(data_handle))
+	);
 
 	return AX_SUCC;
 }

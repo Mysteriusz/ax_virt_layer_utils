@@ -16,7 +16,7 @@
 #define AX_INV_DATA 			((axres)0x02)
 #define AX_INV_BUF 			((axres)0x03)
 #define AX_INV_CODE 			((axres)0x04)
-#define AX_INV_FILE 			((axres)0x05)
+#define AX_INV_FILE 			((axres)0x05) // EXCLUSIVE TO _io_file STRUCTURE ERRORS
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)
 #define AX_BUF_TOO_BIG 			((axres)0x11)
@@ -29,8 +29,8 @@
 #define AX_UNK_ERR 			((axres)0x80)
 
 static inline axres _ax_buf_err(
-	u32 		size,
-	u32 		buf_size	
+	u64 		size,
+	u64 		buf_size	
 ){
 #if defined(AX_STRICT_BUF_SIZE)
 	if (size < buf_size){

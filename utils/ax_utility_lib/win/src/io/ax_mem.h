@@ -1,6 +1,4 @@
 #include "ax_type.h"
-#include "ax_error_code.h"
-
 
 /*
  	These macros should be used when writing multi-platform/multi-build memory abstraction.
@@ -10,11 +8,18 @@
 
 #if defined(AX_WIN32)
 
-#define axmalloc(size) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size));
-#define axfree(ptr) HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr))
+#define axmalloc(size) ({ \
+	void *ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size)); \
+	asrt(ptr != nullptr); \
+	ptr; \
+})
+#define axfree(ptr) ({ \
+	if (ptr) HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
+})
 
 #elif defined(AX_LINUX)
 
+#error "MAKE ASSERTIONS"
 #define axmalloc(size) malloc((size))
 #define axfree(ptr) free((ptr))
 
@@ -25,11 +30,27 @@
 #if defined(AX_WIN32)
 
 #define AX_MEM_POOL_TAG 		'axkm'
-#define axmalloc(size) ExAllocatePool2(NonPagedPoolNx, (size), AX_MEM_POOL_TAG)
-#define axfree(ptr) ExFreePool2((ptr), AX_MEM_POOL_TAG, nullptr, 0)
+static void *axmalloc_msvc(
+	_in u64			size
+){
+	void *ptr = ExAllocatePool2(NonPagedPoolNx, size, AX_MEM_POOL_TAG);
+	asrt(ptr != nullptr);
+	return ptr;
+}
+static void axfree_msvc(
+	_in void		*ptr
+){
+	if (ptr){
+		ExFreePool2(ptr, AX_MEM_POOL_TAG, nullptr, 0);
+	}
+}
+
+#define axmalloc(size) axmalloc_msvc(size)
+#define axfree(ptr) axfree_msvc(ptr)
 
 #elif defined(AX_LINUX)
 
+#error "MAKE ASSERTIONS"
 #define axmalloc(size) kmalloc((size), GFP_KERNEL) 
 #define axfree(ptr) free((ptr))
 

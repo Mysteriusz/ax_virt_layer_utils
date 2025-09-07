@@ -23,7 +23,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #elif defined(AX_KM)
-#include <ntddk.h>
+#include <wdm.h>
+
+#pragma warning(disable:4820)
+#pragma warning(disable:4711)
+#pragma warning(disable:5045)
 #endif
 
 #endif // defined(AX_WIN32)
@@ -49,13 +53,21 @@
 */
 #define _eval 
 
+#if defined(_MSC_VER)
+#define __builtin_trap() __debugbreak()
+#endif
+
 #define null 		(0)
 #define nullptr 	((void*)0)
 
 #define unref(p)	((void)p)
 #define addr(v)		(&(long long[]){v})
+#define asrt(expr)	((expr == true) ? (void)__builtin_trap() : (void)null)
+#define chkf(v,f)	(((v) & (f)) != 0)
+#define astp(t,v)	*((t*)((void*)&(v)))
 
 #include <stdbool.h>
+
 #if defined(AX_UM)
 #include <stdio.h>
 #endif
@@ -85,8 +97,6 @@ typedef union{
 	i8 sig_8;
 	u8 unsig_8;
 } iu64;
-
-#define chkf(v,f)	(((v) & (f)) != 0)
 
 // Characters
 

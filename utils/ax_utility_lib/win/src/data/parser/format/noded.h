@@ -10,7 +10,7 @@
 	==========================================
 
 	[section_name]: -> Named section of stored nodes. 
-	Entire section name CAN`T exceed 512 bytes.
+	Entire section name CAN`T exceed NODED_SECT_BOUND (4096 bytes).
 	Section syntax is strict and HAS to always follow the same pattern.
 	Section names CAN`T repeat.
 	Sections always have to end with ':' character.
@@ -75,7 +75,7 @@
 
 */
 
-#define NODED_EXT		L".noded"
+#define NODED_EXT		L"noded"
 
 typedef struct _noded_doc noded_doc;
 typedef struct _noded_sect noded_sect;
@@ -122,16 +122,24 @@ axres noded_inv_doc(
 #define NODED_SECT_END 		L"]"
 #define NODED_SECT_PTR 		L":"
 
-#define NODED_SECT_BOUND 	0x200
+#define NODED_SECT_BOUND 	0x1000
+// Load section and it`s nodes
 axres noded_load_sect(
 	_in const c16		*path,
 	_in const c16		*sect_name, 
 	_out noded_sect		**sect
 );
+// Find section in a file by name
 axres noded_find_sect(
 	_in io_file		*file,
 	_in const c16		*sect_name, 
-	_out u64		*offset
+	_out u64		*file_off
+);
+// Create section label from string
+axres noded_label_sect(
+	_in const c16		*name,
+	_out u32 		*size,
+	_in_out _eval c16	*buf // Evaluate by (size * sizeof(c16))
 );
 
 /*

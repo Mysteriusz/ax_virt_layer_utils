@@ -71,7 +71,7 @@ axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (text == nullptr
 	|| charset == nullptr){
@@ -81,39 +81,11 @@ axres trim(
 	bool ret_size = ((size != nullptr) && (buf == nullptr));
 	if (!ret_size){
 		if (size == nullptr
-		&& buf == nullptr){
+		|| buf == nullptr){
 			return AX_INV_BUF;
 		}
 	}
 	
-	const c16 *start = text;
-	const c16 *end = end_c16(text);
-	
-	while((contains(charset, *start) == AX_SUCC)
-	&& end != start){
-		start++;
-	}
-
-	while((contains(charset, *end) == AX_SUCC)
-	&& end != start){
-		end--;
-	}
-
-	if (end == start){
-		return AX_INV_DATA;
-	}
-
-	u32 buf_size = dif_c16(start, ++end); 
-	if (ret_size == true){
-		*size = buf_size;
-		return AX_SUCC;
-	}
-
-	if (buf_size == 0){
-		return AX_INV_DATA;
-	}
-	memcpy(*buf, start, buf_size * sizeof(c16)); 
-
-	return AX_SUCC;
+	return AX_NOT_IMP;
 }
 

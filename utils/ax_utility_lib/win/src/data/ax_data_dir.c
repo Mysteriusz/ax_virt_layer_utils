@@ -18,15 +18,11 @@ axres push_data_dir(
 	u32 size = 0;
 
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
+
 	path = axmalloc(size * sizeof(c16));
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
-	if (AX_ERR(res)){
-		axfree(path);
-		return res;
-	}
+	axcheck(res, axfree(path));
 
 	hdl->con.user_data = path;
 
@@ -51,31 +47,25 @@ axres read_data_dir(
 ){
 	bool ret_size = false;
 	axres res = read_data_inv(hdl, size, buf, &ret_size);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	io_file	file = {0};	
 
 	res = io_fo(hdl->con.user_data, IO_FILE_R, &file);
-	if (AX_ERR(res)){
-		return res;
-	} 
+	axcheck(res);
 
 	// Validate buffer size 
 	res = _ax_buf_err(file.size, *size);
 	// Check size and return correct one 
 	if (AX_ERR(res)
 	|| ret_size){
-		*size = file.size;
+		*size = astp(u32,file.size);
 		io_fc(&file);
 		return AX_SUCC;
 	}
 
 	res = io_fr(&file, *size, buf, nullptr);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	io_fc(&file);
 
@@ -87,23 +77,15 @@ axres write_data_dir(
 	_in void		*buf
 ){
 	axres res = write_data_inv(hdl, size, buf);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	io_file file = {0};
 
 	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), &file);
-	// If file did not exist and 	
-	// lacked create access (URI_RULE_CREATE)
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	res = io_fw(&file, size, buf, nullptr);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	io_fc(&file);
 

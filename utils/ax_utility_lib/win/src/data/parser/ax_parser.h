@@ -4,7 +4,7 @@
 #include "ax_type.h"
 #include "ax_error.h"
 
-static u32 _c16len(
+static inline u32 _c16len(
 	_in const c16 		*text
 ){
 	if (text == nullptr){
@@ -19,7 +19,7 @@ static u32 _c16len(
 
 	return len;
 }
-static u32 _c16len_b(
+static inline u32 _c16len_b(
 	_in const c16 		*text
 ){
 	return _c16len(text) * sizeof(c16);
@@ -74,11 +74,12 @@ axres compare(
 	_in const c16 		*a,
 	_in const c16		*b	
 );
+// TODO: FIX TRIM
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*size,
-	_in_out c16		**buf
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 
 /*
@@ -101,11 +102,6 @@ axres find_substr(
 	_out const c16		**loc, // *text substr start location
 	_out_opt const c16	**sub_loc  // *substr partially found location
 );
-axres find_substr_f(
-	_in io_file		*file,
-	_in const c16 		*substr,
-	_out u64		*file_off 
-);
 
 #endif // !defined(AX_PARSER_FIND_INT)
 
@@ -118,9 +114,16 @@ axres find_substr_f(
 #if !defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_SKIP_INT
 
-#define CHARSET_NL 		L"\n\r"
+#define CHARSET_NL 		L"\n\r\x0a\x0d"
 #define CHARSET_WS 		L"\x20\t"
 #define CHARSET_PUNCT     	L".,;:!?()[]{}"
+
+// TODO:
+axres skip_until_r(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out const c16		**loc
+);
 
 axres skip_until(
 	_in const c16		*text,
@@ -172,6 +175,14 @@ axres skip_ws(
 #if !defined(AX_PARSER_READ_INT) && defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_READ_INT
 
+// TODO:
+// Read from end until character in the charset
+axres read_until_r(
+	_in const c16 		*text,
+	_in const c16		*charset,
+	_out u32		*size,
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
 axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
@@ -224,6 +235,27 @@ axres c16_to_int(
 );
 
 #endif // !defined(AX_PARSER_CONV_INT)
+
+#if !defined(AX_PARSER_FILE_INT)
+#define AX_PARSER_FILE_INT
+
+// Can optimize after adding skip_until_r
+axres check_ext(
+	_in const c16 		*path,
+	_in const c16		*ext // Extension WITHOUT '.'
+);
+axres find_substr_f(
+	_in io_file		*file,
+	_in const c16 		*substr,
+	_out u64		*file_off 
+);
+axres skip_until_f(
+	_in io_file		*file,
+	_in const c16		*charset,
+	_out u64		*file_off
+);
+
+#endif // !defined(AX_PARSER_FILE_INT)
 
 #endif // !defined(AX_PARSER_INT)
 

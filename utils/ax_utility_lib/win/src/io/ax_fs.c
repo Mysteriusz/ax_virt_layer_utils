@@ -42,7 +42,7 @@ axres io_fbom(
 	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
 	u64 read = fread(bom, 4, 1, file);
 
-	io_file_enc enc = UTF16LE;
+	io_file_enc enc = UTF16;
 
 	// Read size CAN be UTF32
 	if (read == 4){
@@ -129,6 +129,8 @@ axres io_fo(
 		return AX_INV_BUF;
 	}
 
+	void *file = nullptr;
+	u64 size = 0;
 #if defined(AX_UM)
 	bool exists = (io_fex(path) == AX_SUCC);
 	if (!exists
@@ -136,9 +138,7 @@ axres io_fo(
 		return AX_NOT_FND;
 	}
 
-	FILE *file = nullptr;
 	errno_t err = 0;
-	u64 size = 0;
 
 	const c16 *mode = _io_file_conv(acc);
 	if (mode == nullptr){
@@ -146,7 +146,7 @@ axres io_fo(
 	}
 
 	// Try to open
-	err = _wfopen_s(&file, path, mode);
+	err = _wfopen_s((FILE**)&file, path, mode);
 	if (err == ENOENT){
 		return AX_NOT_FND;
 	} else if (err != 0){
@@ -154,9 +154,9 @@ axres io_fo(
 	}
 
 	// Get size
-	_fseeki64(file, 0, SEEK_END);
-	size = _ftelli64(file);
-	_fseeki64(file, 0, SEEK_SET);
+	_fseeki64((FILE*)file, 0, SEEK_END);
+	size = _ftelli64((FILE*)file);
+	_fseeki64((FILE*)file, 0, SEEK_SET);
 
 #elif defined(AX_KM)
 
@@ -242,6 +242,7 @@ axres io_fr(
 
 #elif defined(AX_KM)
 
+	unref(read);
 #if defined(AX_WIN32)
 	// TODO: 
 #elif defined(AX_LINUX)
@@ -279,6 +280,8 @@ axres io_fw(
 
 #elif defined(AX_KM)
 
+	unref(writ);
+	unref(size);
 #if defined(AX_WIN32)
 	// TODO: 
 #elif defined(AX_LINUX)

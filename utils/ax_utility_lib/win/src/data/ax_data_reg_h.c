@@ -105,47 +105,6 @@ void *res_path(
 // TODO:
 #elif defined(AX_KM)
 	unref(res);
-
-	c16 *path_d = nullptr;
-	ACCESS_MASK mask = RULE_TO_SAM(hdl->con.rule);        
-
-	UNICODE_STRING str = {0};
-	RtlInitUnicodeString(
-		&str, 
-		path_d
-	);
-
-	// Initialize attributes for the root handle
-	OBJECT_ATTRIBUTES root_attr = {0};   
-	InitializeObjectAttributes(
-		&root_attr,
-		&str,
-		OBJ_EXCLUSIVE,
-		nullptr,
-		nullptr
-	);
-
-	HANDLE root = null;
-	ZwCreateDirectoryObject(
-		&root,
-		DIRECTORY_CREATE_SUBDIRECTORY | DIRECTORY_CREATE_OBJECT,
-		&root_attr
-	);
-
-	OBJECT_ATTRIBUTES buf_attr = {0};   
-	InitializeObjectAttributes(
-		&buf_attr,
-		&str,
-		OBJ_EXCLUSIVE,
-		root,
-		nullptr
-	);
-
-	ZwOpenKey(
-		&buf, 
-		mask,
-		&buf_attr
-	);
 #endif 
 
 	return buf;

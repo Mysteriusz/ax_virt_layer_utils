@@ -25,13 +25,11 @@ axres read_until(
 	const c16 *end = nullptr;
 
  	res = skip_until(start, charset, &end);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 	 
-	u32 buf_size = dif_c16(start, end); 
+	u64 buf_size = dif_c16(start, end); 
 	if (ret_size == true){
-		*size = buf_size;
+		*size = astp(u32,buf_size);
 		return AX_SUCC;
 	}
 
@@ -72,14 +70,12 @@ axres join_with(
 		}
 	}
 
-	va_list args;
-	va_start(args, n);
+	c16 **args = (c16**)(&n + 1);
+	c16 *arg = args[0];
 
-	c16 *arg = nullptr;
 	u32 buf_size = 0;
 	u32 buf_offset = 0;
 	for (u32 i = 0; i < n; i++){
-		arg = va_arg(args, c16*);
 		buf_size += _c16len(arg);
 
 		if (!ret_size
@@ -91,8 +87,8 @@ axres join_with(
 			memcpy(&buf[buf_offset], arg, _c16len_b(arg));
 		}
 		buf_offset += _c16len(arg);
+		arg++;
 	}
-	va_end(args);
 	
 	// Add null-terminator
 	buf_size++;
@@ -137,7 +133,7 @@ axres split_by(
 
 	while(in_c16(text, start)){
 		res = skip_until(start, charset, &end);
-		u32 dif_size = dif_c16(start, end);
+		u64 dif_size = dif_c16(start, end);
 
 		if (res == AX_SUCC){
 			buf_size = (dif_size > 0)

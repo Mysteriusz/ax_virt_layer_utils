@@ -54,6 +54,7 @@ axres write_data_inv(
 	if (hdl->con.user_data == nullptr){
 		return AX_INV_ARG;
 	}
+	unref(size);
 
 	return AX_SUCC;
 }
@@ -82,9 +83,7 @@ axres open_data(
 		return AX_INV_DATA;
 	}
 
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	return AX_SUCC;
 }
@@ -107,9 +106,7 @@ axres close_data(
 		return AX_INV_DATA;
 	}
 
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	return AX_SUCC;
 }

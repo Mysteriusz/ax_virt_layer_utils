@@ -167,9 +167,7 @@ axres skip_line(
 	const c16 *temp = nullptr;
 
 	res = skip_until(text, CHARSET_NL, &temp);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	temp++;	
 	if (*temp == L'\0'){
@@ -197,9 +195,7 @@ axres skip_line_n(
 	const c16 *temp = nullptr;
 
 	res = skip_until_n(text, CHARSET_NL, n, &temp);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	temp++;	
 	if (*temp == L'\0'){
@@ -226,9 +222,7 @@ axres skip_ws(
 	const c16 *temp = nullptr;
 
 	res = skip_while(text, CHARSET_WS, &temp);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	*loc = temp;
 

@@ -31,6 +31,9 @@ axres read_data_file(
 	_out u32		*size,
 	_in_out _eval void	*buf
 ){
+	unref(hdl);
+	unref(size);
+	unref(buf);
 	return AX_SUCC;
 }
 axres write_data_file(
@@ -39,9 +42,7 @@ axres write_data_file(
 	_in void		*buf
 ){
 	axres res = write_data_inv(hdl, size, buf);
-	if (AX_ERR(res)){
-		return res;
-	}
+	axcheck(res);
 
 	return AX_SUCC;
 }
@@ -73,11 +74,10 @@ axres open_data_file(
 	hdl->con.is_open = true;
 
 	res = con_file_data(hdl, &hdl->con.data);
-	if (AX_ERR(res)){
+	axcheck(res, 
 		axfree(hdl->con.path);
-		memset(hdl, 0x00, sizeof(data_handle));
-		return res;
-	}
+		memset(hdl, 0x00, sizeof(data_handle))
+	);
 
 	return AX_SUCC;
 }
