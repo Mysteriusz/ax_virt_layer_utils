@@ -26,6 +26,15 @@ axres noded_load_sect(
 	res = noded_find_sect(&file, sect_name, &sect_off);
 	axcheck(res);
 
+	res = skip_line_f(&file, &sect_off);
+	axcheck(res);
+
+	file.offset = sect_off;
+
+	c16 *buf = axmalloc(100);
+	io_fr(&file, 100, buf, nullptr);
+	io_str(buf);
+
 	return AX_SUCC;
 }
 axres noded_find_sect(

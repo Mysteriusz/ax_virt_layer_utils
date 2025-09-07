@@ -114,7 +114,7 @@ axres find_substr(
 #if !defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_SKIP_INT
 
-#define CHARSET_NL 		L"\n\r\x0a\x0d"
+#define CHARSET_NL 		L"\n"
 #define CHARSET_WS 		L"\x20\t"
 #define CHARSET_PUNCT     	L".,;:!?()[]{}"
 
@@ -248,6 +248,10 @@ axres find_substr_f(
 	_in io_file		*file,
 	_in const c16 		*substr,
 	_out u64		*file_off 
+);
+axres skip_line_f(
+	_in io_file		*file,
+	_out u64		*file_off
 );
 axres skip_until_f(
 	_in io_file		*file,

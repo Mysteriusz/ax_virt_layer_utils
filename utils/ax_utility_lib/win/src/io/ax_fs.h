@@ -20,11 +20,12 @@ enum io_file_acc{
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
 };
 
-#define UTF16LE_BOM 	0xFFFE
-#define UTF16BE_BOM	0xFEFF
-#define UTF32LE_BOM	0xFFFE0000
-#define UTF32BE_BOM	0x0000FEFF
-#define UTF8_BOM	0xEFBBBF
+#define UTF16LE_BOM 	0xFEFF
+#define UTF16BE_BOM	0xFFFE
+#define UTF32LE_BOM	0xFEFF0000
+#define UTF32BE_BOM	0x0000FFFE
+#define UTF8LE_BOM	0xBFBBEF
+#define UTF8BE_BOM	0xEFBBBF
 typedef u32 io_file_enc;
 enum io_file_enc{
 	UTF8LE = 10,

@@ -40,7 +40,7 @@ axres io_fbom(
 	}
 	
 	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
-	u64 read = fread(bom, 4, 1, file);
+	u64 read = fread(bom, 1, 4, file);
 
 	io_file_enc enc = UTF16;
 
@@ -54,7 +54,9 @@ axres io_fbom(
 	}
 	// Read size CAN be UTF8
 	if (read >= 3){
-		if(memcmp(bom, addr(UTF8_BOM), 3) == 0){
+		if(memcmp(bom, addr(UTF8LE_BOM), 3) == 0){
+			enc = UTF8;
+		}else if(memcmp(bom, addr(UTF8BE_BOM), 3) == 0){
 			enc = UTF8;
 		}
 	}
@@ -153,6 +155,12 @@ axres io_fo(
 		return AX_INV_DATA;
 	}
 
+	axres res = AX_SUCC;
+
+	io_file_enc enc = UTF16LE;
+	res = io_fbom(path, &enc);
+	axcheck(res);
+
 	// Get size
 	_fseeki64((FILE*)file, 0, SEEK_END);
 	size = _ftelli64((FILE*)file);
@@ -171,6 +179,7 @@ axres io_fo(
 	buf->offset = 0;
 	buf->path = _wcsdup(path);
 	buf->acc = acc;
+	buf->enc = enc;
 	buf->hdl = file;			
 	buf->size = size;
 

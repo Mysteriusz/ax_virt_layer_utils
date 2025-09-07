@@ -11,11 +11,12 @@ int main(
 
 	//res = io_fo(L"D:\\share\\ax_info.noded", IO_FILE_RW, &buf);
 
-	res = noded_load_sect(L"D:\\sdhare\\ax_info.noded", L"mysect1", &sect);
+	res = noded_load_sect(L"D:\\share\\ax_info.noded", L"config", &sect);
 	if (AX_ERR(res)){
 		ax_log(res);
 		return 0;
 	}
+
 	return 0;
 }
 

@@ -128,3 +128,28 @@ axres skip_until_f(
 	return AX_SUCC;
 }
 
+axres skip_line_f(
+	_in io_file		*file,
+	_out u64		*file_off
+){
+	if (io_file_inv(file)){
+		return AX_INV_FILE;
+	}
+	if (file_off == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	u64 nl_off = 0;
+	res = skip_until_f(file, CHARSET_NL, &nl_off);
+	axcheck(res);
+
+	// Skip the found CHARSET_NL character
+	nl_off += _enc_size(file->enc);
+
+	*file_off = nl_off;
+
+	return AX_SUCC;
+}
+

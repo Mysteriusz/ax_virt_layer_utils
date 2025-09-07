@@ -62,7 +62,7 @@
 
 #define unref(p)	((void)p)
 #define addr(v)		(&(long long[]){v})
-#define asrt(expr)	((expr == true) ? (void)__builtin_trap() : (void)null)
+#define asrt(expr)	((expr == false) ? (void)__builtin_trap() : (void)null)
 #define chkf(v,f)	(((v) & (f)) != 0)
 #define astp(t,v)	*((t*)((void*)&(v)))
 
