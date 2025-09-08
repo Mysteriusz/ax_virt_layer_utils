@@ -10,11 +10,14 @@ typedef u16 io_file_acc;
 /*
  	IMPORTANT!
 
-	When you add new flag REMEMBER to upadate io_file_conv
+	When adding a new flag REMEMBER to upadate io_file_conv
 */
 enum io_file_acc{
+	// Read
 	IO_FILE_R = 0x01,
+	// Read/Write(Append)/Create
 	IO_FILE_W = 0x02,
+	// Read/Write/Create(Truncate)
 	IO_FILE_C = 0x04,
 	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
@@ -32,7 +35,7 @@ enum io_file_enc{
 	UTF8 = 11,
 	UTF8BE = 12,
 
-	UTF16LE = 20, // default encoding if not provided 
+	UTF16LE = 20,	
 	UTF16 = 21, 
 	UTF16BE = 22,
 
@@ -40,6 +43,7 @@ enum io_file_enc{
 	UTF32 = 41,
 	UTF32BE = 42,
 };
+// Bytes size of the file encoding
 static inline u32 _enc_size(
 	_in io_file_enc 		enc
 ){
@@ -71,12 +75,12 @@ static inline const c16 *_io_file_conv(
 		return L"rb";
 	case IO_FILE_W:
 		return L"ab";
-	case IO_FILE_RW:
-		return L"ab+";
 	case IO_FILE_C:
 		return L"wb";
+	case IO_FILE_RW:
+		return L"ab+";
 	case IO_FILE_RWC:
-		return L"w+b";
+		return L"wb+";
 	default:
 		return nullptr;
 	}
@@ -116,6 +120,7 @@ axres io_fex(
 );
 
 // Open file 
+// REQUIRES BOM
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,

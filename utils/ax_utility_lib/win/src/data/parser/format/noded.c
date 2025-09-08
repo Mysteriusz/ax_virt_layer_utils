@@ -37,28 +37,18 @@ axres noded_load_sect(
 axres noded_size_sect(
 	_in io_file		*file,
 	_in u64 		sect_off,
-	_out u64		*size
+	_out u64		*sect_size
 ){
 	if (io_file_inv(file)){
 		return AX_INV_FILE;
 	}
-	if (size == nullptr){
+	if (sect_size == nullptr){
 		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
 
-	u64 init_off = file->offset;
-
-	u64 curr_off = sect_off;
-	res = skip_line_f(file, &curr_off);
-	axcheck(res);
-
-	file->offset = curr_off;
-
-	// Reset file offset
-	file->offset = init_off;	
-
+	unref(res);
 	return AX_SUCC;
 }
 axres noded_find_sect(

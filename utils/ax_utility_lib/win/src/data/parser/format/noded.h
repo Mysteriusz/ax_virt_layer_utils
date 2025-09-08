@@ -133,7 +133,7 @@ axres noded_load_sect(
 axres noded_size_sect(
 	_in io_file		*file,
 	_in u64 		sect_off,
-	_out u64		*size
+	_out u64		*sect_size
 );
 // Find section in a file by name
 axres noded_find_sect(

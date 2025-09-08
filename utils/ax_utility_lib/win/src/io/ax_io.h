@@ -17,6 +17,9 @@
 axres io_str(
 	const c16 		*val
 );
+axres io_str_b(
+	const c16 		*val
+);
 axres io_i64(
 	i64			val
 );

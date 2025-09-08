@@ -42,7 +42,7 @@ axres io_fbom(
 	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
 	u64 read = fread(bom, 1, 4, file);
 
-	io_file_enc enc = UTF16;
+	io_file_enc enc = 0;
 
 	// Read size CAN be UTF32
 	if (read == 4){
@@ -55,9 +55,9 @@ axres io_fbom(
 	// Read size CAN be UTF8
 	if (read >= 3){
 		if(memcmp(bom, addr(UTF8LE_BOM), 3) == 0){
-			enc = UTF8;
+			enc = UTF8LE;
 		}else if(memcmp(bom, addr(UTF8BE_BOM), 3) == 0){
-			enc = UTF8;
+			enc = UTF8BE;
 		}
 	}
 	// Read size CAN be UTF16
@@ -67,6 +67,10 @@ axres io_fbom(
 		}else if(memcmp(bom, addr(UTF16BE_BOM), 2) == 0){
 			enc = UTF16BE;
 		}
+	}
+
+	if (enc == 0){
+		return AX_INV_ENC;
 	}
 
 	*buf = enc;
@@ -142,6 +146,7 @@ axres io_fo(
 
 	errno_t err = 0;
 
+	// Convert acc to mode
 	const c16 *mode = _io_file_conv(acc);
 	if (mode == nullptr){
 		return AX_INV_CODE;
@@ -243,7 +248,6 @@ axres io_fr(
 	u64 r = 0;
 	_fseeki64(file->hdl, file->offset, SEEK_CUR);
 	r = fread(buf, 1, size, file->hdl);	
-	_fseeki64(file->hdl, 0, SEEK_SET);
 
 	if (read != nullptr){
 		*read = r;
@@ -281,7 +285,6 @@ axres io_fw(
 	u64 w = 0;
 	_fseeki64(file->hdl, file->offset, SEEK_SET);
 	w = fwrite(buf, size, 1, file->hdl);	
-	_fseeki64(file->hdl, 0, SEEK_SET);
 
 	if (writ != nullptr){
 		*writ = w;
