@@ -4,9 +4,18 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
-#define AX_ERR(r) 			((axres)r != AX_SUCC)
-#define AX_KMERR(r) 			((axres)r < AX_SUCC)
-#define AX_UMERR(r) 			((axres)r > AX_SUCC)
+/*
+ 	Warning logs are primarly acknowleged in kernel level code.
+*/
+
+// Warning code check 
+#define AX_WRG(r) 			(((axres)r >= 0x400) && ((axres)r < 0x800))
+
+// Error code check
+#define AX_ERR(r) 			(((axres)r != AX_SUCC) && !(AX_WRG(r)))
+
+#define AX_KMERR(r) 			(((axres)r < AX_SUCC) && !(AX_WRG(r)))
+#define AX_UMERR(r) 			(((axres)r > AX_SUCC) && !(AX_WRG(r)))
 
 /*
  	Inline return AX_ERR(r) alias
@@ -19,6 +28,7 @@
 #define axcheck_b(r,...)		do { if(AX_ERR(r)){__VA_ARGS__; break;} } while(0)
 
 #define AX_LOG_HEAD 			L"--------AX_LOG--------"
+#define AX_WRG_HEAD 			L"WARNING:"
 
 #include "ax_io.h"
 
@@ -28,8 +38,14 @@ static void ax_log(
 	io_str(AX_LOG_HEAD);
 	io_i64(res);
 }
+static void ax_log_wrg(
+	axres 			res
+){
+	io_str(AX_WRG_HEAD);
+	io_i64(res);
+}
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 
 static void ax_log_lstat(
 	axres 			stat
@@ -38,7 +54,7 @@ static void ax_log_lstat(
 	io_str(L"--------LSTATUS--------");
 }
 
-#endif // defined(AX_WIN32)
+#endif // defined(AX_WIN64)
 
 static void ax_log_msg(
 	axres 			res,

@@ -6,7 +6,7 @@
 
 #if defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 #define io_mpkm_log(val) KdPrint((val))
 #elif defined(AX_LINUX)
 // TODO: linux abstraction (printk??) 

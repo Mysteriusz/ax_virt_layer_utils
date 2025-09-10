@@ -3,8 +3,11 @@
 
 /*
  
-   	axres >= 1 -> user-mode error
+   	Code mapping:
+
    	axres <= -1 -> kernel-mode error
+   	axres >= 1 -> user-mode error
+   	axres >= 4096 <= 65536 -> warning
    	
 */
 
@@ -12,22 +15,53 @@
 
 #define AX_SUCC 			((axres)0x00)
 
+// "INVALID" codes
+
+#define AX_ERR_MSG(r)			(r##_MSG)
+
 #define AX_INV_ARG 			((axres)0x01)
+#define AX_INV_ARG_MSG 			L"Invalid argument passed."
+
 #define AX_INV_DATA 			((axres)0x02)
+#define AX_INV_DATA_MSG 		L"Invalid data passed."
+
 #define AX_INV_BUF 			((axres)0x03)
+#define AX_INV_BUF_MSG 			L"Invalid buffer passed."
+
 #define AX_INV_CODE 			((axres)0x04)
+#define AX_INV_CODE_MSG 		L"Invalid code received."
+
 #define AX_INV_FILE 			((axres)0x05) // EXCLUSIVE TO _io_file STRUCTURE ERRORS
+#define AX_INV_FILE_MSG 		L"Invalid file structure."
+
 #define AX_INV_ENC 			((axres)0x06) // EXCLUSIVE TO _io_file_enc TYPE ERRORS
+#define AX_INV_ENC_MSG 			L"Invalid file encoding."
+
+// "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)
+#define AX_BUF_TOO_SMALL_MSG 		L"Buffer too small."
+
 #define AX_BUF_TOO_BIG 			((axres)0x11)
+#define AX_BUF_TOO_BIG_MSG 		L"Buffer too big."
+
+// "NOT" codes
 
 #define AX_NOT_FND 			((axres)0x20)
 #define AX_NOT_IMP 			((axres)0x21)
 
+// "ACCESS" codes
+
 #define AX_ACC_DEN			((axres)0x40)
 
+// "UNKNOWN" codes
+
 #define AX_UNK_ERR 			((axres)0x80)
+
+// "WARNING" codes
+
+// Missed/Not found
+#define AX_WRG_MIS 			((axres)0x1000)
 
 static inline axres _ax_buf_err(
 	u64 		size,

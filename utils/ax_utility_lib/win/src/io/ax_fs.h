@@ -4,7 +4,7 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
-#define IO_FILE_CHUNK 0x400
+#define IO_FILE_CHUNK 0x200
 
 typedef u16 io_file_acc;
 /*
@@ -94,7 +94,7 @@ typedef struct _io_file{
 	FILE			*hdl;
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	HANDLE			hdl;
 #elif defined(AX_LINUX)
 	void			*hdl;
@@ -119,8 +119,9 @@ axres io_fex(
 	_in const c16		*path	
 );
 
-// Open file 
+// Open file
 // REQUIRES BOM
+// Non BOM files will return AX_INV_ENC.
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,

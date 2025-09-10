@@ -1,6 +1,6 @@
 #include "ax_data.h"
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 
 #define RULE_TO_SAM(rule) \
 	(chkf(rule, URI_RULE_ADM) \

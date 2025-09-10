@@ -43,30 +43,7 @@ axres find_substr_f(
 	u64 init_off = file->offset;
 	u64 occ_off = 0; // Offset of the occurrence 
 
-	const c16 *sub_char = substr;
-	const c16 *occ = nullptr;
-
 	do{
-		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
-		axcheck_b(res);
-
-		res = find_substr(chunk, sub_char, &occ, &sub_char);
-		if (res != AX_NOT_FND 
-		&& AX_ERR(res)){
-			break;
-		}else if (res == AX_NOT_FND){ 
-			sub_char = substr;			
-			file->offset += IO_FILE_CHUNK;
-			occ = nullptr;
-			sub_char = nullptr;
-			memset(chunk, 0x0, IO_FILE_CHUNK);
-			continue;
-		}else if (occ_off == 0){
-			occ_off = file->offset + (dif_b(chunk,occ) + _enc_size(file->enc));
-		}
-
-		// Move to another chunk
-		file->offset += IO_FILE_CHUNK;
 		memset(chunk, 0x0, IO_FILE_CHUNK);
 	} while(file->offset < file->size);
 
@@ -117,7 +94,9 @@ axres skip_while_f(
 			file->offset += IO_FILE_CHUNK;
 		}else{ // Found
 		        // Move by file and chunk offset 
-			occ_off = file->offset + (dif_b(chunk,occ) + _enc_size(file->enc));
+			occ_off = (file->offset == 0) /* TODO: Kurwa refactor */\
+				? file->offset + (dif_b(chunk,occ) + _enc_size(file->enc)) \
+				: file->offset + dif_b(chunk,occ); \
 			break;
 		}
 		memset(chunk, 0x0, IO_FILE_CHUNK);
@@ -156,7 +135,6 @@ axres skip_until_f(
 	u64 occ_off = 0; // Offset of the occurrence 
 
 	const c16 *occ = nullptr;
-
 	do{
 		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
 		axcheck_b(res);
@@ -169,7 +147,9 @@ axres skip_until_f(
 			file->offset += IO_FILE_CHUNK;
 		}else{ // Found
 		        // Move by file and chunk offset 
-			occ_off = file->offset + (dif_b(chunk,occ) + _enc_size(file->enc));
+			occ_off = (file->offset == 0) /* TODO: Kurwa refactor */\
+				? file->offset + (dif_b(chunk,occ) + _enc_size(file->enc)) \
+				: file->offset + dif_b(chunk,occ); \
 			break;
 		}
 		memset(chunk, 0x0, IO_FILE_CHUNK);

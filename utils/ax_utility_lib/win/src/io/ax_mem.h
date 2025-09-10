@@ -6,7 +6,7 @@
 
 #if defined(AX_UM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 
 #define axmalloc(size) ({ \
 	void *ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size)); \
@@ -23,11 +23,11 @@
 #define axmalloc(size) malloc((size))
 #define axfree(ptr) free((ptr))
 
-#endif // defined(AX_WIN32)
+#endif // defined(AX_WIN64)
 
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 
 #define AX_MEM_POOL_TAG 		'axkm'
 static void *axmalloc_msvc(
@@ -54,7 +54,7 @@ static void axfree_msvc(
 #define axmalloc(size) kmalloc((size), GFP_KERNEL) 
 #define axfree(ptr) free((ptr))
 
-#endif // defined(AX_WIN32)
+#endif // defined(AX_WIN64)
 
 #endif // defined(AX_UM)
 

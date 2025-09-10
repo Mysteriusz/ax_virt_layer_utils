@@ -13,9 +13,8 @@ $flags = @(
 	"IC:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km\full"
 )
 $define = @(
-	"DAX_WIN32",
-	"DAX_KM",
-	"D_AMD64_"
+	"DAX_WIN64",
+	"DAX_KM"
 )
 $aalias = "/"
 $ialias = "/c"
@@ -33,9 +32,8 @@ $flags = @(
 	"-target=x86_64-pc-windows-msvc"
 )
 $define = @(
-	"DAX_WIN32",
-	"DAX_UM",
-	"D_AMD64_"
+	"DAX_WIN64",
+	"DAX_UM"
 )
 $aalias = "-"
 $ialias = "-c"

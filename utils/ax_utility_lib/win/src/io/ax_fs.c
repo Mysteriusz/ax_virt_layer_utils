@@ -80,7 +80,7 @@ axres io_fbom(
 
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 
@@ -111,7 +111,7 @@ axres io_fex(
 
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 
@@ -173,7 +173,7 @@ axres io_fo(
 
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 
@@ -207,7 +207,7 @@ axres io_fc(
 
 #elif defined(AX_KM)
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 
@@ -256,7 +256,7 @@ axres io_fr(
 #elif defined(AX_KM)
 
 	unref(read);
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 
@@ -294,7 +294,7 @@ axres io_fw(
 
 	unref(writ);
 	unref(size);
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 	// TODO: 
 #elif defined(AX_LINUX)
 	// TODO: 

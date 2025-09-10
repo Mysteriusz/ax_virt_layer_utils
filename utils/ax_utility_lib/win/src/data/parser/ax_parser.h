@@ -28,8 +28,18 @@ static inline u32 _c16len_b(
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
 #define dif_c16(s,e)		((c16*)e - (c16*)s)
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
+#define in_c16_s(tp,p,s)	(dif_c16(tp,p) < s)
 
 #define dif_b(s,e)		((u8*)e - (u8*)s)
+
+/*
+ 
+   	If AX_NOT_FND is returned, every _out parameter
+	will be set to it`s default type value.
+	(c16* -> *0)
+	(c16** -> nullptr)
+
+*/
 
 /*
  
@@ -78,7 +88,7 @@ axres compare(
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*size,
+	_out u64		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 
@@ -99,8 +109,8 @@ axres find_char(
 axres find_substr(
 	_in const c16 		*text,
 	_in const c16 		*substr,
-	_out const c16		**loc, // *text substr start location
-	_out_opt const c16	**sub_loc  // *substr partially found location
+	_out const c16		**loc, // text substr start location
+	_out_opt const c16	**sub_loc  // substr partially found offset
 );
 
 #endif // !defined(AX_PARSER_FIND_INT)
@@ -180,23 +190,23 @@ axres skip_ws(
 axres read_until_r(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*size,
+	_out u64		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*size,
+	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_line(
 	_in const c16 		*text,
-	_out u32		*size,
+	_in_out u64		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_word(
 	_in const c16 		*text,
-	_out u32		*size,
+	_in_out u64		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 

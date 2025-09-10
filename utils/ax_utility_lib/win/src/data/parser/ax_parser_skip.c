@@ -1,4 +1,5 @@
 #include "ax_parser.h"
+#include "stdbool.h"
 
 axres skip_until(
 	_in const c16		*text,
@@ -9,22 +10,21 @@ axres skip_until(
 	|| charset == nullptr){
 		return AX_INV_ARG;
 	}
-
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
+	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	bool found = false;
 
-	while(in_c16(text,text_char)
-	&& found == false){
-		found = (contains(charset,*text_char) == AX_SUCC)
-			? true
-			: false;
+	while(in_c16_s(text, text_char, text_len)){
+		found = (contains(charset,*text_char) == AX_SUCC);
 
-		if (found == false){
+		if (found == true){
+			break;
+		}else{
 			text_char++;
 		}
 	}
@@ -48,28 +48,29 @@ axres skip_until_n(
 	|| charset == nullptr){
 		return AX_INV_ARG;
 	}
-
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
+	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
-	u32 o = 0;
 
-	bool found = (o == n);
+	u32 occ_n = 0;
+
+	bool found = false;
 
 	do{
-		o = (contains(charset,*text_char) == AX_SUCC)
-			? o + 1
-			: o;
-		found = (o - 1 == n);
+		if (contains(charset,*text_char) == AX_SUCC){
+			found = (occ_n == n);
+			occ_n++;
+		}
 
-		if (found == false){
+		if (found == true){
+			break;
+		}else {
 			text_char++;
 		}
-		
-	}while(in_c16(text,text_char)
-	&& found == false);
+	}while(in_c16_s(text, text_char, text_len));
 
 	if (found == true){
 		*loc = text_char;
@@ -93,29 +94,27 @@ axres skip_word(
 		return AX_INV_BUF;
 	}
 
+	u64 text_len = _c16len(text);
+	u64 word_len = _c16len(word);
 	const c16 *text_char = text;
 	const c16 *word_char = word;
 
 	bool found = false;
 
-	while(in_c16(text, text_char)
-	&& in_c16(word, word_char)
-	&& *text_char == *word_char){
+	while(in_c16_s(text, text_char, text_len)
+	&& in_c16_s(word, word_char, word_len)){
 		text_char++;
 		word_char++;
 	}
 
 	found = (*word_char == L'\0');
-	if (!found){
-		return AX_NOT_FND;	
-	}
-	if (*text_char == L'\0'){
-		return AX_INV_DATA;
+	if (found){
+		*loc = text_char;
 	}
 
-	*loc = text_char;
-
-	return AX_SUCC;
+	return (found == true)
+		? AX_SUCC
+		: AX_NOT_FND;
 }
 
 axres skip_while(
@@ -127,23 +126,19 @@ axres skip_while(
 	|| charset == nullptr){
 		return AX_INV_ARG;
 	}
-
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
+	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
 
-	bool found = true;
-
-	while (in_c16(text,text_char)
-	&& found == true){
-		found = (contains(charset, *text_char) == AX_SUCC)
-			? true
-			: false;
-
-		if (found == true){
+	while (in_c16_s(text, text_char, text_len)){
+		if (contains(charset, *text_char) == AX_SUCC){
 			text_char++;
+		}
+		else{
+			break;
 		}
 	}
 
@@ -169,11 +164,7 @@ axres skip_line(
 	res = skip_until(text, CHARSET_NL, &temp);
 	axcheck(res);
 
-	temp++;	
-	if (*temp == L'\0'){
-		return AX_NOT_FND;
-	}
-
+	temp++;	// skip CHARSET_NL character
 	*loc = temp;
 	
 	return AX_SUCC;
@@ -197,11 +188,7 @@ axres skip_line_n(
 	res = skip_until_n(text, CHARSET_NL, n, &temp);
 	axcheck(res);
 
-	temp++;	
-	if (*temp == L'\0'){
-		return AX_NOT_FND;
-	}
-
+	temp++;	// skip CHARSET_NL character
 	*loc = temp;
 	
 	return AX_SUCC;

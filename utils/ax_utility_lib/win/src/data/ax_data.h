@@ -43,7 +43,7 @@ axres write_data_inv(
 
 */
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 
 #define CON_REG 		0x01
 #define CON_REG_SIZE 		sizeof(HKEY)
@@ -157,7 +157,7 @@ axres close_data(
 
 */
 
-#if !defined(AX_DATA_REG_INT) && defined(AX_WIN32)
+#if !defined(AX_DATA_REG_INT) && defined(AX_WIN64)
 #define AX_DATA_REG_INT
 
 typedef struct _data_reg_desc{

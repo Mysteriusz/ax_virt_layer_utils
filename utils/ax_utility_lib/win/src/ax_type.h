@@ -7,21 +7,44 @@
 #error "Undefined target build mode. (AX_UM/AX_KM)"
 #endif
 
-#if defined(AX_WIN32) && defined(AX_LINUX)
-#error "Cannot define both AX_WIN32 and AX_LINUX"
-#elif !defined(AX_WIN32) && !defined(AX_LINUX)
-#error "Undefined target system. (AX_WIN32/AX_LINUX)"
+#if defined(AX_WIN64) && defined(AX_LINUX)
+#error "Cannot define both AX_WIN64 and AX_LINUX"
+#elif !defined(AX_WIN64) && !defined(AX_LINUX)
+#error "Undefined target platform. (AX_WIN64/AX_LINUX)"
 #endif
 
 #if defined(AX_KM)
+#ifndef 
 #define AX_STRICT_BUF_SIZE 
 #endif
+#endif
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
+
+/*
+ 	Windows specific architecture macros
+*/
+#if defined(__x86_64__) && !defined(__aarch64__)
+
+#ifndef _AMD64_ 
+#define _AMD64_
+#endif
+
+#elif !defined(__x86_64__) && defined(__aarch64__)
+
+#ifndef _ARM64_ 
+#define _ARM64_
+#endif
+
+#else
+#error "Non 64-bit architectures currently arent supported."
+#endif // defined(__x86_64__) && !defined(__aarch64__)
 
 #if defined(AX_UM)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <heapapi.h>
+#include <handleapi.h>
+#include <winreg.h>
+#include <winerror.h>
 #elif defined(AX_KM)
 #include <wdm.h>
 
@@ -30,7 +53,7 @@
 #pragma warning(disable:5045)
 #endif
 
-#endif // defined(AX_WIN32)
+#endif // defined(AX_WIN64)
 
 #define _in
 #define _in_opt
@@ -60,12 +83,16 @@
 #define null 		(0)
 #define nullptr 	((void*)0)
 
+// Declare unreferenced parameter (p)
 #define unref(p)	((void)p)
+// Address of the value (v)
 #define addr(v)		(&(long long[]){v})
-#define asrt(expr)	((expr == false) ? (void)__builtin_trap() : (void)null)
-#define chkf(v,f)	(((v) & (f)) != 0)
-#define astp(t,v)	*((t*)((void*)&(v)))
-
+// Multi-platform assertion (expr)
+#define asrt(expr)	((expr == false) ? (void)__builtin_trap() : (void)null) 
+// Check bit flag (f) in the value (v)
+#define chkf(v,f)	(((v) & (f)) != 0) 
+// Cast value (v) to type (t)
+#define astp(t,v)	*((t*)((void*)&(v))) 
 #include <stdbool.h>
 
 #if defined(AX_UM)
@@ -100,7 +127,7 @@ typedef union{
 
 // Characters
 
-#if defined(AX_WIN32)
+#if defined(AX_WIN64)
 typedef unsigned char c8; // ansi
 typedef unsigned short c16; // unicode
 #elif defined(AX_LINUX) 

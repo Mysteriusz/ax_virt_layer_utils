@@ -3,8 +3,8 @@
 axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*size,
-	_in_out c16		*buf
+	_in_out u64		*size,
+	_in_out _eval c16	*buf
 ){
 	if (text == nullptr
 	|| charset == nullptr){
@@ -14,7 +14,7 @@ axres read_until(
 	bool ret_size = ((size != nullptr) && (buf == nullptr));
 	if (!ret_size){
 		if (size == nullptr
-		&& buf == nullptr){
+		|| buf == nullptr){
 			return AX_INV_BUF;
 		}
 	}
@@ -28,30 +28,35 @@ axres read_until(
 	axcheck(res);
 	 
 	u64 buf_size = dif_c16(start, end); 
-	if (ret_size == true){
-		*size = astp(u32,buf_size);
+	// Adjust size for null-terminator
+	buf_size++;
+
+	if (ret_size){
+		*size = buf_size;
 		return AX_SUCC;
 	}
 
-	if (buf_size == 0){
-		return AX_INV_DATA;
-	}
-	memcpy(buf, start, buf_size * sizeof(c16));
+	// Validate provided buffer size
+	axcheck(_ax_buf_err(buf_size, *size));
+
+	// Adjust size to copy without null-terminator
+	memcpy(buf, start, (buf_size - 1) * sizeof(c16));
+
 
 	return AX_SUCC;
 }
 
 axres read_line(
 	_in const c16 		*text,
-	_out u32		*size,
-	_in_out c16		*buf
+	_in_out u64		*size,
+	_in_out _eval c16	*buf
 ){
 	return read_until(text, CHARSET_NL, size, buf);
 }
 axres read_word(
 	_in const c16 		*text,
-	_out u32		*size,
-	_in_out c16		*buf
+	_in_out u64		*size,
+	_in_out _eval c16	*buf
 ){
 	return read_until(text, CHARSET_WS, size, buf);
 }

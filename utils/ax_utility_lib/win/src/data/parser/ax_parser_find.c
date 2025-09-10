@@ -8,9 +8,10 @@ axres find_char(
 		return AX_INV_ARG;
 	}
 
+	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
 
-	while(in_c16(text, text_char)
+	while(in_c16_s(text, text_char, text_len)
 	&& *text_char != val){
 		text_char++;
 	}
@@ -30,18 +31,19 @@ axres find_substr(
 	|| substr == nullptr){
 		return AX_INV_ARG;
 	}
-
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
 	const c16 *loc_start = text;
 
+	u64 text_len = _c16len(text);
+	u64 sub_len = _c16len(substr);
 	const c16 *text_char = text;
 	const c16 *sub_char = substr;
 
-	while(in_c16(text, text_char)
-	&& in_c16(substr, sub_char)){
+	while(in_c16_s(text, text_char, text_len)
+	&& in_c16_s(substr, sub_char, sub_len)){
 		if (*sub_char == *text_char){
 			if (loc_start == nullptr){
 				loc_start = text_char;
