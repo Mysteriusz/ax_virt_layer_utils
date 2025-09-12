@@ -20,3 +20,5 @@ if ($wr){
 	& "$location\winrun.ps1"
 }
 
+./temp_run.ps1
+

@@ -61,17 +61,20 @@ axres find_substr(
 		text_char++;
 	}
 
-	bool found = (*sub_char == L'\0') // Full find
-		|| ((sub_char > substr) && (*text_char == L'\0')); // Part find
+	bool full_find = (*sub_char == L'\0');
+	bool part_find = ((sub_char > substr) && (*text_char == L'\0')); 
+	bool find = full_find;
 
-	if (found){
+	if (sub_loc != nullptr
+	&& (part_find || full_find)){
+		*sub_loc = sub_char;
+		find = true;
+	}
+	if (find){
 		*loc = loc_start;
-		if (sub_loc != nullptr){
-			*sub_loc = sub_char;
-		}
 	}
 
-	return (found)
+	return (find)
 		? AX_SUCC
 		: AX_NOT_FND;
 }

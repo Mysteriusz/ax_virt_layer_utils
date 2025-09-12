@@ -73,11 +73,11 @@ axres open_data(
 
 	axres res = AX_SUCC;
 	
-	if (starts_with(uri, URI_REG) == AX_SUCC){
+	if (starts_with(uri, URI_REG, nullptr) == AX_SUCC){
 		res = open_data_reg(uri, rule, hdl);
-	}else if (starts_with(uri, URI_DIR) == AX_SUCC){
+	}else if (starts_with(uri, URI_DIR, nullptr) == AX_SUCC){
 		res = open_data_dir(uri, rule, hdl);
-	}else if (starts_with(uri, URI_FILE) == AX_SUCC){
+	}else if (starts_with(uri, URI_FILE, nullptr) == AX_SUCC){
 		res = open_data_file(uri, rule, hdl);
 	}else{
 		return AX_INV_DATA;

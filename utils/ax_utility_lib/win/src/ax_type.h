@@ -135,7 +135,20 @@ typedef signed char c8; // ansi
 typedef signed short c16; // unicode
 #endif
 
-typedef i64 axres;
+typedef u64 axres;
+
+// axres breakdown structure
+typedef struct _axres_s{ 
+	// 32-bit block
+
+	u16 err : 12; // MAX 4095 (0xFFF)
+	u16 meta : 4; // Flag per bit
+	u16 reseverd0;
+
+	// 32-bit block
+
+	u32 reserved1 : 32;
+} axres_s;
 
 #endif //!defined(AX_TYPE_INT)
 

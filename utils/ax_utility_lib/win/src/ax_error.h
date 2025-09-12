@@ -4,31 +4,28 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
-/*
- 	Warning logs are primarly acknowleged in kernel level code.
-*/
-
-// Warning code check 
-#define AX_WRG(r) 			(((axres)r >= 0x400) && ((axres)r < 0x800))
+// Error structure cast
+#define AX_RES_S(r) 			(*(axres_s*)((axres*)addr(r)))
 
 // Error code check
-#define AX_ERR(r) 			(((axres)r != AX_SUCC) && !(AX_WRG(r)))
-
-#define AX_KMERR(r) 			(((axres)r < AX_SUCC) && !(AX_WRG(r)))
-#define AX_UMERR(r) 			(((axres)r > AX_SUCC) && !(AX_WRG(r)))
+#define AX_ERR(r) 			((AX_RES_S(r).err) != AX_SUCC)
 
 /*
  	Inline return AX_ERR(r) alias
 */
-#define axcheck(r,...)			do { if(AX_ERR(r)){__VA_ARGS__; return (axres)r;} } while(0)
+#define axcheck(r,...)			do { \
+	if(AX_ERR(r)){__VA_ARGS__; return (axres)r;} \
+} while(0)
 
 /*
  	Inline break AX_ERR(r) alias
 */
-#define axcheck_b(r,...)		do { if(AX_ERR(r)){__VA_ARGS__; break;} } while(0)
+#define axcheck_b(r,...)		do { \
+	if(AX_ERR(r)){__VA_ARGS__; break;}  \
+} while(0)
 
 #define AX_LOG_HEAD 			L"--------AX_LOG--------"
-#define AX_WRG_HEAD 			L"WARNING:"
+#define AX_LOG_META 			L"--------METADATA--------"
 
 #include "ax_io.h"
 
@@ -36,13 +33,7 @@ static void ax_log(
 	axres 			res
 ){
 	io_str(AX_LOG_HEAD);
-	io_i64(res);
-}
-static void ax_log_wrg(
-	axres 			res
-){
-	io_str(AX_WRG_HEAD);
-	io_i64(res);
+	io_i64(AX_RES_S(res).err);
 }
 
 #if defined(AX_WIN64)

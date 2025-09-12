@@ -138,7 +138,7 @@ inline io_file_acc rule_to_io(
 
 // URI scheme validation
 #define URI_V(uri_md, uri, uri_p)( \
-	(starts_with(uri, uri_md) != AX_SUCC) \
+	(starts_with(uri, uri_md, nullptr) != AX_SUCC) \
 	|| (skip_word(uri, uri_md, &uri_p) != AX_SUCC) \
 )
 

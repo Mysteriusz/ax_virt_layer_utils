@@ -138,8 +138,7 @@ axres noded_size_sect(
 // Find section in a file by name
 axres noded_find_sect(
 	_in io_file		*file,
-	_in const c16		*sect_name, 
-	_out u64		*file_off
+	_in const c16		*sect_name
 );
 // Create section label from string
 axres noded_label_sect(

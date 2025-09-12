@@ -22,12 +22,11 @@ axres noded_load_sect(
 	res = io_fo(path, IO_FILE_R, &file);
 	axcheck(res);
 
-	u64 sect_off = 0;	
-	res = noded_find_sect(&file, sect_name, &sect_off);
+	res = noded_find_sect(&file, sect_name);
 	axcheck(res);
 
 	u64 sect_size = 0;
-	res = noded_size_sect(&file, sect_off, &sect_size);
+	res = noded_size_sect(&file, file.offset, &sect_size);
 	axcheck(res);
 
 	io_fc(&file);
@@ -39,7 +38,7 @@ axres noded_size_sect(
 	_in u64 		sect_off,
 	_out u64		*sect_size
 ){
-	if (io_file_inv(file)){
+	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (sect_size == nullptr){
@@ -53,17 +52,13 @@ axres noded_size_sect(
 }
 axres noded_find_sect(
 	_in io_file		*file,
-	_in const c16		*sect_name, 
-	_out u64		*file_off
+	_in const c16		*sect_name
 ){
-	if (io_file_inv(file)){
+	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (sect_name == nullptr){
 		return AX_INV_ARG;
-	}
-	if (file_off == nullptr){
-		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
@@ -79,13 +74,10 @@ axres noded_find_sect(
 	res = noded_label_sect(sect_name, &sect_label_s, sect_label); 
 	axcheck(res, axfree(sect_label));
 
-	u64 sect_off = 0;
-	res = find_substr_f(file, sect_label, &sect_off);
+	res = find_substr_f(file, sect_label);
 
 	axfree(sect_label);
 	axcheck(res);
-	
-	*file_off = sect_off; 
 
 	return AX_SUCC;
 }

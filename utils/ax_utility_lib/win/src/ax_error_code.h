@@ -5,19 +5,23 @@
  
    	Code mapping:
 
-   	axres <= -1 -> kernel-mode error
-   	axres >= 1 -> user-mode error
-   	axres >= 4096 <= 65536 -> warning
+   	axres bit 0-11 		: Error code
+   	axres bit 12-15		: Error metadata
+
+	Further bit fileds may be added
    	
+	Code structure can be revealed by casting 
+		- (axres_s*)&axrer
+
 */
 
 #include "ax_type.h"
 
+// ERROR CODES CANNOT BE BIGGER THAN 0xFFF (12 bits) 
+//
 #define AX_SUCC 			((axres)0x00)
 
 // "INVALID" codes
-
-#define AX_ERR_MSG(r)			(r##_MSG)
 
 #define AX_INV_ARG 			((axres)0x01)
 #define AX_INV_ARG_MSG 			L"Invalid argument passed."
@@ -57,11 +61,6 @@
 // "UNKNOWN" codes
 
 #define AX_UNK_ERR 			((axres)0x80)
-
-// "WARNING" codes
-
-// Missed/Not found
-#define AX_WRG_MIS 			((axres)0x1000)
 
 static inline axres _ax_buf_err(
 	u64 		size,

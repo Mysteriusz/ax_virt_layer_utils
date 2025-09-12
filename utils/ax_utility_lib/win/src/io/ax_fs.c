@@ -1,8 +1,10 @@
 #include "ax_fs.h"
 #include "ax_error.h"
+#include "winnt.h"
 
-bool io_file_inv(
-	_in io_file 		*file
+bool io_finv(
+	_in io_file 		*file,
+	_in_opt io_file_enc 	exp_enc
 ){
 	if (file == nullptr){
 		return true;
@@ -13,6 +15,11 @@ bool io_file_inv(
 	}
 	if (file->hdl == nullptr){
 		return true;
+	}
+
+	if (exp_enc != 0
+	&& _enc_size(file->enc) != _enc_size(exp_enc)){
+		return true;	
 	}
 
 	return false;
@@ -81,9 +88,9 @@ axres io_fbom(
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif
@@ -105,16 +112,16 @@ axres io_fex(
 		if (err == ENOENT){
 			return AX_NOT_FND;
 		}
-		return AX_INV_FILE;
+		return AX_INV_DATA;
 	}
 	fclose(file);
 
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif
@@ -162,6 +169,7 @@ axres io_fo(
 
 	axres res = AX_SUCC;
 
+	// Get encoding
 	io_file_enc enc = UTF16LE;
 	res = io_fbom(path, &enc);
 	axcheck(res);
@@ -174,9 +182,9 @@ axres io_fo(
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif
@@ -199,18 +207,20 @@ axres io_fc(
 
 #if defined(AX_UM)
 
+	axfree(file->path);
+
 	errno_t err = 0;
 	err = fclose(file->hdl);
 	if (err != 0){
-		return AX_UNK_ERR;
+		return AX_INV_DATA;
 	}
 
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif
@@ -238,15 +248,13 @@ axres io_fr(
 #if defined(AX_UM)
 
 	// Skip BOM
-	u16 bom = 0;
-	fread(&bom, sizeof(c16), 1, file->hdl);
-	if (bom != 0xfeff // UTF-16BE
-	&& bom != 0xfffe){ // UTF-16LE
-		_fseeki64(file->hdl, 0, SEEK_SET);
+	u64 bom_s = _enc_size(file->enc);
+	if (file->offset < bom_s){
+		file->offset += bom_s - file->offset;
 	}
 
 	u64 r = 0;
-	_fseeki64(file->hdl, file->offset, SEEK_CUR);
+	_fseeki64(file->hdl, file->offset, SEEK_SET);
 	r = fread(buf, 1, size, file->hdl);	
 
 	if (read != nullptr){
@@ -257,9 +265,9 @@ axres io_fr(
 
 	unref(read);
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif
@@ -291,13 +299,10 @@ axres io_fw(
 	}
 
 #elif defined(AX_KM)
-
-	unref(writ);
-	unref(size);
 #if defined(AX_WIN64)
-	// TODO: 
+	#error "TODO"
 #elif defined(AX_LINUX)
-	// TODO: 
+	#error "TODO"
 #endif
 
 #endif

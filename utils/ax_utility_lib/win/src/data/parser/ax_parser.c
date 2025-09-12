@@ -1,8 +1,10 @@
 #include "ax_parser.h"
+#include "minwindef.h"
 
 axres starts_with(
 	_in const c16		*text,
-	_in const c16		*str
+	_in const c16		*str,
+	_out_opt const c16	**loc
 ){
 	if (text == nullptr
 	|| str == nullptr){
@@ -24,9 +26,20 @@ axres starts_with(
 			break;
 		}
 	}
-	
+
+	bool full_find = (*str_char == L'\0');
+	bool part_find = !full_find && (*text_char == L'\0');
+
+	bool find = full_find;
+
+	if (loc != nullptr
+	&& (part_find || full_find)){
+		*loc = str_char;
+		find = true; // Act as found if reading loc
+	}
+
 	// Got to the end of substr
-	return (*str_char == L'\0')
+	return (find == true)
 		? AX_SUCC
 		: AX_NOT_FND;
 }

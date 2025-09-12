@@ -74,7 +74,8 @@ static inline u32 _c16len_b(
 
 axres starts_with(
 	_in const c16		*text,
-	_in const c16		*str
+	_in const c16		*str,
+	_out_opt const c16	**loc
 );
 axres contains(
 	_in const c16 		*text,
@@ -124,7 +125,7 @@ axres find_substr(
 #if !defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_SKIP_INT
 
-#define CHARSET_NL 		L"\x0a"
+#define CHARSET_NL 		L"\x0a\x0d"
 #define CHARSET_WS 		L"\x20\t"
 #define CHARSET_PUNCT     	L".,;:!?()[]{}"
 
@@ -256,34 +257,29 @@ axres check_ext(
 );
 
 /*
-	Find interface for file
+	Find interface for files
 */
 axres find_substr_f(
 	_in io_file		*file,
-	_in const c16 		*substr,
-	_out u64		*file_off 
+	_in const c16 		*substr
 );
 
 /*
-	Skip interface for file
+	Skip interface for files
 */
 axres skip_while_f(
 	_in io_file		*file,
-	_in const c16		*charset,
-	_out u64		*file_off
+	_in const c16		*charset
 );
 axres skip_until_f(
 	_in io_file		*file,
-	_in const c16		*charset,
-	_out u64		*file_off
+	_in const c16		*charset
 );
 axres skip_line_f(
-	_in io_file		*file,
-	_out u64		*file_off
+	_in io_file		*file
 );
 axres skip_word_f(
-	_in io_file		*file,
-	_out u64		*file_off 
+	_in io_file		*file
 );
 
 #endif // !defined(AX_PARSER_FILE_INT)

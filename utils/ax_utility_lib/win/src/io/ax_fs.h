@@ -4,7 +4,7 @@
 #include "ax_type.h"
 #include "ax_error_code.h"
 
-#define IO_FILE_CHUNK 0x200
+#define IO_FILE_CHUNK 0x400 // (1024 UTF8) (512 UTF16) (256 UTF32)
 
 typedef u16 io_file_acc;
 /*
@@ -104,8 +104,9 @@ typedef struct _io_file{
 	io_file_enc 		enc; // Optional field (default = UTF16LE)
 	u64			offset; // Optional field (default = 0) ** RESETS AFTER R/W OPERATIONS **
 } io_file;
-bool io_file_inv(
-	_in io_file 		*file
+bool io_finv(
+	_in io_file 		*file,
+	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 );
 
 // Get file byte order mark (Encoding)
