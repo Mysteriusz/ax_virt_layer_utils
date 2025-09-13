@@ -114,6 +114,55 @@ axres find_substr(
 	_out_opt const c16	**sub_loc  // substr partially found offset
 );
 
+/*
+	Sequence formating:
+		- %s (string)
+	TODO: MORE FORMATS
+
+	Multi-specifier formats should have separator between them UNLESS:
+		- specifier has type size (%i32, %i64, etc...)
+
+	Every format should also have some sort of start/end character.
+
+	Example:
+		- fmt = L"[[[%s|%s]]"
+		- ret = L"[[[some_string|other_string]]"
+
+		- fmt = L"<%s\n%s>"
+		- ret = L"<some_string
+		other_string>"
+
+	Invalid format:
+		- fmt = L"[[[%s%s]]"
+		- fmt = L"%s%s"
+		%s does not have type size.
+	Valid format:
+		- fmt = L"[[[%i32%i32]]"
+		- fmt = L"%i32%i32"
+*/
+
+typedef struct _spec_meta{
+	const c16 *val;
+	bool sep;
+} spec_meta;
+
+#define SEQ_SPC_TABLE_SIZE 		0x1
+static const spec_meta seq_spec_table[SEQ_SPC_TABLE_SIZE] = {
+	{L"%s", true},
+};
+
+bool find_sequence_spec_inv(
+	_in const c16		*spec,
+	_out const spec_meta	**meta
+);
+bool find_sequence_inv(
+	_in const c16 		*fmt
+);
+axres find_sequence(
+	_in const c16		*text,
+	_in const c16 		*fmt
+);
+
 #endif // !defined(AX_PARSER_FIND_INT)
 
 /*
@@ -262,6 +311,32 @@ axres check_ext(
 axres find_substr_f(
 	_in io_file		*file,
 	_in const c16 		*substr
+);
+/*
+	Sequence formating:
+		- %s (string)
+	TODO: MORE FORMATS
+
+	Multi-type formats should have separator between them 
+	Every format should also have some sort of start/end character
+
+	Example:
+		- fmt = L"[[[%s|%s]]"
+		- ret = L"[[[some_string|other_string]]"
+
+		- fmt = L"<%s\n%s>"
+		- ret = L"<some_string
+		other_string>"
+
+	Invalid format:
+		- fmt = L"[[[%s%s]]"
+		- fmt = L"[%s"
+		- fmt = L"%s]"
+		- fmt = L"%s%s"
+*/
+axres find_sequence_f(
+	_in io_file		*file,
+	_in const c16 		*fmt
 );
 
 /*

@@ -85,6 +85,10 @@ typedef struct _noded_doc{
 	io_file			*file;
 	noded_sect		*root; 		
 } noded_doc;
+bool noded_doc_inv(
+	_in noded_doc 		*doc
+);
+
 typedef struct _noded_sect{
 	c16			*name;
 	u32			line;
@@ -100,12 +104,23 @@ typedef struct _node_kvp{
 } node_kvp;
 
 /*
+ 	noded global
+*/
+axres noded_load_sym(
+	_in noded_doc 		*doc
+);
+
+/*
  	noded_doc related
 */
 
-axres noded_load_doc(
+// Initialize document by loading symbols etc.
+axres noded_init_doc(
 	_in const c16		*path,
-	_out noded_doc		**doc
+	_out noded_doc		*doc
+);
+axres noded_load_doc(
+	_in noded_doc		*doc
 );
 axres noded_unload_doc(
 	_in noded_doc		*doc
@@ -125,26 +140,8 @@ axres noded_inv_doc(
 #define NODED_SECT_BOUND 	0x1000
 // Load section and it`s nodes
 axres noded_load_sect(
-	_in const c16		*path,
-	_in const c16		*sect_name, 
-	_out noded_sect		**sect
-);
-// Find section in a file by name
-axres noded_size_sect(
-	_in io_file		*file,
-	_in u64 		sect_off,
-	_out u64		*sect_size
-);
-// Find section in a file by name
-axres noded_find_sect(
-	_in io_file		*file,
+	_in noded_doc		*doc,
 	_in const c16		*sect_name
-);
-// Create section label from string
-axres noded_label_sect(
-	_in const c16		*name,
-	_out u32 		*size,
-	_in_out _eval c16	*buf // Evaluate by (size * sizeof(c16))
 );
 
 /*

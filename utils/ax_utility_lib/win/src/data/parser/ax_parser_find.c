@@ -79,3 +79,84 @@ axres find_substr(
 		: AX_NOT_FND;
 }
 
+bool find_sequence_spec_inv(
+	_in const c16		*spec,
+	_out const spec_meta	**meta
+){
+	if (spec == nullptr
+	|| spec[0] != L'%'){
+		return true;
+	}
+	if (meta == nullptr){
+		return true;
+	}
+
+	axres res = AX_SUCC;
+	for (u32 i = 0; i < SEQ_SPC_TABLE_SIZE; i++){
+		res = starts_with(spec, seq_spec_table[i].val, &spec);
+
+		if (res == AX_SUCC){
+			*meta = &seq_spec_table[i];
+			break;
+		}
+	}
+
+	if (AX_ERR(res)){
+		return true;
+	}
+
+	return false;
+}
+bool find_sequence_inv(
+	_in const c16 		*fmt
+){
+	if (fmt == nullptr){
+		return true;
+	}
+	if (fmt[0] == L'\0'){
+		return true;
+	}
+
+	u64 fmt_len = _c16len(fmt); 
+
+	const c16 *fmt_char = fmt; 
+	const spec_meta *fmt_spec = nullptr;
+
+	// Iterate specifiers
+	while(in_c16_s(fmt, fmt_char, fmt_len)){
+		// Check specifier and read it`s metadata
+		if (*fmt_char == L'%'
+		&& find_sequence_spec_inv(fmt_char, &fmt_spec)){
+			return true;
+		} else if(*fmt_char != L'%'){
+			fmt_spec = nullptr;
+		}
+
+		fmt_char += (fmt_spec != nullptr)
+			? _c16len(fmt_spec->val)
+			: 1;
+
+		// If specifier needs separator but the next char is another specifier
+		if (fmt_spec != nullptr
+		&& fmt_spec->sep == true
+		&& *fmt_char == L'%'){
+			return true;
+		}
+	}
+
+	return false;
+}
+axres find_sequence(
+	_in const c16		*text,
+	_in const c16 		*fmt
+){
+	if (find_sequence_inv(fmt)){
+		return AX_INV_FMT;
+	}
+	if (text == nullptr){
+		return AX_INV_ARG;
+	}
+
+	return AX_SUCC;
+}
+

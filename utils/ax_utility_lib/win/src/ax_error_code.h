@@ -41,6 +41,9 @@
 #define AX_INV_ENC 			((axres)0x06) // EXCLUSIVE TO _io_file_enc TYPE ERRORS
 #define AX_INV_ENC_MSG 			L"Invalid file encoding."
 
+#define AX_INV_FMT 			((axres)0x07)
+#define AX_INV_FMT_MSG 			L"Invalid value format."
+
 // "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)

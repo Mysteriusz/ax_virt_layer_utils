@@ -34,10 +34,11 @@ axres find_substr_f(
 
 	c16 *chunk = axmalloc(IO_FILE_CHUNK);
 
+	// File offset of the first substr occcurence.
 	u64 start_off = 0;
 
-	const c16 *chunk_loc = nullptr;
-	const c16 *str_loc = nullptr;
+	const c16 *chunk_loc = nullptr; // Location in chunk*
+	const c16 *str_loc = nullptr; // Location in substr*
 
 	u64 init_off = file->offset;
 
@@ -45,18 +46,37 @@ axres find_substr_f(
 		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
 		axcheck_b(res);
 
+/*
+		Check continuation after substr was cut by chunk		 	
+
+		Example:
+			- previous chunk = L"some_s"
+			- previous str_loc = L"some_string"
+			Here the part of the string was found in the chunk.
+			From now on each other will pass through here and move str_loc further.
+
+			- chunk = L"tring other_string"
+			- str_loc = L"tring"
+
+			And so on until either:
+				- Chunk is not a continuation of the string.
+				- String was found.
+*/
 		if (str_loc != nullptr){
 			res = starts_with(chunk, str_loc, &str_loc);
 		}
 
-		// Either substr continuation not found or its the initial iteration
+/*
+ 		Either the continuation of string not found or its the initial read.
+		If substr continuation not found it will rescan the chunk the string.
+*/
 		if (str_loc == nullptr
 		|| res == AX_NOT_FND){
 			res = find_substr(chunk, substr, &chunk_loc, &str_loc);
 			start_off = file->offset + dif_b(chunk, chunk_loc);
 		}
 
-		// Neither check found substr (skip chunk)
+		// Chunk does not have substr (restart)
 		if (res == AX_NOT_FND){
 			str_loc = nullptr;
 		}
@@ -76,6 +96,21 @@ axres find_substr_f(
 	axcheck(res, file->offset = init_off);
 
 	file->offset = start_off;
+
+	return AX_SUCC;
+}
+axres find_sequence_f(
+	_in io_file		*file,
+	_in const c16 		*seq
+){
+	if (io_finv(file, UTF16)){
+		return AX_INV_FILE;
+	}
+	if (seq == nullptr){
+		return AX_INV_ARG;
+	}
+
+
 
 	return AX_SUCC;
 }
