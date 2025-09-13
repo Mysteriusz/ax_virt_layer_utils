@@ -19,7 +19,7 @@ int main(
 
 	io_fc(&file);*/
 
-	res = find_sequence(L"some_text|other_text", L"%s|%s");
+	res = find_sequence(L"dkjsfjfsdkfdfsome_text||other_text|1234|", L"||%s||%s|%i32||");
 	axcheck(res, ax_log(res));
 
 	return 0;

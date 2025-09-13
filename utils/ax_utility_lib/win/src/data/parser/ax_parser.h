@@ -85,7 +85,15 @@ axres compare(
 	_in const c16 		*a,
 	_in const c16		*b	
 );
-// TODO: FIX TRIM
+axres count(
+	_in const c16 		*text,
+	_in const c16		*charset,
+	_out u32		*count
+);
+axres reverse(
+	_in const c16 		*text,
+	_in_out c16 		*rev
+);
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
@@ -143,18 +151,16 @@ axres find_substr(
 
 typedef struct _spec_meta{
 	const c16 *val;
-	bool sep;
+	bool sep; // Separator exists?
+	u32 t_size; // Variable size (0 == until separator)
 } spec_meta;
 
-#define SEQ_SPC_TABLE_SIZE 		0x1
-static const spec_meta seq_spec_table[SEQ_SPC_TABLE_SIZE] = {
-	{L"%s", true},
+#define SEQ_SPEC_TABLE_SIZE 		0x2
+static const spec_meta seq_spec_table[SEQ_SPEC_TABLE_SIZE] = {
+	{L"%s", true, 0},
+	{L"%i32", false, sizeof(i32)},
 };
 
-bool find_sequence_spec_inv(
-	_in const c16		*spec,
-	_out const spec_meta	**meta
-);
 bool find_sequence_inv(
 	_in const c16 		*fmt
 );
@@ -179,12 +185,6 @@ axres find_sequence(
 #define CHARSET_PUNCT     	L".,;:!?()[]{}"
 
 // TODO:
-axres skip_until_r(
-	_in const c16		*text,
-	_in const c16		*charset,
-	_out const c16		**loc
-);
-
 axres skip_until(
 	_in const c16		*text,
 	_in const c16		*charset,
@@ -194,6 +194,11 @@ axres skip_until_n(
 	_in const c16		*text,
 	_in const c16		*charset,
 	_in u32			n,
+	_out const c16		**loc
+);
+axres skip_until_r(
+	_in const c16		*text,
+	_in const c16		*charset,
 	_out const c16		**loc
 );
 

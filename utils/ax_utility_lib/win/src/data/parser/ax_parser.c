@@ -87,6 +87,65 @@ axres compare(
 		? AX_SUCC
 		: AX_NOT_FND;
 }
+axres count(
+	_in const c16 		*text,
+	_in const c16		*charset,
+	_out u32		*count
+){
+	if (text == nullptr
+	|| charset == nullptr){
+		return AX_INV_ARG;
+	}
+	if (count == nullptr){
+		return AX_INV_BUF;
+	}
+
+	u64 text_len = _c16len(text);
+	const c16 *text_char = text;
+
+	u32 occ = 0; 
+
+	while(in_c16_s(text, text_char, text_len)){
+		if (contains(charset, *text_char) == AX_SUCC){
+			occ++;
+		}
+		text_char++;
+	}
+
+	*count = occ;
+
+	return AX_SUCC;
+}
+axres reverse(
+	_in const c16 		*text,
+	_in_out c16 		*rev
+){
+	if (text == nullptr){
+		return AX_INV_ARG;
+	}
+	if (rev == nullptr){
+		return AX_INV_BUF;
+	}
+
+	u64 text_len = _c16len(text);
+	memcpy(rev, text, text_len * sizeof(c16));
+
+	c16 *text_end = &rev[text_len - 1];
+	c16 *text_set = rev;
+	c16 swap = L'\0';
+
+	while(text_end != text_set){
+		swap = *text_set;  
+		*text_set = *text_end; 
+		*text_end = swap;
+
+		text_end--;
+		text_set++;
+	}
+
+
+	return AX_SUCC;
+}
 
 axres trim(
 	_in const c16 		*text,

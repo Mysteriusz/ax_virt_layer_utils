@@ -80,6 +80,42 @@ axres skip_until_n(
 		? AX_SUCC
 		: AX_NOT_FND;
 }
+axres skip_until_r(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out const c16		**loc
+){
+	if (text == nullptr
+	|| charset == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+	
+	u64 text_len = _c16len(text);
+	const c16 *text_char = &text[text_len - 1];
+
+	bool found = false;
+
+	while(in_c16_s(text, text_char, text_len)){
+		found = (contains(charset,*text_char) == AX_SUCC);
+
+		if (found == true){
+			break;
+		}else{
+			text_char--;
+		}
+	}
+
+	if (found == true){
+		*loc = text_char;
+	}
+
+	return (found == true)
+		? AX_SUCC
+		: AX_NOT_FND;
+}
 
 axres skip_word(
 	_in const c16 		*text,

@@ -20,9 +20,9 @@
 /*
  	Inline break AX_ERR(r) alias
 */
-#define axcheck_b(r,...)		do { \
+#define axcheck_b(r,...)		({ \
 	if(AX_ERR(r)){__VA_ARGS__; break;}  \
-} while(0)
+})
 
 #define AX_LOG_HEAD 			L"--------AX_LOG--------"
 #define AX_LOG_META 			L"--------METADATA--------"

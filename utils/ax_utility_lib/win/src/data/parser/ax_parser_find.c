@@ -79,33 +79,95 @@ axres find_substr(
 		: AX_NOT_FND;
 }
 
-bool find_sequence_spec_inv(
-	_in const c16		*spec,
-	_out const spec_meta	**meta
+// Map specifier (%s, %i32, etc...) to its spec_meta in the table
+const spec_meta *seq_spec_table_map(
+	_in const c16		*spec
 ){
-	if (spec == nullptr
-	|| spec[0] != L'%'){
-		return true;
+	if (spec == nullptr){
+		return nullptr; 
 	}
-	if (meta == nullptr){
-		return true;
-	}
+
+	const spec_meta *buf = nullptr;
+	const c16 *temp = nullptr;
 
 	axres res = AX_SUCC;
-	for (u32 i = 0; i < SEQ_SPC_TABLE_SIZE; i++){
-		res = starts_with(spec, seq_spec_table[i].val, &spec);
+	for (u32 i = 0; i < SEQ_SPEC_TABLE_SIZE; i++){
+		res = starts_with(spec, seq_spec_table[i].val, &temp);
 
 		if (res == AX_SUCC){
-			*meta = &seq_spec_table[i];
+			buf = &seq_spec_table[i];
 			break;
 		}
 	}
 
-	if (AX_ERR(res)){
-		return true;
+	return buf;
+}
+axres seq_spec_load(
+	_in const c16		*fmt,
+	_out const spec_meta	***spec, // Specifier array
+	_out const c16		***sep // Separator array
+){
+	if (fmt == nullptr){
+		return AX_INV_ARG;
+	}
+	if (spec == nullptr
+	|| sep == nullptr){
+		return AX_INV_BUF;
 	}
 
-	return false;
+	axres res = AX_SUCC;
+
+	u64 fmt_len = _c16len(fmt);
+	const c16 *fmt_char = fmt;
+
+	u32 spec_count = 0;
+	res = count(fmt, L"%", &spec_count);
+	axcheck(res);
+
+	const spec_meta **spec_buf = axmalloc(spec_count * sizeof(spec_meta*));
+/*
+	Separator count will always be one more than specifier
+
+	Example:
+ 		- |%spec1|%spec2| - separator count == 3
+		For each specifier there are 1 or 2 separators
+*/
+	const c16 **sep_buf = axmalloc((spec_count + 1) * sizeof(c16*));
+
+	u64 sep_len = 0;
+	u32 sep_i = 0;
+
+	u32 spec_i = 0;
+
+	while(in_c16_s(fmt, fmt_char, fmt_len)){
+		// Read separator
+		res = read_until(fmt_char, L"%", &sep_len, nullptr);
+		axcheck_b(res);
+
+		sep_buf[sep_i] = axmalloc(sep_len * sizeof(c16));
+
+		res = read_until(fmt_char, L"%", &sep_len, (c16*)sep_buf[sep_i]);
+		axcheck_b(res);
+
+		fmt_char += (sep_len - 1);
+
+		// Read specifier
+		spec_buf[spec_i] = seq_spec_table_map(fmt_char);
+		fmt_char += _c16len(spec_buf[spec_i]->val);
+
+		spec_i++;
+		sep_i++;
+	}
+
+	// Read last separator
+	sep_len = _c16len(fmt_char);
+	sep_buf[sep_i] = axmalloc((sep_len + 1) * sizeof(c16));
+	memcpy((c16*)sep_buf[sep_i], fmt_char, sep_len * sizeof(c16));
+	
+	*spec = spec_buf;
+	*sep = sep_buf;
+
+	return AX_SUCC;
 }
 bool find_sequence_inv(
 	_in const c16 		*fmt
@@ -124,12 +186,12 @@ bool find_sequence_inv(
 
 	// Iterate specifiers
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
-		// Check specifier and read it`s metadata
+		// Find specifier`s metadata
+		fmt_spec = seq_spec_table_map(fmt_char);
+
 		if (*fmt_char == L'%'
-		&& find_sequence_spec_inv(fmt_char, &fmt_spec)){
+		&& fmt_spec == nullptr){
 			return true;
-		} else if(*fmt_char != L'%'){
-			fmt_spec = nullptr;
 		}
 
 		fmt_char += (fmt_spec != nullptr)
@@ -156,6 +218,30 @@ axres find_sequence(
 	if (text == nullptr){
 		return AX_INV_ARG;
 	}
+
+	axres res = AX_SUCC;
+
+	u64 text_len = _c16len(text);
+	u64 fmt_len = _c16len(fmt);
+	const c16 *text_char = text;
+	const c16 *fmt_char = fmt;
+	
+	const spec_meta **spec_arr = nullptr;
+	const c16 **sep_arr = nullptr;
+	res = seq_spec_load(fmt, &spec_arr, &sep_arr);
+	axcheck(res);
+
+	// Loop until last format specifier and map
+	while(in_c16_s(text, text_char, text_len)
+	&& in_c16_s(fmt, fmt_char, fmt_len)){
+		text_char++;
+		fmt_char++;
+	}
+
+	io_str(sep_arr[0]);
+	io_str(sep_arr[1]);
+	io_str(sep_arr[2]);
+	io_str(sep_arr[3]);
 
 	return AX_SUCC;
 }
