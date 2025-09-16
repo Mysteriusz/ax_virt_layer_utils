@@ -1,6 +1,5 @@
-#include "ax_fs.h"
+#include "ax_file.h"
 #include "ax_error.h"
-#include "winnt.h"
 
 bool io_finv(
 	_in io_file 		*file,

@@ -94,6 +94,12 @@ axres reverse(
 	_in const c16 		*text,
 	_in_out c16 		*rev
 );
+axres c16_cat(
+	_in const c16 		*a,
+	_in const c16 		*b,
+	_out u64		*size,
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
@@ -108,7 +114,7 @@ axres trim(
 */
 
 #if !defined(AX_PARSER_FIND_INT)
-#define AX_PARSER_FIND_INt
+#define AX_PARSER_FIND_INT
 
 axres find_char(
 	_in const c16 		*text,
@@ -149,25 +155,47 @@ axres find_substr(
 		- fmt = L"%i32%i32"
 */
 
-typedef struct _spec_meta{
-	const c16 *val;
-	bool sep; // Separator exists?
-	u32 t_size; // Variable size (0 == until separator)
-} spec_meta;
+#if !defined(AX_PARSER_SEQUENCE_INT)
+#define AX_PARSER_SEQUENCE_INT
 
-#define SEQ_SPEC_TABLE_SIZE 		0x2
-static const spec_meta seq_spec_table[SEQ_SPEC_TABLE_SIZE] = {
-	{L"%s", true, 0},
-	{L"%i32", false, sizeof(i32)},
-};
+typedef struct _fmt_group{
+	ax_list *seq_list;
+/* 
+ 	Each capture set has to be separated.
+	
+	Invalid:
+		- L"[[<.><.>]]"
+	Valid: 
+		- L"[[<.>]<.>]"
+*/
+	ax_list *cap_sets;
+} fmt_group;
 
-bool find_sequence_inv(
-	_in const c16 		*fmt
+// Group starting character
+#define FMT_GRP_SET 		L"\\"
+const c16 *seq_group_to_charset(
+	_in const c16		*cpg
 );
-axres find_sequence(
+axres seq_split_fmt(
+	_in const c16 		*fmt,
+	_out u32		*count,
+	_out fmt_group 		**grps
+);
+axres seq_match(
 	_in const c16		*text,
 	_in const c16 		*fmt
 );
+axres seq_locate(
+	_in const c16		*text,
+	_in const c16 		*fmt,
+	_out const c16		**loc
+);
+axres seq_find(
+	_in const c16		*text,
+	_in const c16 		*fmt
+);
+
+#endif // !defined(AX_PARSER_SEQUENCE_INT)
 
 #endif // !defined(AX_PARSER_FIND_INT)
 
@@ -179,6 +207,9 @@ axres find_sequence(
 
 #if !defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_SKIP_INT
+
+#define UNICODE_ANY		L"\uFEFE"
+#define CHARSET_ANY 		UNICODE_ANY
 
 #define CHARSET_NL 		L"\x0a\x0d"
 #define CHARSET_WS 		L"\x20\t"
@@ -301,7 +332,7 @@ axres c16_to_int(
 
 #endif // !defined(AX_PARSER_CONV_INT)
 
-#if !defined(AX_PARSER_FILE_INT)
+#if !defined(AX_PARSER_FILE_INT) && defined(AX_PARSER_FIND_INT) && defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_FILE_INT
 
 // Can optimize after adding skip_until_r

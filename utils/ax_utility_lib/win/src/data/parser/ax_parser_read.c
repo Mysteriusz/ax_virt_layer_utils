@@ -42,7 +42,6 @@ axres read_until(
 	// Adjust size to copy without null-terminator
 	memcpy(buf, start, (buf_size - 1) * sizeof(c16));
 
-
 	return AX_SUCC;
 }
 

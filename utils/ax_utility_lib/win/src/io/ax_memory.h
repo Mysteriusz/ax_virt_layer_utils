@@ -1,3 +1,6 @@
+#if !defined(AX_IO_MEMORY)
+#define AX_IO_MEMORY
+
 #include "ax_type.h"
 
 /*
@@ -57,4 +60,13 @@ static void axfree_msvc(
 #endif // defined(AX_WIN64)
 
 #endif // defined(AX_UM)
+
+i8 sfmemcmp(
+	_in const void* a,
+	_in const void* b,
+	_in const u64 a_n,
+	_in const u64 b_n
+);
+
+#endif // !defined(AX_IO_MEMORY)
 

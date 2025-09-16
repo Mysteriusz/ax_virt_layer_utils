@@ -19,12 +19,12 @@ axres starts_with(
 
 	while(in_c16_s(text, text_char, text_len)
 	&& in_c16_s(str, str_char, str_len)){
-		text_char++;
-		str_char++;
-
 		if (*text_char != *str_char){
 			break;
 		}
+
+		text_char++;
+		str_char++;
 	}
 
 	bool full_find = (*str_char == L'\0');
@@ -54,6 +54,9 @@ axres contains(
 
 	const c16 *text_char = text;
 	u64 text_len = _c16len(text);
+
+	if (text[0] == UNICODE_ANY[0]){
+	}
 
 	while(in_c16_s(text, text_char, text_len)){
 		if (*text_char == value){
@@ -147,6 +150,40 @@ axres reverse(
 	return AX_SUCC;
 }
 
+axres c16_cat(
+	_in const c16 		*a,
+	_in const c16 		*b,
+	_out u64		*size,
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+){
+	if (a == nullptr
+	|| b == nullptr){
+		return AX_INV_ARG;
+	}
+
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	u64 a_len = _c16len(a);
+	u64 b_len = _c16len(b);
+
+	u64 buf_size = a_len + b_len + 1;
+	if (ret_size){
+		*size = buf_size;
+		return AX_SUCC;
+	}
+
+	memcpy(buf, a, a_len * sizeof(c16)); 
+	memcpy(buf + a_len, b, b_len * sizeof(c16)); 
+	buf[buf_size - 1] = L'\0';
+
+	return AX_SUCC;
+}
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,

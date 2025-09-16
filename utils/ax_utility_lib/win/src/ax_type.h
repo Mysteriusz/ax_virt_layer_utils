@@ -14,7 +14,7 @@
 #endif
 
 #if defined(AX_KM)
-#ifndef 
+#ifndef AX_STRICT_BUF_SIZE
 #define AX_STRICT_BUF_SIZE 
 #endif
 #endif

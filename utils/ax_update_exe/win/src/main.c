@@ -18,8 +18,11 @@ int main(
 	io_str(buf);
 
 	io_fc(&file);*/
+	unref(res);
 
-	res = find_sequence(L"dkjsfjfsdkfdfsome_text||other_text|1234|", L"||%s||%s|%i32||");
+	fmt_group *spec = nullptr;
+	u32 fmt_c = 0;
+	res = seq_split_fmt(L"\\[<.>]:\\", &fmt_c, &spec);
 	axcheck(res, ax_log(res));
 
 	return 0;

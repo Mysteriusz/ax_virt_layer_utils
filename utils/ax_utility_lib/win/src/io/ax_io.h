@@ -15,18 +15,23 @@
 #endif
 
 axres io_str(
-	const c16 		*val
+	_in const c16 		*val
 );
 axres io_str_b(
-	const c16 		*val
+	_in const c16 		*val
+);
+axres io_str_len(
+	_in const c16 		*val,
+	_in u64 		len
 );
 axres io_i64(
-	i64			val
+	_in i64			val
 );
 
 // I/O headers 
-#include "ax_mem.h"
-#include "ax_fs.h"
+#include "ax_memory.h"
+#include "ax_file.h"
+#include "ax_structures.h"
 
 #endif // !defined(AX_IO_INT)
 
