@@ -44,6 +44,48 @@ axres read_until(
 
 	return AX_SUCC;
 }
+axres read_range(
+	_in const c16 		*text,
+	_in u64			from,
+	_in u64			to,	
+	_in_out u64		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+){
+	if (text == nullptr
+	|| to <= from){ return AX_INV_ARG;
+	}
+
+	u64 text_len = _c16len(text);
+	if ((text_len - 1) < from // from index check
+	|| (text_len - 1) < to){ // to index check
+		return AX_INV_ARG;
+	}
+	
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+	
+	u64 buf_size = (to - from) + 1;
+	// Adjust for null-terminator
+	buf_size++;
+
+	if (ret_size){
+		*size = buf_size;
+		return AX_SUCC;
+	}
+
+	// Validate provided buffer size
+	axcheck(_ax_buf_err(buf_size, *size));
+
+	// Adjust size to copy without null-terminator
+	memcpy(buf, &text[from], (buf_size - 1) * sizeof(c16));
+
+	return AX_SUCC;
+}
 
 axres read_line(
 	_in const c16 		*text,

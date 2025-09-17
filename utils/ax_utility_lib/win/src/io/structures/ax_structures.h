@@ -44,6 +44,15 @@ typedef axres (*ax_structures_delete)(
 	_in void 			*structure
 );
 
+// Anonymous commnad structure
+#define AX_STRUCTURE_CMD \
+	ax_structures_add add; \
+	ax_structures_remove remove; \
+	ax_structures_at at; \
+	ax_structures_at_v at_v; \
+	ax_structures_iter iter; \
+	ax_structures_delete delete;
+
 #if !defined(AX_IO_STRUCTURES_LIST_INT)
 #define AX_IO_STRUCTURES_LIST_INT
 
@@ -56,12 +65,7 @@ typedef struct _ax_list_node{
 typedef struct _ax_list{
 	ax_list_node *root;
 	u32 count;
-	ax_structures_add add;
-	ax_structures_remove remove;
-	ax_structures_at at;
-	ax_structures_at_v at_v;
-	ax_structures_iter iter;
-	ax_structures_delete delete;
+	struct { AX_STRUCTURE_CMD };
 } ax_list;
 
 axres ax_list_init(

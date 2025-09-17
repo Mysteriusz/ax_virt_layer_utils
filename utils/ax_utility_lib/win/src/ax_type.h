@@ -101,6 +101,7 @@
 #define chkf(v,f)	(((v) & (f)) != 0) 
 // Cast value (v) to type (t)
 #define astp(t,v)	*((t*)((void*)&(v))) 
+
 #include <stdbool.h>
 
 #if defined(AX_UM)

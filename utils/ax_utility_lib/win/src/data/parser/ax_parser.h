@@ -81,6 +81,13 @@ axres contains(
 	_in const c16 		*text,
 	_in const c16		value	
 );
+// Range containment check
+axres contains_r(
+	_in const c16 		*text,
+	_in u64 		a,
+	_in u64 		b,
+	_in const c16		value	
+);
 axres compare(
 	_in const c16 		*a,
 	_in const c16		*b	
@@ -184,7 +191,7 @@ typedef struct _fmt_group{
 const c16 *seq_spec_to_charset(
 	_in const c16		*cpg
 );
-// In-order sequence finder usage
+// LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_out u32		*count,
@@ -192,12 +199,13 @@ axres seq_split_fmt(
 );
 axres seq_match(
 	_in const c16		*text,
-	_in u32			count,
-	_in fmt_group 		*grps
+	_in const c16 		*seq_set,
+	_in const c16 		*seq_end,
+	_in const c16		*cap
 );
 axres seq_locate(
 	_in const c16		*text,
-	_in const c16 		*fmt,
+	_in fmt_group 		*grp,
 	_out const c16		**loc
 );
 axres seq_find(
@@ -295,14 +303,34 @@ axres read_until(
 	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
+// Read inclusive range 
+axres read_range(
+	_in const c16 		*text,
+	_in u64			from,
+	_in u64			to,	
+	_in_out u64		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
+#define a_read_range(text, from, to, size, buf) ({ \
+	c16 *b = nullptr; \
+	u64 s = 0; \
+	axres res = AX_SUCC; \
+	res = read_range(text, from, to, &s, b); \
+	b = axmalloc(s * sizeof(c16)); \
+	res = read_range(text, from, to, &s, b); \
+	*size = s; \
+	*buf = b; \
+	res; \
+})
+
 axres read_line(
 	_in const c16 		*text,
-	_in_out u64		*size,
+	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres read_word(
 	_in const c16 		*text,
-	_in_out u64		*size,
+	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 

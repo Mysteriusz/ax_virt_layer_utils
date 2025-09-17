@@ -20,13 +20,17 @@ int main(
 	io_fc(&file);*/
 	unref(res);
 
+	const c16 *seq = L"\\[[<.>]:\\";
+
 	ax_list *list = nullptr;
 	u32 fmt_c = 0;
-	res = seq_split_fmt(L"\\[<.>]:\\[[[<.>]:\\", &fmt_c, &list);
+	res = seq_split_fmt(seq, &fmt_c, &list);
 	axcheck(res, ax_log(res));
 
-	fmt_group *a = i_as(list, 1, fmt_group*);
-	io_str(i_as(a->seq_list, 0, c16*));
+	const c16 *loc = nullptr;
+	res = seq_locate(L"some_textdfkjsl[section]:other_text", i_as(list, 0, fmt_group*), &loc); 
+	axcheck(res, ax_log(res));
+	io_str(loc);
 
 	return 0;
 }

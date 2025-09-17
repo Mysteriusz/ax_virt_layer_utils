@@ -1,5 +1,4 @@
 #include "ax_parser.h"
-#include "minwindef.h"
 
 axres starts_with(
 	_in const c16		*text,
@@ -56,6 +55,7 @@ axres contains(
 	u64 text_len = _c16len(text);
 
 	if (text[0] == UNICODE_ANY[0]){
+		return AX_SUCC;
 	}
 
 	while(in_c16_s(text, text_char, text_len)){
@@ -70,6 +70,37 @@ axres contains(
 		: AX_NOT_FND;
 }
 
+axres contains_r(
+	_in const c16 		*text,
+	_in u64 		a,
+	_in u64 		b,
+	_in const c16		value	
+){
+	if (text == nullptr){
+		return AX_INV_ARG;
+	}
+
+	const c16 *text_char = &text[a];
+	u64 text_len = _c16len(text);
+
+	if (text[0] == UNICODE_ANY[0]){
+		return true;
+	}
+
+	u64 i = a;
+	while(in_c16_s(text, text_char, text_len)
+	&& i < b){
+		if (*text_char == value){
+			break;
+		}
+		text_char++;
+		i++;
+	}
+
+	return (*text_char == value)
+		? AX_SUCC
+		: AX_NOT_FND;
+}
 axres compare(
 	_in const c16 		*a,
 	_in const c16		*b	

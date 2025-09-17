@@ -158,10 +158,7 @@ axres seq_split_fmt(
 		axcheck_b(res);
 	}
 
-	// Free the temp group buffer
-	axfree(grp);
-
-	// Cleanup check
+	// Free the temp group buffer axfree(grp); Cleanup check
 	axcheck(res,
 		list->iter(list, (ax_structures_iter_act)seq_split_fmt_c),
 		list->delete(list)
@@ -171,11 +168,105 @@ axres seq_split_fmt(
 
 	return AX_SUCC;
 }
+
 axres seq_match(
 	_in const c16		*text,
-	_in u32			count,
-	_in fmt_group 		*grps
+	_in const c16 		*seq_set,
+	_in const c16 		*seq_end,
+	_in const c16		*cap
 ){
+	axres res = AX_SUCC;
+
+	u64 v_set_s = 0;
+	c16 *v_set = nullptr;
+
+	res = a_read_range(
+		seq_set,
+		dif_c16(text, seq_set), 
+		dif_c16(text, seq_end),
+		&v_set_s,
+		&v_set
+	);
+	axcheck(res);
+
+	const c16 *v_set_loc = nullptr;
+	res = skip_while(v_set, cap, &v_set_loc);
+	axcheck(res, axfree(v_set));
+
+	axfree(v_set);
+	// Check if skipped distance was the correct size between start and end of the capture group sequence
+	if ((dif_c16(v_set, v_set_loc) - 1) != dif_c16(seq_set, seq_end)){
+		return AX_INV_DATA;
+	}
+
+	return AX_SUCC;
+}
+axres seq_locate(
+	_in const c16		*text,
+	_in fmt_group 		*grp,
+	_out const c16		**loc
+){
+	if (text == nullptr
+	|| grp == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	u64 text_len = _c16len(text);
+	const c16 *text_char = text;
+	const c16 *set_char = text; 
+
+	u32 seq_i = 0;
+	u32 cap_i = 0;
+	const c16 *seq_set = text_char;
+	const c16 *seq_end = text_char;
+
+	while(in_c16_s(text, text_char, text_len)
+	&& seq_i < (grp->seq_list->count - 1)){
+		// Skip to next sequence
+		res = find_substr(
+			text_char,
+			i_as(grp->seq_list, seq_i, c16*),
+			&seq_set,
+			nullptr
+		); 
+		axcheck_b(res);
+
+		if (seq_i == 0){
+			set_char = seq_set;
+		}
+
+		seq_i++;
+
+		res = find_substr(
+			seq_set,
+			i_as(grp->seq_list, seq_i, c16*),
+			&seq_end,
+			nullptr
+		); 
+		axcheck_b(res);
+
+		res = seq_match(set_char, seq_set, seq_end, i_as(grp->cap_sets, cap_i, c16*));
+		if (res == AX_INV_DATA){
+			// Reset search
+			seq_i = 0;
+			cap_i = 0;
+			// First possible sequence occurence
+			text_char = seq_set;
+		}else if (res == AX_SUCC){
+			// Continue search
+			cap_i++;
+			text_char = seq_end;
+		}else axcheck_b(res);
+	}
+
+	axcheck(res);
+	*loc = set_char;
+
 	return AX_SUCC;
 }
 
