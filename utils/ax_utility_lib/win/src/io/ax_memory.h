@@ -19,6 +19,8 @@
 #define axfree(ptr) ({ \
 	if (ptr) HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
 })
+#define axmmap() ({ \
+})
 
 #elif defined(AX_LINUX)
 

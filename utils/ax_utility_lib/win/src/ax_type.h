@@ -65,7 +65,7 @@
 #define _in_out_opt
 
 /*
-	Indicates that variable HAS to be evaluated by caller POST initial call 
+	Indicates that variable HAS to be evaluated by caller POST initial call.
 
 	Example:
 		DECL: foo(u32 *size, c16 *buf);
@@ -75,6 +75,14 @@
 		foo(&size, buffer); // Recall evaluated
 */
 #define _eval 
+
+/*
+ 	Auto pass indicator.
+	Means the value passed won`t be null and can be used whenever you want.
+
+	Only applicable to pointer types.
+*/
+#define _prepass [static 1]
 
 #if defined(_MSC_VER)
 #define __builtin_trap() __debugbreak()

@@ -9,7 +9,6 @@ const c16 *seq_group_to_charset(
 
 	return nullptr;
 }
-#define CHARSET_SEQ 			L"<\\"
 axres seq_read_group(
 	_in const c16		*fmt,
 	_in u64 		grp_len,
@@ -38,6 +37,13 @@ axres seq_read_group(
 	// Sequence identifying characters
 	c16 *rng = nullptr;
 	u64 rng_len = 0;
+
+/* 
+	Iterate group 
+	Example:
+		Only the string between \\ will be read.
+ 		- L"\\[<.>]\\"
+*/
 
 	while(in_c16_s(fmt, fmt_char, fmt_len)
 	&& *fmt_char != *FMT_GRP_SET){
@@ -83,10 +89,21 @@ axres seq_read_group(
 
 	return AX_SUCC;
 }
+
+void* seq_split_fmt_c(
+	const ax_list list _prepass,
+	const ax_list_node node _prepass
+){
+	fmt_group *grp = (fmt_group*)node->value;
+	ax_list_delete(grp->cap_sets);
+	ax_list_delete(grp->seq_list);
+
+	return nullptr;	
+}
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_out u32		*count,
-	_out fmt_group 		**grps
+	_out ax_list 		**grps
 ){
 	if (fmt == nullptr){
 		return AX_INV_FMT;
@@ -113,8 +130,11 @@ axres seq_split_fmt(
 	}
 	grps_c--;
 
-	fmt_group *grps_arr = axmalloc(sizeof(fmt_group) * grps_c);
-	u32 grps_i = 0;
+	ax_list *list = nullptr;
+	res = ax_list_init(&list);
+	axcheck(res);
+
+	fmt_group *grp = axmalloc(sizeof(fmt_group));
 
 	// Reset fmt_char
 	fmt_char = fmt;
@@ -124,21 +144,38 @@ axres seq_split_fmt(
 
 		// Find group ending
 		res = skip_until(fmt_char, FMT_GRP_SET, &fmt_char);
-		axcheck_b(res, axfree(grps_arr));
+		axcheck_b(res);
 
 		// Initialize group lists
-		ax_list_init(&grps_arr[grps_i].cap_sets);
-		ax_list_init(&grps_arr[grps_i].seq_list);
+		res = ax_list_init(&grp->cap_sets);
+		res = ax_list_init(&grp->seq_list);
 
 		// Parse group
-		res = seq_read_group(grp_char, dif_c16(grp_char, fmt_char), &grps_arr[grps_i]);
-		axcheck_b(res, axfree(grps_arr));
+		res = seq_read_group(grp_char, dif_c16(grp_char, fmt_char), grp);
+		axcheck_b(res);
 
-		grps_i++;
+		res = list->add(list, grp, sizeof(fmt_group));
+		axcheck_b(res);
 	}
 
-	*grps = grps_arr;
+	// Free the temp group buffer
+	axfree(grp);
 
+	// Cleanup check
+	axcheck(res,
+		list->iter(list, (ax_structures_iter_act)seq_split_fmt_c),
+		list->delete(list)
+	);
+
+	*grps = list;
+
+	return AX_SUCC;
+}
+axres seq_match(
+	_in const c16		*text,
+	_in u32			count,
+	_in fmt_group 		*grps
+){
 	return AX_SUCC;
 }
 

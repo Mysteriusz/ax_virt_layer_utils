@@ -17,7 +17,7 @@ CompileFlags:
     - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/um/full"
 
     - "-DAX_WIN64"
-    - "-DAX_KM"
+    - "-DAX_UM"
 
 Diagnostics:
   Suppress:

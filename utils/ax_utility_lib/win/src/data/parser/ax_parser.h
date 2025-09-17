@@ -26,11 +26,11 @@ static inline u32 _c16len_b(
 }
 
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
-#define dif_c16(s,e)		((c16*)e - (c16*)s)
+#define dif_c16(s,e)		((c16*)(e) - (c16*)(s))
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
-#define in_c16_s(tp,p,s)	(dif_c16(tp,p) < s)
+#define in_c16_s(tp,p,s)	(dif_c16(tp,p) < (s))
 
-#define dif_b(s,e)		((u8*)e - (u8*)s)
+#define dif_b(s,e)		((u8*)(e) - (u8*)(s))
 
 /*
  
@@ -158,6 +158,8 @@ axres find_substr(
 #if !defined(AX_PARSER_SEQUENCE_INT)
 #define AX_PARSER_SEQUENCE_INT
 
+// Charset of sequence starting identifiers
+#define CHARSET_SEQ 			L"<\\"
 typedef struct _fmt_group{
 	ax_list *seq_list;
 /* 
@@ -173,17 +175,25 @@ typedef struct _fmt_group{
 
 // Group starting character
 #define FMT_GRP_SET 		L"\\"
-const c16 *seq_group_to_charset(
+/*
+ 	Specifier between < and > 
+ 	Example:
+		<.> 
+		<a-z> - TODO
+*/
+const c16 *seq_spec_to_charset(
 	_in const c16		*cpg
 );
+// In-order sequence finder usage
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_out u32		*count,
-	_out fmt_group 		**grps
+	_out ax_list 		**grps
 );
 axres seq_match(
 	_in const c16		*text,
-	_in const c16 		*fmt
+	_in u32			count,
+	_in fmt_group 		*grps
 );
 axres seq_locate(
 	_in const c16		*text,

@@ -10,16 +10,36 @@ typedef axres (*ax_structures_add)(
 	_in void 			*value,
 	_in u64 			size
 );
+
 typedef axres (*ax_structures_remove)(
 	_in void 			*structure,
 	_in void 			*value,
 	_in u64 			size
 );
+
 typedef axres (*ax_structures_at)(
 	_in const void 			*structure,
 	_in u32 			index,
-	_out const void 		**structure_desc
+	_out const void 		**structure_node
 );
+
+// Unsafe at-index value call
+typedef void* (*ax_structures_at_v)(
+	_in const void 			*structure,
+	_in u32 			index
+);
+#define i_as(s, v_i, v_t) ((v_t)(s->at_v(s, v_i)))
+
+typedef void* (*ax_structures_iter_act)(
+	const u8 structure _prepass,
+	const u8 structure_node _prepass
+);
+typedef axres (*ax_structures_iter)(
+	_in const void 			*structure,
+	_in ax_structures_iter_act	action
+	// TODO capture group evaluation on bool
+);
+
 typedef axres (*ax_structures_delete)(
 	_in void 			*structure
 );
@@ -39,11 +59,13 @@ typedef struct _ax_list{
 	ax_structures_add add;
 	ax_structures_remove remove;
 	ax_structures_at at;
+	ax_structures_at_v at_v;
+	ax_structures_iter iter;
 	ax_structures_delete delete;
 } ax_list;
 
 axres ax_list_init(
-	_out ax_list			**buf
+	_out ax_list		**buf
 );
 axres ax_list_add(
 	_in ax_list 			*list,
@@ -59,6 +81,14 @@ axres ax_list_at(
 	_in const ax_list 		*list,
 	_in u32 			index,
 	_out const ax_list_node 	**buf
+);
+void *ax_list_at_v(
+	_in const ax_list 		*list,
+	_in u32 			index
+);
+axres ax_list_iter(
+	_in const ax_list 		*list,
+	_in ax_structures_iter_act	action
 );
 axres ax_list_delete(
 	_in ax_list 			*list

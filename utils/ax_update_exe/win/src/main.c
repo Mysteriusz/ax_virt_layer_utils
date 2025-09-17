@@ -20,10 +20,13 @@ int main(
 	io_fc(&file);*/
 	unref(res);
 
-	fmt_group *spec = nullptr;
+	ax_list *list = nullptr;
 	u32 fmt_c = 0;
-	res = seq_split_fmt(L"\\[<.>]:\\", &fmt_c, &spec);
+	res = seq_split_fmt(L"\\[<.>]:\\[[[<.>]:\\", &fmt_c, &list);
 	axcheck(res, ax_log(res));
+
+	fmt_group *a = i_as(list, 1, fmt_group*);
+	io_str(i_as(a->seq_list, 0, c16*));
 
 	return 0;
 }

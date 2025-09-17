@@ -13,8 +13,10 @@ axres ax_list_init(
 
 	list->add = (ax_structures_add)ax_list_add;
 	list->remove = (ax_structures_remove)ax_list_remove;
-	list->delete = (ax_structures_delete)ax_list_delete;
 	list->at = (ax_structures_at)ax_list_at;
+	list->at_v = (ax_structures_at_v)ax_list_at_v;
+	list->iter = (ax_structures_iter)ax_list_iter;
+	list->delete = (ax_structures_delete)ax_list_delete;
 
 	*buf = list;
 
@@ -122,6 +124,45 @@ axres ax_list_at(
 	}
 
 	*buf = curr;
+
+	return AX_SUCC;
+}
+void *ax_list_at_v(
+	_in const ax_list 		*list,
+	_in u32 			index
+){
+	if (list == nullptr){
+		return nullptr;
+	}
+
+	const ax_list_node *node = nullptr;
+	list->at(list, index, (const void**)&node);
+
+	if (node == nullptr){
+		return nullptr;
+	}
+
+	return node->value;
+}
+axres ax_list_iter(
+	_in const ax_list 		*list,
+	_in ax_structures_iter_act	action
+){
+	if (list == nullptr
+	|| action == nullptr){
+		return AX_INV_ARG;
+	}
+
+	ax_list_node *node = list->root;
+	while(node != nullptr){
+		// Execute action with 
+		action(
+			(u8*)list,
+			(u8*)node
+		);
+
+		node = node->next;
+	}
 
 	return AX_SUCC;
 }
