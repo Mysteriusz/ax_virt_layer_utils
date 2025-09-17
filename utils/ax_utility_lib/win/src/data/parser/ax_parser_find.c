@@ -36,6 +36,10 @@ axres find_substr(
 		return AX_INV_BUF;
 	}
 
+	if (substr[0] == CHARSET_ANY[0]){
+		return AX_SUCC;
+	}
+
 	const c16 *loc_start = text;
 
 	u64 text_len = _c16len(text);

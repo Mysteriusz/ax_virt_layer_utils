@@ -20,7 +20,7 @@ int main(
 	io_fc(&file);*/
 	unref(res);
 
-	const c16 *seq = L"\\[[<.>]:\\";
+	const c16 *seq = L"\\[<.>|other_text]\\";
 
 	ax_list *list = nullptr;
 	u32 fmt_c = 0;
@@ -28,7 +28,7 @@ int main(
 	axcheck(res, ax_log(res));
 
 	const c16 *loc = nullptr;
-	res = seq_locate(L"some_textdfkjsl[section]:other_text", i_as(list, 0, fmt_group*), &loc); 
+	res = seq_locate(L"some_textdfkjsl[section|other_text]:", i_as(list, 0, fmt_group*), &loc); 
 	axcheck(res, ax_log(res));
 	io_str(loc);
 

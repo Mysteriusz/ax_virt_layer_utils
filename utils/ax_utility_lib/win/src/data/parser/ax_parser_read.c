@@ -52,7 +52,8 @@ axres read_range(
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (text == nullptr
-	|| to <= from){ return AX_INV_ARG;
+	|| to <= from){ 
+		return AX_INV_ARG;
 	}
 
 	u64 text_len = _c16len(text);

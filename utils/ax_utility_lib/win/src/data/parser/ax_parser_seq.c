@@ -181,7 +181,7 @@ axres seq_match(
 	c16 *v_set = nullptr;
 
 	res = a_read_range(
-		seq_set,
+		text,
 		dif_c16(text, seq_set), 
 		dif_c16(text, seq_end),
 		&v_set_s,
@@ -239,7 +239,6 @@ axres seq_locate(
 		if (seq_i == 0){
 			set_char = seq_set;
 		}
-
 		seq_i++;
 
 		res = find_substr(
@@ -261,7 +260,9 @@ axres seq_locate(
 			// Continue search
 			cap_i++;
 			text_char = seq_end;
-		}else axcheck_b(res);
+		}else {
+			axcheck_b(res);
+		}
 	}
 
 	axcheck(res);
