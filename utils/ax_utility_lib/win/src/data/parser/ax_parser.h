@@ -186,7 +186,10 @@ typedef struct _fmt_group{
  	Specifier between < and > 
  	Example:
 		<.> 
-		<a-z> - TODO
+		<a-z>
+		<l-n>
+
+	These two are the only ways to define a capture group
 */
 const c16 *seq_spec_to_charset(
 	_in const c16		*cpg
@@ -303,7 +306,7 @@ axres read_until(
 	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
-// Read inclusive range 
+// Read (inclusive from) range 
 axres read_range(
 	_in const c16 		*text,
 	_in u64			from,
@@ -311,17 +314,6 @@ axres read_range(
 	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
-#define a_read_range(text, from, to, size, buf) ({ \
-	c16 *b = nullptr; \
-	u64 s = 0; \
-	axres res = AX_SUCC; \
-	res = read_range(text, from, to, &s, b); \
-	b = axmalloc(s * sizeof(c16)); \
-	res = read_range(text, from, to, &s, b); \
-	*size = s; \
-	*buf = b; \
-	res; \
-})
 
 axres read_line(
 	_in const c16 		*text,

@@ -51,15 +51,15 @@ axres read_range(
 	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
-	if (text == nullptr
-	|| to <= from){ 
+	if (text == nullptr){ 
 		return AX_INV_ARG;
 	}
 
 	u64 text_len = _c16len(text);
-	if ((text_len - 1) < from // from index check
+	if (to <= from
+	|| (text_len - 1) < from // from index check
 	|| (text_len - 1) < to){ // to index check
-		return AX_INV_ARG;
+		return AX_INV_IND;
 	}
 	
 	bool ret_size = ((size != nullptr) && (buf == nullptr));
@@ -70,7 +70,7 @@ axres read_range(
 		}
 	}
 	
-	u64 buf_size = (to - from) + 1;
+	u64 buf_size = to - from;
 	// Adjust for null-terminator
 	buf_size++;
 

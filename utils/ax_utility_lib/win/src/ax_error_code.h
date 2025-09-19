@@ -44,6 +44,9 @@
 #define AX_INV_FMT 			((axres)0x07)
 #define AX_INV_FMT_MSG 			L"Invalid value format."
 
+#define AX_INV_IND 			((axres)0x08)
+#define AX_INV_IND_MSG 			L"Index out of bounds."
+
 // "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)

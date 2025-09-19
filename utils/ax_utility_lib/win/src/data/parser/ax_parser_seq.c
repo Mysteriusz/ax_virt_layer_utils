@@ -1,13 +1,29 @@
 #include "ax_parser.h"
 
-const c16 *seq_group_to_charset(
-	_in const c16		*cpg
+const c16 *seq_spec_to_charset(
+	_in const c16		*cpg // cpg FOR capture group
 ){
-	if (*cpg == L'.'){
+	// Follows <x-y>
+	u32 rng = cpg[0]; // x
+	u32 mode = cpg[1]; // -
+	u32 rng_lim = cpg[2]; // y
+
+	// Avaiable modes check
+	if (rng == (u32)L'.' 
+	&& mode != (u32)L'-'){
 		return CHARSET_ANY;
 	}
 
-	return nullptr;
+	c16 *set = axmalloc(((rng - rng_lim) + 1) * sizeof(c16));
+	u32 i = 0;
+	while(rng <= rng_lim){
+		set[i] = (c16)rng;
+		rng++;
+		i++;
+	}
+
+	unref(mode);
+	return set;
 }
 axres seq_read_group(
 	_in const c16		*fmt,
@@ -55,7 +71,7 @@ axres seq_read_group(
 			res = skip_until(fmt_char, L">", &fmt_char);
 			axcheck(res);
 
-			const c16 *cap_set = seq_group_to_charset(spec_char);
+			const c16 *cap_set = seq_spec_to_charset(spec_char);
 			grp->cap_sets->add(
 				grp->cap_sets,
 				(void*)cap_set,
@@ -180,14 +196,16 @@ axres seq_match(
 	u64 v_set_s = 0;
 	c16 *v_set = nullptr;
 
-	res = a_read_range(
-		text,
-		dif_c16(text, seq_set), 
-		dif_c16(text, seq_end),
-		&v_set_s,
-		&v_set
-	);
+	u64 from = dif_c16(text, seq_set);
+	u64 to = dif_c16(text, seq_end);
+
+	res = read_range(text, from, to, &v_set_s, nullptr);
 	axcheck(res);
+
+	v_set = axmalloc(v_set_s * sizeof(c16));
+
+	res = read_range(text, from, to, &v_set_s, v_set);
+	axcheck(res, axfree(v_set));
 
 	const c16 *v_set_loc = nullptr;
 	res = skip_while(v_set, cap, &v_set_loc);
@@ -195,7 +213,7 @@ axres seq_match(
 
 	axfree(v_set);
 	// Check if skipped distance was the correct size between start and end of the capture group sequence
-	if ((dif_c16(v_set, v_set_loc) - 1) != dif_c16(seq_set, seq_end)){
+	if (dif_c16(v_set, v_set_loc) != dif_c16(seq_set, seq_end)){
 		return AX_INV_DATA;
 	}
 
@@ -227,7 +245,7 @@ axres seq_locate(
 
 	while(in_c16_s(text, text_char, text_len)
 	&& seq_i < (grp->seq_list->count - 1)){
-		// Skip to next sequence
+		// Find sequence start
 		res = find_substr(
 			text_char,
 			i_as(grp->seq_list, seq_i, c16*),
@@ -236,11 +254,15 @@ axres seq_locate(
 		); 
 		axcheck_b(res);
 
+		// First check
 		if (seq_i == 0){
 			set_char = seq_set;
 		}
-		seq_i++;
 
+		seq_set += _c16len(i_as(grp->seq_list, seq_i, c16*));
+		seq_i++;
+		
+		// Find sequence end
 		res = find_substr(
 			seq_set,
 			i_as(grp->seq_list, seq_i, c16*),
@@ -249,23 +271,35 @@ axres seq_locate(
 		); 
 		axcheck_b(res);
 
-		res = seq_match(set_char, seq_set, seq_end, i_as(grp->cap_sets, cap_i, c16*));
-		if (res == AX_INV_DATA){
-			// Reset search
-			seq_i = 0;
+		// Match with capture group
+		res = seq_match(
+			text_char,
+			seq_set,
+			seq_end, 
+			i_as(grp->cap_sets, cap_i, c16*)
+		);
+		// Capture group failed
+		// Reset search
+		if(AX_ERR(res)){
+			text_char = set_char + _c16len(i_as(grp->seq_list, 0, c16*));
 			cap_i = 0;
-			// First possible sequence occurence
-			text_char = seq_set;
-		}else if (res == AX_SUCC){
-			// Continue search
-			cap_i++;
+			seq_i = 0;
+			seq_set = text_char;
+			seq_end = text_char;
+			set_char = nullptr;
+		}
+		else{
+			// Move to another sequence
 			text_char = seq_end;
-		}else {
-			axcheck_b(res);
+			cap_i++;
 		}
 	}
 
-	axcheck(res);
+	if (set_char == nullptr){
+		return AX_NOT_FND;
+	}
+	else axcheck(res);
+
 	*loc = set_char;
 
 	return AX_SUCC;

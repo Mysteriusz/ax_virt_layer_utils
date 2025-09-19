@@ -20,15 +20,20 @@ int main(
 	io_fc(&file);*/
 	unref(res);
 
-	const c16 *seq = L"\\[<.>|other_text]\\";
+	const c16 *seq = L"\\[<a-z>|<.>]\\";
+	const c16 *txt = L"l[sect[ion|other_text|a|b]:";
 
 	ax_list *list = nullptr;
 	u32 fmt_c = 0;
 	res = seq_split_fmt(seq, &fmt_c, &list);
 	axcheck(res, ax_log(res));
 
+	/*fmt_group *root = i_as(list, 0, fmt_group*);
+	res = seq_match(txt, &txt[2], &txt[9], i_as(root->cap_sets, 0, c16*));
+	axcheck(res, ax_log(res));*/
+
 	const c16 *loc = nullptr;
-	res = seq_locate(L"some_textdfkjsl[section|other_text]:", i_as(list, 0, fmt_group*), &loc); 
+	res = seq_locate(txt, i_as(list, 0, fmt_group*), &loc); 
 	axcheck(res, ax_log(res));
 	io_str(loc);
 
