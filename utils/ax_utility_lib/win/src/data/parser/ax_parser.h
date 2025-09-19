@@ -211,9 +211,21 @@ axres seq_locate(
 	_in fmt_group 		*grp,
 	_out const c16		**loc
 );
+/*
+ 	Known issues:
+		- seq: L"\\[<a-z>|<.>]:\\"
+		- text: L"l[section|other_text||a|b]:"
+		Result is AX_NOT_FND.
+		Cause and possible fix:
+			seq_locate searches for next sequences in order so if next sequence
+			is the same as the character inside of the current section the it assumes
+			that || means 2 sections itself so 
+			->  seq_list[1] = | AND seq_list[2] = | which is not true
+*/
 axres seq_find(
 	_in const c16		*text,
-	_in const c16 		*fmt
+	_in const c16 		*fmt,
+	_out const c16 		**loc
 );
 
 #endif // !defined(AX_PARSER_SEQUENCE_INT)

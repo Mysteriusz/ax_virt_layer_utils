@@ -106,7 +106,7 @@ axres seq_read_group(
 	return AX_SUCC;
 }
 
-void* seq_split_fmt_c(
+void* seq_split_fmt_iter(
 	const ax_list list _prepass,
 	const ax_list_node node _prepass
 ){
@@ -176,7 +176,7 @@ axres seq_split_fmt(
 
 	// Free the temp group buffer axfree(grp); Cleanup check
 	axcheck(res,
-		list->iter(list, (ax_structures_iter_act)seq_split_fmt_c),
+		list->iter(list, (ax_structures_iter_act)seq_split_fmt_iter),
 		list->delete(list)
 	);
 
@@ -301,6 +301,35 @@ axres seq_locate(
 	else axcheck(res);
 
 	*loc = set_char;
+
+	return AX_SUCC;
+}
+
+axres seq_find(
+	_in const c16		*text,
+	_in const c16 		*fmt,
+	_out const c16 		**loc
+){
+	if (text == nullptr
+	|| fmt == nullptr){
+		return AX_INV_ARG;
+	}
+
+	axres res = AX_SUCC;
+
+	u32 grp_count = 0;
+	ax_list *grp_list = nullptr;
+	res = seq_split_fmt(fmt, &grp_count, &grp_list);
+	axcheck(res);
+
+	// Currently only one group
+	const c16 *loc_buf = nullptr; 
+	res = seq_locate(text, i_as(grp_list, 0, fmt_group*), &loc_buf);
+
+	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
+	axcheck(res);
+
+	*loc = loc_buf;
 
 	return AX_SUCC;
 }
