@@ -69,6 +69,31 @@ axres seq_find_f(
 
 	return AX_SUCC;
 }
+axres seq_find_all_f(
+	_in io_file		*file,
+	_in const c16 		*fmt,
+	_in_out ax_list		*locs
+){
+	if (io_finv(file, UTF16)){
+		return AX_INV_FILE;
+	}
+	if (fmt == nullptr){
+		return AX_INV_ARG;
+	}
+	if (locs == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+
+	res = seq_find_all(fmap_off, fmt, locs);
+	axcheck(res);
+
+	return AX_SUCC;
+}
 
 axres skip_while_f(
 	_in io_file		*file,

@@ -174,7 +174,7 @@ typedef struct _fmt_group{
  	Each capture set has to be separated.
 	
 	Invalid:
-		- L"[[<.><.>]]"
+		- L"[[<.><.>]]" // TODO: Capture set joining
 	Valid: 
 		- L"[[<.>]<.>]"
 */
@@ -403,6 +403,11 @@ axres find_substr_f(
 axres seq_find_f(
 	_in io_file		*file,
 	_in const c16 		*fmt
+);
+axres seq_find_all_f(
+	_in io_file		*file,
+	_in const c16 		*fmt,
+	_in_out ax_list		*locs
 );
 
 /*
