@@ -3,6 +3,7 @@
 
 #include "ax_type.h"
 #include "ax_error.h"
+#include "ax_io.h"
 
 static inline u32 _c16len(
 	_in const c16 		*text
@@ -226,6 +227,11 @@ axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
 	_out const c16 		**loc
+);
+axres seq_find_all(
+	_in const c16		*text,
+	_in const c16 		*fmt,
+	_in_out ax_list		*locs
 );
 
 #endif // !defined(AX_PARSER_SEQUENCE_INT)

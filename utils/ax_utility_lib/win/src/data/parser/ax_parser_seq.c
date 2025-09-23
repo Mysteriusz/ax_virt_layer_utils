@@ -71,11 +71,11 @@ axres seq_read_group(
 			res = skip_until(fmt_char, L">", &fmt_char);
 			axcheck(res);
 
-			const c16 *cap_set = seq_spec_to_charset(spec_char);
+			const c16 *cap_beg = seq_spec_to_charset(spec_char);
 			grp->cap_sets->add(
 				grp->cap_sets,
-				(void*)cap_set,
-				_c16len_b(cap_set) + sizeof(c16) // Include null-terminator
+				(void*)cap_beg,
+				_c16len_b(cap_beg) + sizeof(c16) // Include null-terminator
 			); 
 
 			skip_len = 1;
@@ -187,33 +187,35 @@ axres seq_split_fmt(
 
 axres seq_match(
 	_in const c16		*text,
-	_in const c16 		*seq_set,
+	_in const c16 		*seq_beg,
 	_in const c16 		*seq_end,
 	_in const c16		*cap
 ){
 	axres res = AX_SUCC;
 
-	u64 v_set_s = 0;
-	c16 *v_set = nullptr;
+	u64 inv_set_s = 0;
+	c16 *inv_beg = nullptr;
 
-	u64 from = dif_c16(text, seq_set);
+	u64 from = dif_c16(text, seq_beg);
 	u64 to = dif_c16(text, seq_end);
 
-	res = read_range(text, from, to, &v_set_s, nullptr);
+	// Read range
+	res = read_range(text, from, to, &inv_set_s, nullptr);
 	axcheck(res);
 
-	v_set = axmalloc(v_set_s * sizeof(c16));
+	inv_beg = axmalloc(inv_set_s * sizeof(c16));
 
-	res = read_range(text, from, to, &v_set_s, v_set);
-	axcheck(res, axfree(v_set));
+	res = read_range(text, from, to, &inv_set_s, inv_beg);
+	axcheck(res, axfree(inv_beg));
 
-	const c16 *v_set_loc = nullptr;
-	res = skip_while(v_set, cap, &v_set_loc);
-	axcheck(res, axfree(v_set));
+	// Try to skip entire inv_begwith capture group
+	const c16 *inv_set_loc = nullptr;
+	res = skip_while(inv_beg, cap, &inv_set_loc);
+	axcheck(res, axfree(inv_beg));
 
-	axfree(v_set);
-	// Check if skipped distance was the correct size between start and end of the capture group sequence
-	if (dif_c16(v_set, v_set_loc) != dif_c16(seq_set, seq_end)){
+	axfree(inv_beg);
+	// Check if skip count was as seq_end expects
+	if (dif_c16(inv_beg, inv_set_loc) != dif_c16(seq_beg, seq_end)){
 		return AX_INV_DATA;
 	}
 
@@ -240,7 +242,7 @@ axres seq_locate(
 
 	u32 seq_i = 0;
 	u32 cap_i = 0;
-	const c16 *seq_set = text_char;
+	const c16 *seq_beg = text_char;
 	const c16 *seq_end = text_char;
 
 	while(in_c16_s(text, text_char, text_len)
@@ -249,22 +251,22 @@ axres seq_locate(
 		res = find_substr(
 			text_char,
 			i_as(grp->seq_list, seq_i, c16*),
-			&seq_set,
+			&seq_beg,
 			nullptr
 		); 
 		axcheck_b(res);
 
 		// First check
 		if (seq_i == 0){
-			set_char = seq_set;
+			set_char = seq_beg;
 		}
 
-		seq_set += _c16len(i_as(grp->seq_list, seq_i, c16*));
+		seq_beg+= _c16len(i_as(grp->seq_list, seq_i, c16*));
 		seq_i++;
 		
 		// Find sequence end
 		res = find_substr(
-			seq_set,
+			seq_beg,
 			i_as(grp->seq_list, seq_i, c16*),
 			&seq_end,
 			nullptr
@@ -274,7 +276,7 @@ axres seq_locate(
 		// Match with capture group
 		res = seq_match(
 			text_char,
-			seq_set,
+			seq_beg,
 			seq_end, 
 			i_as(grp->cap_sets, cap_i, c16*)
 		);
@@ -282,10 +284,10 @@ axres seq_locate(
 		// Reset search
 		if(AX_ERR(res)){
 			text_char = set_char + _c16len(i_as(grp->seq_list, 0, c16*));
+			seq_beg = text_char;
+			seq_end = text_char;
 			cap_i = 0;
 			seq_i = 0;
-			seq_set = text_char;
-			seq_end = text_char;
 			set_char = nullptr;
 		}
 		else{
@@ -314,6 +316,9 @@ axres seq_find(
 	|| fmt == nullptr){
 		return AX_INV_ARG;
 	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
 
 	axres res = AX_SUCC;
 
@@ -323,14 +328,60 @@ axres seq_find(
 	axcheck(res);
 
 	// Currently only one group
-	const c16 *loc_buf = nullptr; 
-	res = seq_locate(text, i_as(grp_list, 0, fmt_group*), &loc_buf);
+	const c16 *text_loc = nullptr; 
+	res = seq_locate(text, i_as(grp_list, 0, fmt_group*), &text_loc);
 
 	// Iterate grp_list cleanup function
 	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
 	axcheck(res);
 
-	*loc = loc_buf;
+	*loc = text_loc;
+
+	return AX_SUCC;
+}
+axres seq_find_all(
+	_in const c16		*text,
+	_in const c16 		*fmt,
+	_in_out ax_list		*locs
+){
+	if (text == nullptr
+	|| fmt == nullptr){
+		return AX_INV_ARG;
+	}
+	if (locs == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	u32 grp_count = 0;
+	ax_list *grp_list = nullptr;
+	res = seq_split_fmt(fmt, &grp_count, &grp_list);
+	axcheck(res);
+
+	u64 text_len = _c16len(text); 
+	const c16 *text_char = text; 
+	const c16 *text_loc = text; 
+
+	// Currently only one group
+	fmt_group* grp = i_as(grp_list, 0, fmt_group*);
+	while(in_c16_s(text, text_char, text_len)){
+		res = seq_locate(text_char, grp, &text_loc);
+		axcheck_b(res);
+
+		locs->add(locs, &text_loc, sizeof(const c16*));
+		text_char = text_loc + 1;
+	}
+
+	// No occurrences added and res is not internal err
+	if (locs->count != 0
+	&& res == AX_NOT_FND){
+		res = AX_SUCC;
+	}
+
+	// Iterate grp_list cleanup function
+	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
+	axcheck(res, locs->clear(locs));
 
 	return AX_SUCC;
 }

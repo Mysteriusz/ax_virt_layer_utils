@@ -27,7 +27,7 @@
 #define AX_LOG_HEAD 			L"--------AX_LOG--------"
 #define AX_LOG_META 			L"--------METADATA--------"
 
-#include "ax_io.h"
+#include "ax_log.h"
 
 static void ax_log(
 	axres 			res

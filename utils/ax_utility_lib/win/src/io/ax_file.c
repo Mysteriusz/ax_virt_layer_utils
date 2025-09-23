@@ -1,5 +1,6 @@
 #include "ax_file.h"
 #include "ax_error.h"
+#include "ax_io.h"
 
 bool io_finv(
 	_in io_file 		*file,
@@ -212,8 +213,12 @@ axres io_fo(
 		return AX_INV_DATA;
 	}
 
+	// Platform/mode specific cleanup phase when anything after opening the file fails
+	if (0){
 CLEANUP:
-	fclose(file);
+		fclose(file);
+		return AX_INV_DATA;
+	}
 
 #elif defined(AX_KM)
 

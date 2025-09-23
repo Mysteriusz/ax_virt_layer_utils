@@ -4,7 +4,8 @@ int main(
 	void
 ){
 	axres res = AX_SUCC;
-	io_file file = {0};
+
+	/*io_file file = {0};
 
 	res = io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file); 
 	axcheck(res, ax_log(res));
@@ -17,17 +18,22 @@ int main(
 	axcheck(res, ax_log(res));
 	io_str(buf);
 
-	io_fc(&file);
+	io_fc(&file);*/
 	unref(res);
 
-	/*const c16 *seq = L"\\[<a-z>|<.>]:\\";
-	const c16 *txt = L"l[sect[ion|other_text|a|b]:";
-	const c16 *loc = nullptr;
+	const c16 *seq = L"\\[<a-z>|<.>]:\\";
+	const c16 *txt = L"l[sect[ion|other[abc|_text]:|a|b]:";
+	//const c16 *loc = nullptr;
 
-	res = seq_find(txt, seq, &loc);
+	ax_list *occs = nullptr;
+	ax_list_init(&occs);
+
+	res = seq_find_all(txt, seq, occs);
 	axcheck(res, ax_log(res));
 
-	io_str(loc);*/
+	io_str(*i_as(occs, 0, c16**));
+	io_str(*i_as(occs, 1, c16**));
+	io_i64(occs->count);
 
 	return 0;
 }

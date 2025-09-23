@@ -1,8 +1,7 @@
 #if !defined(AX_IO_STRUCTURES_INT)
 #define AX_IO_STRUCTURES_INT
 
-#include "ax_type.h"
-#include "ax_error_code.h"
+#include "ax_error.h"
 #include "ax_memory.h"
 
 typedef axres (*ax_structures_add)(
@@ -40,6 +39,10 @@ typedef axres (*ax_structures_iter)(
 	// TODO capture group evaluation on bool
 );
 
+typedef axres (*ax_structures_clear)(
+	_in void 			*structure
+);
+
 typedef axres (*ax_structures_delete)(
 	_in void 			*structure
 );
@@ -51,6 +54,7 @@ typedef axres (*ax_structures_delete)(
 	ax_structures_at at; \
 	ax_structures_at_v at_v; \
 	ax_structures_iter iter; \
+	ax_structures_clear clear; \
 	ax_structures_delete delete;
 
 #if !defined(AX_IO_STRUCTURES_LIST_INT)
@@ -93,6 +97,9 @@ void *ax_list_at_v(
 axres ax_list_iter(
 	_in const ax_list 		*list,
 	_in ax_structures_iter_act	action
+);
+axres ax_list_clear(
+	_in ax_list 			*list
 );
 axres ax_list_delete(
 	_in ax_list 			*list

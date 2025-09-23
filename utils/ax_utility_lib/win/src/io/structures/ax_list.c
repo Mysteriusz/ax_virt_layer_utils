@@ -16,6 +16,7 @@ axres ax_list_init(
 	list->at = (ax_structures_at)ax_list_at;
 	list->at_v = (ax_structures_at_v)ax_list_at_v;
 	list->iter = (ax_structures_iter)ax_list_iter;
+	list->clear = (ax_structures_clear)ax_list_clear;
 	list->delete = (ax_structures_delete)ax_list_delete;
 
 	*buf = list;
@@ -166,18 +167,35 @@ axres ax_list_iter(
 
 	return AX_SUCC;
 }
+axres ax_list_clear(
+	_in ax_list 			*list
+){
+	if (list == nullptr){
+		return AX_INV_ARG;
+	}
+
+	ax_list_node *node = list->root;
+	ax_list_node *next = nullptr;
+	while(node != nullptr){
+		next = node->next;
+		axfree(node);
+		node = next;
+	}
+	list->root = nullptr;
+
+	return AX_SUCC;
+}
 axres ax_list_delete(
 	_in ax_list 			*list
 ){
-	ax_list_node *prev = nullptr;
-	ax_list_node *curr = list->root;
-	// Free all nodes
-	while(curr != nullptr){
-		prev = curr;
-		curr = curr->next;
+	if (list == nullptr){
+		return AX_INV_ARG;
+	}
 
-		axfree(prev->value);
-		axfree(prev);
+	// Free all nodes
+	axres res = AX_SUCC;
+	res = ax_list_clear(list);
+	if (AX_ERR(res)){
 	}
 	axfree(list);
 
