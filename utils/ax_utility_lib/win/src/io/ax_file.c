@@ -212,10 +212,13 @@ axres io_fo(
 		return AX_INV_DATA;
 	}
 
+CLEANUP:
+	fclose(file);
+
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	void *file = nullptr;
+	HANDLE file = nullptr;
 	#error "TODO"
 #elif defined(AX_LINUX)
 	void *file = nullptr;
@@ -228,19 +231,20 @@ axres io_fo(
 	// Get encoding
 	io_file_enc enc = UTF16LE;
 	res = io_fbom(path, &enc);
-	axcheck(res);
+	axcheck(res, goto CLEANUP);
 
+	// Get file memory map
 	io_fmap map = {0};
-	// Pass file as handle
-	res = io_fmmap(file, &map); 
-	axcheck(res);
+	// Pass file handle
+	res = io_fmmap(file, &map);
+	axcheck(res, goto CLEANUP);
 
 	buf->offset = 0;
 	buf->path = _wcsdup(path);
 	buf->acc = acc;
 	buf->enc = enc;
-	buf->hdl = file;		
-	buf->map = map;		
+	buf->hdl = file;
+	buf->map = map;
 
 	return AX_SUCC;
 }
@@ -393,6 +397,7 @@ axres io_fmmap(
 		0
 	);
 	if (map_buf == nullptr){
+		CloseHandle(map_hdl);
 		return AX_INV_DATA;
 	}
 

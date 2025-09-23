@@ -9,7 +9,7 @@ int main(
 	res = io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file); 
 	axcheck(res, ax_log(res));
 
-	res = seq_find_f(&file, L"\\[<.>|<.>]:\\");
+	res = seq_find_f(&file, L"\\[<.>|<a-z>]:\\");
 	axcheck(res, ax_log(res));
 
 	c16 *buf = axmalloc(100);
