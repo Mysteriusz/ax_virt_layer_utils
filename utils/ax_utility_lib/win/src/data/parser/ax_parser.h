@@ -390,29 +390,11 @@ axres find_substr_f(
 	_in io_file		*file,
 	_in const c16 		*substr
 );
+
 /*
-	Sequence formating:
-		- %s (string)
-	TODO: MORE FORMATS
-
-	Multi-type formats should have separator between them 
-	Every format should also have some sort of start/end character
-
-	Example:
-		- fmt = L"[[[%s|%s]]"
-		- ret = L"[[[some_string|other_string]]"
-
-		- fmt = L"<%s\n%s>"
-		- ret = L"<some_string
-		other_string>"
-
-	Invalid format:
-		- fmt = L"[[[%s%s]]"
-		- fmt = L"[%s"
-		- fmt = L"%s]"
-		- fmt = L"%s%s"
+	Seq interface for files
 */
-axres find_sequence_f(
+axres seq_find_f(
 	_in io_file		*file,
 	_in const c16 		*fmt
 );

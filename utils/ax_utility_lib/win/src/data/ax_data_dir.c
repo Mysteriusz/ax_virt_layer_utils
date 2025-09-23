@@ -54,12 +54,16 @@ axres read_data_dir(
 	res = io_fo(hdl->con.user_data, IO_FILE_R, &file);
 	axcheck(res);
 
+	u64 fsize = 0;
+	res = io_fsize(file.path, &fsize);
+	axcheck(res);
+
 	// Validate buffer size 
-	res = _ax_buf_err(file.size, *size);
+	res = _ax_buf_err(fsize, *size);
 	// Check size and return correct one 
 	if (AX_ERR(res)
 	|| ret_size){
-		*size = astp(u32,file.size);
+		*size = astp(u32,fsize);
 		io_fc(&file);
 		return AX_SUCC;
 	}

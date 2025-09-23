@@ -8,17 +8,16 @@
    	axres bit 0-11 		: Error code
    	axres bit 12-15		: Error metadata
 
-	Further bit fileds may be added
+	Further bit fields may be added
    	
 	Code structure can be revealed by casting 
-		- (axres_s*)&axrer
+		- (axres_s*)&axres
 
 */
 
 #include "ax_type.h"
 
 // ERROR CODES CANNOT BE BIGGER THAN 0xFFF (12 bits) 
-//
 #define AX_SUCC 			((axres)0x00)
 
 // "INVALID" codes

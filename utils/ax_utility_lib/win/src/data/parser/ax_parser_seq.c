@@ -326,6 +326,7 @@ axres seq_find(
 	const c16 *loc_buf = nullptr; 
 	res = seq_locate(text, i_as(grp_list, 0, fmt_group*), &loc_buf);
 
+	// Iterate grp_list cleanup function
 	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
 	axcheck(res);
 

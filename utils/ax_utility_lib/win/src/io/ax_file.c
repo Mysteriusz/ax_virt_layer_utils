@@ -35,19 +35,31 @@ axres io_fbom(
 		return AX_INV_BUF;
 	}
 
+	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
+
 #if defined(AX_UM)
 	FILE *file = nullptr;
 	errno_t err = _wfopen_s(&file, path, L"r"); 
 	if (err != 0){
+		axfree(bom);
+
 		if (err == ENOENT){
 			return AX_NOT_FND;
 		}
 		return AX_INV_FILE;
 	}
 	
-	u32 *bom = axmalloc(4); // Max BOM size is 4 bytes
 	u64 read = fread(bom, 1, 4, file);
+	fclose(file);
+#elif defined(AX_KM)
 
+#if defined(AX_WIN64)
+	#error "TODO"
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#endif
 	io_file_enc enc = 0;
 
 	// Read size CAN be UTF32
@@ -75,24 +87,12 @@ axres io_fbom(
 		}
 	}
 
+	axfree(bom);
 	if (enc == 0){
 		return AX_INV_ENC;
 	}
 
 	*buf = enc;
-
-	axfree(bom);
-	fclose(file);
-
-#elif defined(AX_KM)
-
-#if defined(AX_WIN64)
-	#error "TODO"
-#elif defined(AX_LINUX)
-	#error "TODO"
-#endif
-
-#endif
 
 	return AX_SUCC;
 }
@@ -105,6 +105,7 @@ axres io_fex(
 	}
 
 #if defined(AX_UM)
+
 	FILE *file = nullptr;
 	errno_t err = _wfopen_s(&file, path, L"r"); 
 	if (err != 0){
@@ -128,10 +129,55 @@ axres io_fex(
 	return AX_SUCC;
 }
 
+axres io_fsize(
+	_in const c16		*path,
+	_out u64		*size
+){
+	if (path == nullptr){
+		return AX_INV_ARG;
+	}
+	if (size == nullptr){
+		return AX_INV_BUF;
+	}
+
+	u64 fsize = 0;
+
+#if defined(AX_UM)
+
+	FILE *file = nullptr;
+	errno_t err = _wfopen_s(&file, path, L"r"); 
+	if (err != 0){
+		if (err == ENOENT){
+			return AX_NOT_FND;
+		}
+		return AX_INV_DATA;
+	}
+
+	_fseeki64((FILE*)file, 0, SEEK_END);
+	fsize = _ftelli64((FILE*)file);
+	_fseeki64((FILE*)file, 0, SEEK_SET);
+
+	fclose(file);
+
+#elif defined(AX_KM)
+
+#if defined(AX_WIN64)
+	#error "TODO"
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#endif // defined(AX_UM)
+
+	*size = fsize;
+
+	return AX_SUCC;
+}
+
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
-	_out io_file		*buf
+	_in_out io_file		*buf
 ){
 	if (path == nullptr
 	|| acc == 0){
@@ -141,9 +187,9 @@ axres io_fo(
 		return AX_INV_BUF;
 	}
 
-	void *file = nullptr;
-	u64 size = 0;
 #if defined(AX_UM)
+	FILE *file = nullptr;
+
 	bool exists = (io_fex(path) == AX_SUCC);
 	if (!exists
 	&& !chkf(acc, IO_FILE_C)){
@@ -166,6 +212,17 @@ axres io_fo(
 		return AX_INV_DATA;
 	}
 
+#elif defined(AX_KM)
+
+#if defined(AX_WIN64)
+	void *file = nullptr;
+	#error "TODO"
+#elif defined(AX_LINUX)
+	void *file = nullptr;
+	#error "TODO"
+#endif
+
+#endif
 	axres res = AX_SUCC;
 
 	// Get encoding
@@ -173,27 +230,17 @@ axres io_fo(
 	res = io_fbom(path, &enc);
 	axcheck(res);
 
-	// Get size
-	_fseeki64((FILE*)file, 0, SEEK_END);
-	size = _ftelli64((FILE*)file);
-	_fseeki64((FILE*)file, 0, SEEK_SET);
-
-#elif defined(AX_KM)
-
-#if defined(AX_WIN64)
-	#error "TODO"
-#elif defined(AX_LINUX)
-	#error "TODO"
-#endif
-
-#endif
+	io_fmap map = {0};
+	// Pass file as handle
+	res = io_fmmap(file, &map); 
+	axcheck(res);
 
 	buf->offset = 0;
 	buf->path = _wcsdup(path);
 	buf->acc = acc;
 	buf->enc = enc;
-	buf->hdl = file;			
-	buf->size = size;
+	buf->hdl = file;		
+	buf->map = map;		
 
 	return AX_SUCC;
 }
@@ -205,8 +252,6 @@ axres io_fc(
 	}
 
 #if defined(AX_UM)
-
-	axfree(file->path);
 
 	errno_t err = 0;
 	err = fclose(file->hdl);
@@ -224,6 +269,12 @@ axres io_fc(
 
 #endif
 
+	axres res = AX_SUCC;
+	res = io_funmap(&file->map);
+	axcheck(res);
+
+	axfree(file->path);
+
 	return AX_SUCC;
 }
 axres io_fr(
@@ -238,6 +289,7 @@ axres io_fr(
 	if (buf == nullptr){
 		return AX_INV_BUF;
 	}
+
 #if defined(AX_STRICT_BUF_SIZE)
 	if (size > file->size){
 		return AX_BUF_TOO_BIG;
@@ -298,6 +350,94 @@ axres io_fw(
 	}
 
 #elif defined(AX_KM)
+#if defined(AX_WIN64)
+	#error "TODO"
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#endif
+
+	return AX_SUCC;
+}
+
+axres io_fmmap(
+	_in void 		*hdl,
+	_in_out io_fmap		*map
+){
+	if (hdl == nullptr){
+		return AX_INV_FILE;
+	}
+	if (map == nullptr){
+		return AX_INV_BUF;
+	}
+
+#if defined(AX_UM)
+
+#if defined(AX_WIN64)
+#include "io.h"
+
+	HANDLE map_hdl = CreateFileMappingW(
+		(HANDLE)_get_osfhandle(_fileno(hdl)),
+		nullptr,
+		PAGE_READONLY,
+		0,
+		0,
+		nullptr
+	);
+	void *map_buf = MapViewOfFile(
+		map_hdl,
+		FILE_MAP_READ,
+		0,
+		0,
+		0
+	);
+	if (map_buf == nullptr){
+		return AX_INV_DATA;
+	}
+
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#elif defined(AX_KM)
+
+#if defined(AX_WIN64)
+	#error "TODO"
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#endif
+
+	map->root = map_buf;
+	map->hdl = map_hdl;
+
+	return AX_SUCC;
+}
+axres io_funmap(
+	_in io_fmap		*map
+){
+	if (map == nullptr){
+		return AX_INV_ARG;
+	}
+
+#if defined(AX_UM)
+
+#if defined(AX_WIN64)
+
+	// Unless Unmap fails ignore CloseHandle error
+	if (UnmapViewOfFile(map->root) == 0){
+		return AX_INV_DATA;
+	}
+	CloseHandle(map->hdl);
+
+#elif defined(AX_LINUX)
+	#error "TODO"
+#endif
+
+#elif defined(AX_KM)
+
 #if defined(AX_WIN64)
 	#error "TODO"
 #elif defined(AX_LINUX)

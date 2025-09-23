@@ -45,6 +45,7 @@
 #include <handleapi.h>
 #include <winreg.h>
 #include <winerror.h>
+#include <memoryapi.h>
 #elif defined(AX_KM)
 #include <wdm.h>
 

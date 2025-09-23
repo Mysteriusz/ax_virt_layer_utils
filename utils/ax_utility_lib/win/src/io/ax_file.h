@@ -86,10 +86,19 @@ static inline const c16 *_io_file_conv(
 	}
 }
 
+typedef struct _io_fmap{
+	void *root;
+
+#if defined(AX_WIN64)
+	HANDLE hdl;
+#elif defined(AX_LINUX)
+#error "TODO"
+#endif // defined(AX_WIN64)
+
+} io_fmap;
+
 typedef struct _io_file{
 	c16			*path;
-	io_file_acc		acc;
-	u64 			size;
 #if defined(AX_UM)
 	FILE			*hdl;
 #elif defined(AX_KM)
@@ -101,9 +110,13 @@ typedef struct _io_file{
 #endif
 
 #endif
+	io_fmap			map; // Memory mapped file
+	io_file_acc		acc; // File access
 	io_file_enc 		enc; // Optional field (default = UTF16LE)
-	u64			offset; // Optional field (default = 0) ** RESETS AFTER R/W OPERATIONS **
+	u64			offset; // Optional field (default = 0)
 } io_file;
+
+// Invalidate file and check encoding (exp_enc = 0 if no encoding check)
 bool io_finv(
 	_in io_file 		*file,
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
@@ -120,13 +133,19 @@ axres io_fex(
 	_in const c16		*path	
 );
 
+// Check file size
+axres io_fsize(
+	_in const c16		*path,
+	_out u64		*size
+);
+
 // Open file
 // REQUIRES BOM
 // Non BOM files will return AX_INV_ENC.
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
-	_out io_file		*buf
+	_in_out io_file		*buf
 );
 // Close file 
 axres io_fc(
@@ -145,6 +164,14 @@ axres io_fw(
 	_in u64			size,
 	_in void 		*buf,
 	_out_opt u64		*writ // Bytes written
+);
+
+axres io_fmmap(
+	_in void 		*hdl,
+	_in_out io_fmap		*map
+);
+axres io_funmap(
+	_in_out io_fmap		*map
 );
 
 #endif // AX_IO_FS_INT

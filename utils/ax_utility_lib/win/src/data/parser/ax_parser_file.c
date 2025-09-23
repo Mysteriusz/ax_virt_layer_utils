@@ -32,85 +32,40 @@ axres find_substr_f(
 
 	axres res = AX_SUCC;
 
-	c16 *chunk = axmalloc(IO_FILE_CHUNK);
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+	// Location of substr in fmap
+	const c16 *loc = file->map.root;
 
-	// File offset of the first substr occcurence.
-	u64 start_off = 0;
+	res = find_substr(fmap_off, substr, &loc, nullptr);
+	axcheck(res);
 
-	const c16 *chunk_loc = nullptr; // Location in chunk*
-	const c16 *str_loc = nullptr; // Location in substr*
-
-	u64 init_off = file->offset;
-
-	do{
-		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
-		axcheck_b(res);
-
-/*
-		Check continuation after substr was cut by chunk		 	
-
-		Example:
-			- previous chunk = L"some_s"
-			- previous str_loc = L"some_string"
-			Here the part of the string was found in the chunk.
-			From now on each other will pass through here and move str_loc further.
-
-			- chunk = L"tring other_string"
-			- str_loc = L"tring"
-
-			And so on until either:
-				- Chunk is not a continuation of the string.
-				- String was found.
-*/
-		if (str_loc != nullptr){
-			res = starts_with(chunk, str_loc, &str_loc);
-		}
-
-/*
- 		Either the continuation of string not found or its the initial read.
-		If substr continuation not found it will rescan the chunk the string.
-*/
-		if (str_loc == nullptr
-		|| res == AX_NOT_FND){
-			res = find_substr(chunk, substr, &chunk_loc, &str_loc);
-			start_off = file->offset + dif_b(chunk, chunk_loc);
-		}
-
-		// Chunk does not have substr (restart)
-		if (res == AX_NOT_FND){
-			str_loc = nullptr;
-		}
-
-		file->offset += IO_FILE_CHUNK;
-
-		// Found
-		if (res == AX_SUCC
-		&& *str_loc == L'\0'){
-			break;
-		}
-
-		memset(chunk, 0x0, IO_FILE_CHUNK);
-	} while(file->offset < file->size);
-
-	axfree(chunk);
-	axcheck(res, file->offset = init_off);
-
-	file->offset = start_off;
+	file->offset = dif_b(file->map.root, loc);
 
 	return AX_SUCC;
 }
-axres find_sequence_f(
+axres seq_find_f(
 	_in io_file		*file,
-	_in const c16 		*seq
+	_in const c16 		*fmt
 ){
 	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
 	}
-	if (seq == nullptr){
+	if (fmt == nullptr){
 		return AX_INV_ARG;
 	}
 
+	axres res = AX_SUCC;
 
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+	// Location of substr in fmap
+	const c16 *loc = file->map.root;
+
+	res = seq_find(fmap_off, fmt, &loc);
+	axcheck(res);
+
+	file->offset = dif_b(file->map.root, loc);
 
 	return AX_SUCC;
 }
@@ -128,29 +83,15 @@ axres skip_while_f(
 
 	axres res = AX_SUCC;
 
-	c16 *chunk = axmalloc(IO_FILE_CHUNK);
-	const c16 *chunk_loc = nullptr;
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+	// Location of substr in fmap
+	const c16 *loc = file->map.root;
 
-	u64 init_off = file->offset;
+	res = skip_while(fmap_off, charset, &loc);
+	axcheck(res);
 
-	do{
-		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
-		axcheck_b(res);
-		res = skip_while(chunk, charset, &chunk_loc);
-		axcheck_b(res);
-
-		file->offset += dif_b(chunk, chunk_loc);
-
-		// Found
-		if (contains(charset, *chunk_loc) != AX_SUCC){
-			break;
-		}
-
-		memset(chunk, 0x0, IO_FILE_CHUNK);
-	} while(file->offset < file->size);
-
-	axfree(chunk);
-	axcheck(res, file->offset = init_off);
+	file->offset = dif_b(file->map.root, loc);
 
 	return AX_SUCC;
 }
@@ -165,34 +106,17 @@ axres skip_until_f(
 		return AX_INV_ARG;
 	}
 
-	axres res = 0;
+	axres res = AX_SUCC;
 
-	c16 *chunk = axmalloc(IO_FILE_CHUNK);
-	const c16 *chunk_loc = nullptr;
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+	// Location of substr in fmap
+	const c16 *loc = file->map.root;
 
-	u64 init_off = file->offset;
+	res = skip_until(fmap_off, charset, &loc);
+	axcheck(res);
 
-	do{
-		res = io_fr(file, IO_FILE_CHUNK, chunk, nullptr);
-		axcheck_b(res);
-		res = skip_until(chunk, charset, &chunk_loc);
-		if (res == AX_NOT_FND){
-			// Last chunk character
-			chunk_loc = &chunk[(IO_FILE_CHUNK - 1) / sizeof(c16)];
-		} else axcheck_b(res);
-
-		file->offset += dif_b(chunk, chunk_loc);
-
-		// Found
-		if (contains(charset, *chunk_loc) == AX_SUCC){
-			break;
-		}
-
-		memset(chunk, 0x0, IO_FILE_CHUNK);
-	} while(file->offset < file->size);
-
-	axfree(chunk);
-	axcheck(res, file->offset = init_off);
+	file->offset = dif_b(file->map.root, loc);
 
 	return AX_SUCC;
 }

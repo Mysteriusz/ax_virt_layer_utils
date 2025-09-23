@@ -230,7 +230,7 @@ axres pop_data_dir(
 // ops.read
 axres read_data_dir(
 	_in data_handle		*hdl,	
-	_out u32		*size,
+	_in_out u32		*size,
 	_in_out _eval void	*buf
 );
 // ops.write
@@ -283,7 +283,7 @@ axres pop_data_file(
 // ops.read
 axres read_data_file(
 	_in data_handle		*hdl,	
-	_out u32		*size,
+	_in_out u32		*size,
 	_in_out _eval void	*buf
 );
 // ops.write
