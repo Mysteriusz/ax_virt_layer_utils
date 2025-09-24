@@ -244,7 +244,7 @@ CLEANUP:
 	res = io_fmmap(file, &map);
 	axcheck(res, goto CLEANUP);
 
-	buf->offset = 0;
+	buf->offset = _enc_size(enc);
 	buf->path = _wcsdup(path);
 	buf->acc = acc;
 	buf->enc = enc;

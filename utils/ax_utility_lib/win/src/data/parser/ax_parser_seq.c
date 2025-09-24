@@ -106,7 +106,7 @@ axres seq_read_group(
 	return AX_SUCC;
 }
 
-void* seq_split_fmt_iter(
+void seq_split_fmt_iter(
 	const ax_list list _prepass,
 	const ax_list_node node _prepass
 ){
@@ -114,7 +114,7 @@ void* seq_split_fmt_iter(
 	ax_list_delete(grp->cap_sets);
 	ax_list_delete(grp->seq_list);
 
-	return nullptr;	
+	return;	
 }
 axres seq_split_fmt(
 	_in const c16 		*fmt,

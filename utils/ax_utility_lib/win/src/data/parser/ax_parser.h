@@ -254,7 +254,6 @@ axres seq_find_all(
 #define CHARSET_WS 		L"\x20\t"
 #define CHARSET_PUNCT     	L".,;:!?()[]{}"
 
-// TODO:
 axres skip_until(
 	_in const c16		*text,
 	_in const c16		*charset,
@@ -346,7 +345,7 @@ axres read_word(
 
 axres join_with(
 	_in _eval c16		*buf, // Evaluate by using (size * sizeof(c16))
-	_in_out u32		*size,
+	_in_out u64		*size,
 	_in u32 		n,
 	...
 );
@@ -354,12 +353,12 @@ axres join_with(
 axres split_by(
 	_in const c16		*text,
 	_in const c16		*charset,
-	_out u32		*size, 
+	_out u64		*size, 
 	_in_out _eval c16	**buf // Evaluate by using (size * sizeof(c16*))
 );
 axres c_split_by(
 	_in c16			**buf,
-	_in u32			size
+	_in u64			size
 );
 
 #endif // !defined(AX_PARSER_READ_INT)
@@ -426,6 +425,12 @@ axres skip_line_f(
 );
 axres skip_word_f(
 	_in io_file		*file
+);
+
+axres read_line_f(
+	_in io_file		*file,
+	_in_out u64		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 
 #endif // !defined(AX_PARSER_FILE_INT)

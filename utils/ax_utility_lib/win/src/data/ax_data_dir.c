@@ -15,7 +15,7 @@ axres push_data_dir(
 	axres res = AX_SUCC;
 	c16 *path = nullptr;
 
-	u32 size = 0;
+	u64 size = 0;
 
 	res = join_with(path, &size, 3, hdl->con.path, name, ext);
 	axcheck(res);

@@ -106,7 +106,7 @@ axres read_word(
 #include <stdarg.h>
 axres join_with(
 	_in _eval c16		*buf,
-	_in_out u32		*size,
+	_in_out u64		*size,
 	_in u32 		n,
 	...
 ){
@@ -155,7 +155,7 @@ axres join_with(
 axres split_by(
 	_in const c16		*text,
 	_in const c16		*charset,
-	_out u32		*size, // Evaluate by using (size * sizeof(c16*))
+	_out u64		*size, // Evaluate by using (size * sizeof(c16*))
 	_in_out c16		**buf
 ){
 	// All arguments that cannot be nullptr.
@@ -228,7 +228,7 @@ axres split_by(
 }
 axres c_split_by(
 	_in c16			**buf,
-	_in u32			size
+	_in u64			size
 ){
 	if (buf == nullptr){
 		return AX_INV_ARG;

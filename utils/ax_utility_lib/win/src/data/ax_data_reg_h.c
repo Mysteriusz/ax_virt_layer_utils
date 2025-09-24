@@ -50,19 +50,19 @@ void *res_path(
 	HANDLE *buf = nullptr; 
 
 #if defined(AX_UM)
-	u32 path_s = 0;
+	u64 path_len = 0;
 	c16 **path_d = nullptr; 
 
 	// Split path into keys to follow 
-	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	res = split_by(hdl->con.path, L"\\/", &path_len, path_d);  
 	if (AX_ERR(res)){
 		ax_log(res);
 		return nullptr;
 	}
 
-	path_d = axmalloc(path_s * sizeof(c16*));
+	path_d = axmalloc(path_len * sizeof(c16*));
 
-	res = split_by(hdl->con.path, L"\\/", &path_s, path_d);  
+	res = split_by(hdl->con.path, L"\\/", &path_len, path_d);  
 	if (AX_ERR(res)){
 		ax_log(res);
 		return nullptr;
@@ -73,7 +73,7 @@ void *res_path(
 	LSTATUS stat = ERROR_SUCCESS;
 
 	u32 dwSamDesired = RULE_TO_SAM(hdl->con.rule);
-	for (u32 i = 1; i < path_s; i++){
+	for (u32 i = 1; i < path_len; i++){
 		if (chkf(hdl->con.rule, URI_RULE_CREATE)){
 			stat = RegCreateKeyExW(
 				(HKEY)buf,

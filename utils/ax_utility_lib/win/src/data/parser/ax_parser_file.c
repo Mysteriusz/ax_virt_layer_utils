@@ -33,7 +33,7 @@ axres find_substr_f(
 	axres res = AX_SUCC;
 
 	// fmap with file offset
-	const c16 *fmap_off = file->map.root;
+	const c16 *fmap_off = file->map.root + file->offset;
 	// Location of substr in fmap
 	const c16 *loc = file->map.root;
 
@@ -58,7 +58,7 @@ axres seq_find_f(
 	axres res = AX_SUCC;
 
 	// fmap with file offset
-	const c16 *fmap_off = file->map.root;
+	const c16 *fmap_off = file->map.root + file->offset;
 	// Location of substr in fmap
 	const c16 *loc = file->map.root;
 
@@ -109,7 +109,7 @@ axres skip_while_f(
 	axres res = AX_SUCC;
 
 	// fmap with file offset
-	const c16 *fmap_off = file->map.root;
+	const c16 *fmap_off = file->map.root + file->offset;
 	// Location of substr in fmap
 	const c16 *loc = file->map.root;
 
@@ -134,7 +134,7 @@ axres skip_until_f(
 	axres res = AX_SUCC;
 
 	// fmap with file offset
-	const c16 *fmap_off = file->map.root;
+	const c16 *fmap_off = file->map.root + file->offset;
 	// Location of substr in fmap
 	const c16 *loc = file->map.root;
 
@@ -181,3 +181,25 @@ axres skip_word_f(
 
 	return AX_SUCC;
 }
+
+axres read_line_f(
+	_in io_file		*file,
+	_in_out u64		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+){
+	if (io_finv(file, UTF16)){
+		return AX_INV_FILE;
+	}
+	
+	axres res = AX_SUCC;
+
+	u64 line_len = *size;
+	const c16 *file_off = file->map.root + file->offset;
+
+	res = read_line(file_off, &line_len, buf);
+	axcheck(res);
+
+	*size = line_len;
+	return AX_SUCC;
+}
+

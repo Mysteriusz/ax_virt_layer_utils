@@ -29,7 +29,7 @@ typedef void* (*ax_structures_at_v)(
 );
 #define i_as(s, v_i, v_t) ((v_t)(s->at_v(s, v_i)))
 
-typedef void* (*ax_structures_iter_act)(
+typedef void (*ax_structures_iter_act)(
 	const u8 structure _prepass,
 	const u8 structure_node _prepass
 );
