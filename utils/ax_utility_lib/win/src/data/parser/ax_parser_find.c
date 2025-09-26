@@ -60,6 +60,7 @@ axres find_substr(
 			}
 		}else{
 			loc_start = nullptr;
+			text_char -= dif_c16(substr, sub_char);
 			sub_char = substr;	
 		}
 

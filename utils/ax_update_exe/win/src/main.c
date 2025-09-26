@@ -10,11 +10,11 @@ int main(
 	res = noded_init_doc(L"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));*/
 
-	const c16 *loc = nullptr;
-	res = seq_find(L"lsl[my_section]abcd", L"\\[<{a-z}>]\\", &loc);
+	/*const c16 *loc = nullptr;
+	res = seq_find(L"lsl[my-section]abcd", L"\\[<{a-z}+{-}>]\\", &loc);
 	axcheck(res, ax_log(res));
 
-	io_str(loc);
+	io_str(loc);*/
 	/*ax_list *g = nullptr;
 	res = seq_split_fmt(L"\\[<{a-z}+{_}>|<{a}>]\\", &g);
 	axcheck(res, ax_log(res));
@@ -24,7 +24,7 @@ int main(
 	io_i64(grp->cap_sets->count);
 
 	unref(grp);*/
-	//io_str(seq_spec_to_charset(L"<{a-h}+{l-n}+{z}+{abc}>"));
+	io_str(seq_spec_to_charset(L"<{a-h}+{-}>"));
 
 	unref(res);
 

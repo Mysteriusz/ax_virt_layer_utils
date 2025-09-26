@@ -1,4 +1,5 @@
 #include "ax_parser.h"
+#include "minwindef.h"
 
 enum set_mode{
 	add = L'+', // Mathematical Union (U)
@@ -7,11 +8,11 @@ enum set_mode{
 };
 
 c16 *_rng_to_set(
-	const c16 *a,
-	const c16 *b
+	const c16 a,
+	const c16 b
 ){
-	u32 c = (u32)*a;
-	u32 d = (u32)*b;
+	u32 c = (u32)a;
+	u32 d = (u32)b;
 
 	// Invert <c-d> -> <d-c>
 	if (c > d){
@@ -38,23 +39,21 @@ const c16 *seq_spec_to_charset(
 		return nullptr;
 	}
 
-	enum set_mode mode = 0;
-	const c16 *charset = nullptr;
-	// Set containing temp data to be merged with charset based on set_mode
-	const c16 *wrkset = nullptr;
-	unref(mode);
-	unref(wrkset);
+	axres res = AX_SUCC;
 
-	const c16 *cap_end = cap;
-	// Check and return nullptr if non-ending capture group
-	axcheck_r(
-		skip_until(cap, L">", &cap_end), nullptr
-	);
+	// Find ending sequence
+	const c16 *cap_end = nullptr;
+	res = find_substr(cap, L"}>", &cap_end, nullptr);
+	axcheck_r(res, nullptr);
 
-	u64 cap_len = dif_c16(cap, cap_end) + 1;
+	u64 cap_len = dif_c16(cap, cap_end + 2);
 	const c16 *cap_char = cap;
 	const c16 *not_char = nullptr;
-	const c16 *rng_char = nullptr;
+
+	enum set_mode mode = 0;
+	const c16 *charset = nullptr;
+	// Set containing temp data to be merged with charset based on mode
+	const c16 *wrkset = nullptr;
 
 	// Capture set parse <{a-z}-{c-m}+{l}>
 	while(in_c16_s(cap, cap_char, cap_len)){
@@ -70,34 +69,27 @@ const c16 *seq_spec_to_charset(
 
 		/* 
 		 	Get the wrkset for operation 
+
+			not_char[0] == L'{'
+			not_char[1] == (from_range_char OR single_char)
+			not_char[2] == (range_char OR L'}')
+			not_char[3] == (to_range_char OR outofrange)
+			not_char[4] == (L'}' OR outofrange)
 		*/
-
-		// Check if range in current notation
-		skip_until(not_char, L"}-", &rng_char);
-
-		// Range check
-		if (*rng_char == L'-'){ 
-			wrkset = _rng_to_set(rng_char - 1, rng_char + 1);
-		// Sentinel char (CHARSET_ANY; no range expected)
-		}else if (*rng_char == L'}' 
-		&& *(rng_char + 1) == L'.'
-		&& *(rng_char - 1) == L'.'){ 
-			wrkset = CHARSET_ANY;
-		// Means its a single char
-		}else if (*rng_char == L'}'){ 	
-			wrkset = _rng_to_set(rng_char - 1, rng_char - 1);
-		// Empty set
-		}else{ 
-			wrkset = nullptr;
+		
+		// Single char
+		if (not_char[2] == L'}'){
+			wrkset = _rng_to_set(not_char[1], not_char[1]);
+		// Range
+		}else{
+			wrkset = _rng_to_set(not_char[1], not_char[3]);
 		}
 
 		/* 
 		 	 Perform mode operation on the wrkset and charset
 		*/
 
-		axcheck_r(
-			skip_until(cap_char, L"}", &cap_char), nullptr
-		);
+		cap_char = &not_char[4];
 
 		// Initialize charset on first iteration 
 		if (charset == nullptr){

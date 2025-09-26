@@ -168,6 +168,11 @@ typedef struct _fmt_group{
 		<{a-z}+{x-z}+{_}>
 		<{l-n}+{x}>
 		<{\x20-\x45}+{\x6f}>
+
+	In case you want to include syntax characters: {, }, -, <, >
+	You either have to include them in the capture range like above
+	OR you can add them by adding single character like so:
+		<{a-z}+{{}+{-}+{<}>
 */
 const c16 *seq_spec_to_charset(
 	_in const c16		*cpg
@@ -302,6 +307,7 @@ axres read_until(
 	_in_out u64		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
+
 // Read (inclusive from) range 
 axres read_range(
 	_in const c16 		*text,
