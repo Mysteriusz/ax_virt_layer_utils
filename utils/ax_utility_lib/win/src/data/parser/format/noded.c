@@ -54,7 +54,9 @@ axres noded_load_sym(
 		// Read label
 		res = read_line_f(doc->file, &label_len, nullptr);
 		axcheck_b(res);
+
 		label_buf = axmalloc(label_len * sizeof(c16));
+
 		res = read_line_f(doc->file, &label_len, label_buf);
 		axcheck_b(res, axfree(label_buf));
 

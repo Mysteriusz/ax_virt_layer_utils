@@ -132,7 +132,9 @@ axres noded_unload_doc(
 
 #define NODED_SECT_BEG 		L"["
 #define NODED_SECT_END 		L"]:\n"
-#define NODED_SECT_FMT		FMT_GRP L"[" SEQ_CAP_ASCII L"]:" FMT_GRP
+
+// All ASCII writable without L'[' AND L']' characters
+#define NODED_SECT_FMT		FMT_GRP L"[<" SEQ_CAP_ASCII L"-{[}-{]}>]:" FMT_GRP
 
 // Load section and it`s nodes
 axres noded_load_sect(

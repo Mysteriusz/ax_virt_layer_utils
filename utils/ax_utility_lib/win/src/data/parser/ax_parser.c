@@ -250,6 +250,7 @@ axres c16_union(
 		b_char++;
 	}
 
+	// Null-terminator
 	buf_len++;
 	if (ret_size){
 		*size = buf_len;
@@ -274,6 +275,67 @@ axres c16_union(
 		}
 
 		buf_i++;
+	}
+
+	return AX_SUCC;
+}
+axres c16_difference(
+	_in const c16 		*a,
+	_in const c16		*b,
+	_in_out u64 		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+){
+	if (a == nullptr
+	|| b == nullptr){
+		return AX_INV_ARG;
+	}
+
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	u64 a_len = _c16len(a);
+	const c16 *a_char = a;
+	
+	u64 b_len = _c16len(b);
+	const c16 *b_char = b;
+
+	u64 buf_len = a_len;
+	while(in_c16_s(b, b_char, b_len)){
+		// If exist once remove it
+		if (contains(a, *b_char) == AX_SUCC){
+			buf_len--;
+		}
+
+		b_char++;
+	}
+
+	// Null-terminator
+	buf_len++;
+	if (ret_size){
+		*size = buf_len;
+		return AX_SUCC;
+	}
+
+	axcheck(_ax_buf_err(*size, buf_len));
+
+	// Reset
+	a_char = a;
+	b_char = b;
+
+	u64 buf_i = 0;
+	// Write-back
+	while(buf_i < (buf_len - 1)){
+		if (contains(b, *a_char) != AX_SUCC){
+			buf[buf_i] = *a_char;
+			buf_i++;
+		}
+
+		a_char++;
 	}
 
 	return AX_SUCC;

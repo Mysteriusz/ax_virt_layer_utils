@@ -114,6 +114,12 @@ axres c16_union(
 	_in_out u64 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
+axres c16_difference(
+	_in const c16 		*a,
+	_in const c16		*b,
+	_in_out u64 		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
@@ -227,7 +233,7 @@ axres seq_find_all(
 	_in_out ax_list		*locs
 );
 
-#define SEQ_CAP_ASCII		L"<{\x20-\x7f}>"
+#define SEQ_CAP_ASCII		L"{\x20-\x7f}"
 
 #endif // !defined(AX_PARSER_SEQUENCE_INT)
 

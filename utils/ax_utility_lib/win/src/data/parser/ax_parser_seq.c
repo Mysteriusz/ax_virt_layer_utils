@@ -1,5 +1,4 @@
 #include "ax_parser.h"
-#include "minwindef.h"
 
 enum set_mode{
 	add = L'+', // Mathematical Union (U)
@@ -71,6 +70,10 @@ bool seq_cap_to_charset_inv(
 			in_set = false;
 			break;
 		case add:
+			break;
+		case difference:
+			break;
+		case collide:
 			break;
 		default:
 			// Not in set and unknown character
@@ -194,13 +197,18 @@ const c16 *seq_cap_to_charset(
 			c16_union(charset, wrkset, &temp_size, temp_set);
 			temp_set = axmalloc(temp_size * sizeof(c16));
 			c16_union(charset, wrkset, &temp_size, temp_set);
-
-			// Cleanup previous charset
-			axfree((void*)charset);
+			break;
+		case difference:
+			c16_difference(charset, wrkset, &temp_size, temp_set);
+			temp_set = axmalloc(temp_size * sizeof(c16));
+			c16_difference(charset, wrkset, &temp_size, temp_set);
 			break;
 		default:
 			break;
 		}
+
+		// Cleanup previous charset
+		axfree((void*)charset);
 
 		// Write to charset
 		charset = temp_set;

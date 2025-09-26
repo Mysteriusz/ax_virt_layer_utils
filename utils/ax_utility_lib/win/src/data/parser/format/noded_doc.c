@@ -18,7 +18,7 @@ axres noded_init_doc(
 	doc->file = file;
 
 	res = io_fo(path, IO_FILE_R, file);
-	axcheck(res);
+	axcheck(res, axfree(file));
 
 	res = noded_load_sym(doc);
 	axcheck(res,

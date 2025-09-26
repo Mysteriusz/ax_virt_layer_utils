@@ -19,7 +19,9 @@ axres noded_load_sect(
 	res = join_with(sect_full, &sect_full_s, 3,
 		NODED_SECT_BEG, sect_name, NODED_SECT_END);
 	axcheck(res);
+
 	sect_full = axmalloc(sect_full_s * sizeof(c16));
+
 	res = join_with(sect_full, &sect_full_s, 3,
 		NODED_SECT_BEG, sect_name, NODED_SECT_END);
 	axcheck(res, axfree(sect_full));

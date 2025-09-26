@@ -6,22 +6,22 @@ int main(
 ){
 	axres res = AX_SUCC;
 
-	/*noded_doc *doc = nullptr; 
+	noded_doc *doc = nullptr; 
 	res = noded_init_doc(L"D:\\share\\ax_info.noded", &doc);
-	axcheck(res, ax_log(res));*/
-
-	/*const c16 *loc = nullptr;
-	res = seq_find(L"lsl[my-section]abcd", L"\\[<{a-z}+{-}>]\\", &loc);
 	axcheck(res, ax_log(res));
 
-	io_str(loc);*/
-	ax_list *g = nullptr;
-	res = seq_split_fmt(L"\\[<{a-z}+{_}>|<{a-b}>]\\", &g);
-	axcheck(res, ax_log(res));
-	fmt_group *grp = index_as(g, 0, fmt_group*);
-	unref(grp);
+	/*u64 len = 0;
+	c16 *buf = nullptr;
 
-	//io_i64(seq_cap_to_charset_inv(L"{a-}"));
+	res = c16_difference(L"abcdefghijk", L"cdgh", &len, buf);
+	axcheck(res, ax_log(res));
+
+	buf = axmalloc(len * sizeof(c16));
+
+	res = c16_difference(L"abcdefghijk", L"cdgh", &len, buf);
+	axcheck(res, ax_log(res));
+
+	io_str_b(buf);*/
 
 	unref(res);
 
