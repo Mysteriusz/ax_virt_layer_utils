@@ -36,7 +36,7 @@ static inline u32 _c16len_b(
 /*
  
    	If AX_NOT_FND is returned, every _out parameter
-	will be set to it`s default type value.
+	will be written to ONLY when there was no error.
 	(c16* -> *0)
 	(c16** -> nullptr)
 
@@ -93,7 +93,7 @@ axres compare(
 	_in const c16 		*a,
 	_in const c16		*b	
 );
-axres count(
+axres charset_count(
 	_in const c16 		*text,
 	_in const c16		*charset,
 	_out u32		*count
@@ -105,7 +105,13 @@ axres reverse(
 axres c16_cat(
 	_in const c16 		*a,
 	_in const c16 		*b,
-	_out u64		*size,
+	_in_out u64		*size,
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
+axres c16_union(
+	_in const c16 		*a,
+	_in const c16		*b,
+	_in_out u64 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
 axres trim(
@@ -136,33 +142,6 @@ axres find_substr(
 	_out_opt const c16	**sub_loc  // substr partially found offset
 );
 
-/*
-	Sequence formating:
-		- %s (string)
-	TODO: MORE FORMATS
-
-	Multi-specifier formats should have separator between them UNLESS:
-		- specifier has type size (%i32, %i64, etc...)
-
-	Every format should also have some sort of start/end character.
-
-	Example:
-		- fmt = L"[[[%s|%s]]"
-		- ret = L"[[[some_string|other_string]]"
-
-		- fmt = L"<%s\n%s>"
-		- ret = L"<some_string
-		other_string>"
-
-	Invalid format:
-		- fmt = L"[[[%s%s]]"
-		- fmt = L"%s%s"
-		%s does not have type size.
-	Valid format:
-		- fmt = L"[[[%i32%i32]]"
-		- fmt = L"%i32%i32"
-*/
-
 #if !defined(AX_PARSER_SEQUENCE_INT)
 #define AX_PARSER_SEQUENCE_INT
 
@@ -174,23 +153,21 @@ typedef struct _fmt_group{
  	Each capture set has to be separated.
 	
 	Invalid:
-		- L"[[<.><.>]]" // TODO: Capture set joining
+		- L"[[<{.}><{.}>]]" // TODO: Capture set joining
 	Valid: 
-		- L"[[<.>]<.>]"
+		- L"[[<{.}>]<{.}>]"
 */
 	ax_list *cap_sets;
 } fmt_group;
 
-// Group starting character
-#define FMT_GRP_SET 		L"\\"
+// Format group character 
+#define FMT_GRP 		L"\\"
 /*
- 	Specifier between < and > 
  	Example:
-		<.> 
-		<a-z>
-		<l-n>
-
-	These two are the only ways to define a capture group
+		<{.}> 
+		<{a-z}+{x-z}+{_}>
+		<{l-n}+{x}>
+		<{\x20-\x45}+{\x6f}>
 */
 const c16 *seq_spec_to_charset(
 	_in const c16		*cpg
@@ -198,7 +175,6 @@ const c16 *seq_spec_to_charset(
 // LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
-	_out u32		*count,
 	_out ax_list 		**grps
 );
 axres seq_match(
@@ -212,9 +188,10 @@ axres seq_locate(
 	_in fmt_group 		*grp,
 	_out const c16		**loc
 );
+
 /*
  	Known issues:
-		- seq: L"\\[<a-z>|<.>]:\\"
+		- seq: L"\\[<{a-z}>|<{.}>]:\\"
 		- text: L"l[section|other_text||a|b]:"
 		Result is AX_NOT_FND.
 		Cause and possible fix:
@@ -233,6 +210,8 @@ axres seq_find_all(
 	_in const c16 		*fmt,
 	_in_out ax_list		*locs
 );
+
+#define SEQ_CAP_ASCII		L"<{\x20-\x7f}>"
 
 #endif // !defined(AX_PARSER_SEQUENCE_INT)
 
@@ -356,7 +335,7 @@ axres split_by(
 	_out u64		*size, 
 	_in_out _eval c16	**buf // Evaluate by using (size * sizeof(c16*))
 );
-axres c_split_by(
+axres split_by_c(
 	_in c16			**buf,
 	_in u64			size
 );

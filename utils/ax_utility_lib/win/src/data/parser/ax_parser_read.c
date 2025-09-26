@@ -226,7 +226,7 @@ axres split_by(
 
 	return AX_SUCC;
 }
-axres c_split_by(
+axres split_by_c(
 	_in c16			**buf,
 	_in u64			size
 ){

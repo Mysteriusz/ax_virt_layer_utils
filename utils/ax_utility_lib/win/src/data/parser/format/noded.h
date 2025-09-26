@@ -10,11 +10,11 @@
 	==========================================
 
 	[section_name]: -> Named section of stored nodes. 
-	Entire section name CAN`T exceed NODED_SECT_BOUND (4096 bytes).
 	Section syntax is strict and HAS to always follow the same pattern.
 	Section names CAN`T repeat.
 	Sections always have to end with ':' character.
-	They also CAN contain white spaces but CAN`T be multi-lined.
+	Sections name is limited to <0x20-0x7f> (Printable ASCII).
+	Sections CAN`T be multi-lined.
 
 	Examples:
 	[[
@@ -76,7 +76,6 @@
 */
 
 #define NODED_EXT		L"noded"
-#define NODED_SECT_FMT		L"\\[<a-z>]:\\"
 
 typedef struct _noded_doc noded_doc;
 typedef struct _noded_sect noded_sect;
@@ -133,8 +132,8 @@ axres noded_unload_doc(
 
 #define NODED_SECT_BEG 		L"["
 #define NODED_SECT_END 		L"]:\n"
+#define NODED_SECT_FMT		FMT_GRP L"[" SEQ_CAP_ASCII L"]:" FMT_GRP
 
-#define NODED_SECT_BOUND 	0x1000
 // Load section and it`s nodes
 axres noded_load_sect(
 	_in noded_doc		*doc,

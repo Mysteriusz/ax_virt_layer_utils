@@ -46,8 +46,9 @@ axres noded_load_sym(
 	u64 label_len = 0;
 	c16 *label_buf = nullptr;
 
+	// Iterate over section sequences
 	for (u64 i = 0; i < sym_list->count; i++){
-		label_off = dif_b(doc->file->map.root, *i_as(sym_list, i, c16**));
+		label_off = dif_b(doc->file->map.root, *index_as(sym_list, i, c16**));
 		doc->file->offset = label_off;
 
 		// Read label

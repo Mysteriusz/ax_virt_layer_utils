@@ -27,7 +27,7 @@ typedef void* (*ax_structures_at_v)(
 	_in const void 			*structure,
 	_in u32 			index
 );
-#define i_as(s, v_i, v_t) ((v_t)(s->at_v(s, v_i)))
+#define index_as(s, v_i, v_t) ((v_t)(s->at_v(s, v_i)))
 
 typedef void (*ax_structures_iter_act)(
 	const u8 structure _prepass,

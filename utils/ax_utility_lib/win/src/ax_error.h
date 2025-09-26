@@ -18,6 +18,14 @@
 } while(0)
 
 /*
+ 	Inline custom return AX_ERR(r) alias
+*/
+#define axcheck_r(r, fr,...)			do { \
+	if(AX_ERR(r)){__VA_ARGS__; return fr;} \
+} while(0)
+
+
+/*
  	Inline break AX_ERR(r) alias
 */
 #define axcheck_b(r,...)		({ \
