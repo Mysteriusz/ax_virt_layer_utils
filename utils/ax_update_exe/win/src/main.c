@@ -15,16 +15,13 @@ int main(
 	axcheck(res, ax_log(res));
 
 	io_str(loc);*/
-	/*ax_list *g = nullptr;
-	res = seq_split_fmt(L"\\[<{a-z}+{_}>|<{a}>]\\", &g);
+	ax_list *g = nullptr;
+	res = seq_split_fmt(L"\\[<{a-z}+{_}>|<{a-b}>]\\", &g);
 	axcheck(res, ax_log(res));
-
 	fmt_group *grp = index_as(g, 0, fmt_group*);
-	io_i64(grp->seq_list->count);
-	io_i64(grp->cap_sets->count);
+	unref(grp);
 
-	unref(grp);*/
-	io_str(seq_spec_to_charset(L"<{a-h}+{-}>"));
+	//io_i64(seq_cap_to_charset_inv(L"{a-}"));
 
 	unref(res);
 

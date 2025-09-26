@@ -162,21 +162,32 @@ typedef struct _fmt_group{
 
 // Format group character 
 #define FMT_GRP 		L"\\"
-/*
- 	Example:
-		<{.}> 
-		<{a-z}+{x-z}+{_}>
-		<{l-n}+{x}>
-		<{\x20-\x45}+{\x6f}>
 
-	In case you want to include syntax characters: {, }, -, <, >
+/*
+   	Input of cap has to start with:
+		L'{'
+	and end with:
+		L'}'
+
+ 	Example:
+		{.}
+		{a-z}+{x-z}+{_}
+		{l-n}+{x}
+		{\x20-\x45}+{\x6f}
+
+	In case you want to include syntax characters ({, }, -)
 	You either have to include them in the capture range like above
 	OR you can add them by adding single character like so:
-		<{a-z}+{{}+{-}+{<}>
+		{a-z}+{{}+{-}+{<}
 */
-const c16 *seq_spec_to_charset(
-	_in const c16		*cpg
+const c16 *seq_cap_to_charset(
+	_in const c16		*cap // cap FOR capture group
 );
+// Syntax invalidation for seq_cap_to_charset
+bool seq_cap_to_charset_inv(
+	_in const c16		*cap // cap FOR capture group
+);
+
 // LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
