@@ -63,7 +63,6 @@ axres noded_load_sym(
 		// Load into sect buffer
 		curr.label = label_buf;
 		curr.offset = label_off;
-		io_str(curr.label);
 
 		// Add sect buffer to list
 		res = sect_list->add(sect_list, &curr, sizeof(noded_sect));

@@ -606,7 +606,6 @@ axres seq_find_all(
 				c16*
 			)
 		);
-		io_i64(_c16len(index_as(grp->seq_list, 0, c16*)));
 	}
 
 	// No occurrences added and res is not internal err

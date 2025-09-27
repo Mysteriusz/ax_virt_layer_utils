@@ -197,7 +197,7 @@ bool seq_cap_to_charset_inv(
 // LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
-	_out ax_list 		**grps
+	_out ax_list 		**grps // Access by index_as(locs, 0, fmt_group*)
 );
 axres seq_match(
 	_in const c16		*text,
@@ -230,7 +230,7 @@ axres seq_find(
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs
+	_in_out ax_list		*locs // Access by *index_as(locs, 0, c16**)
 );
 
 #define SEQ_CAP_ASCII		L"{\x20-\x7f}"
@@ -408,7 +408,7 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs
+	_in_out ax_list		*locs // Access by *index_as(locs, 0, c16**)
 );
 
 /*

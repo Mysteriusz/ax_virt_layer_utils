@@ -34,6 +34,8 @@
 		
 	[secti\non a]: -> INVALID (have to be one-lined)
 	[section a] -> INVALID (no ':' character)
+	[se]ction a] -> INVALID
+	[sectio[n a] -> INVALID
 
 	]]
 
