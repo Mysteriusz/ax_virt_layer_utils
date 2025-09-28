@@ -454,7 +454,7 @@ axres seq_match(
 axres seq_locate(
 	_in const c16		*text,
 	_in fmt_group 		*grp,
-	_out const c16		**loc
+	_out seq_loc		*loc
 ){
 	if (text == nullptr
 	|| grp == nullptr){
@@ -468,7 +468,7 @@ axres seq_locate(
 
 	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
-	const c16 *set_char = text; 
+	const c16 *beg_char = text; 
 
 	u32 seq_i = 0;
 	u32 cap_i = 0;
@@ -488,7 +488,7 @@ axres seq_locate(
 
 		// First check
 		if (seq_i == 0){
-			set_char = seq_beg;
+			beg_char = seq_beg;
 		}
 
 		seq_beg+= _c16len(index_as(grp->seq_list, seq_i, c16*));
@@ -513,12 +513,12 @@ axres seq_locate(
 		// Capture group failed
 		// Reset search
 		if(AX_ERR(res)){
-			text_char = set_char + _c16len(index_as(grp->seq_list, 0, c16*));
+			text_char = beg_char + _c16len(index_as(grp->seq_list, 0, c16*));
 			seq_beg = text_char;
 			seq_end = text_char;
 			cap_i = 0;
 			seq_i = 0;
-			set_char = nullptr;
+			beg_char = nullptr;
 		}
 		else{
 			// Move to another sequence
@@ -527,12 +527,13 @@ axres seq_locate(
 		}
 	}
 
-	if (set_char == nullptr){
+	if (beg_char == nullptr){
 		return AX_NOT_FND;
 	}
 	else axcheck(res);
 
-	*loc = set_char;
+	loc->beg = beg_char;
+	loc->end = text_char;
 
 	return AX_SUCC;
 }
@@ -540,7 +541,7 @@ axres seq_locate(
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out const c16 		**loc
+	_out seq_loc 		*loc
 ){
 	if (text == nullptr
 	|| fmt == nullptr){
@@ -557,14 +558,14 @@ axres seq_find(
 	axcheck(res);
 
 	// Currently only one group
-	const c16 *text_loc = nullptr; 
-	res = seq_locate(text, index_as(grp_list, 0, fmt_group*), &text_loc);
+	seq_loc buf = {0};
+	res = seq_locate(text, index_as(grp_list, 0, fmt_group*), &buf);
 
 	// Iterate grp_list cleanup function
 	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
 	axcheck(res);
 
-	*loc = text_loc;
+	*loc = buf;
 
 	return AX_SUCC;
 }
@@ -589,17 +590,17 @@ axres seq_find_all(
 
 	u64 text_len = _c16len(text); 
 	const c16 *text_char = text; 
-	const c16 *text_loc = text; 
+	seq_loc buf = {0};
 
 	// Currently only first group
 	fmt_group* grp = index_as(grp_list, 0, fmt_group*);
 	while(in_c16_s(text, text_char, text_len)){
-		res = seq_locate(text_char, grp, &text_loc);
+		res = seq_locate(text_char, grp, &buf);
 		axcheck_b(res);
 
 		// Add the sequence occurrence to the list
-		locs->add(locs, &text_loc, sizeof(const c16*));
-		text_char = text_loc + _c16len(
+		locs->add(locs, &buf, sizeof(seq_loc));
+		text_char = buf.beg + _c16len(
 			index_as(
 				grp->seq_list,
 				0,

@@ -166,6 +166,11 @@ typedef struct _fmt_group{
 	ax_list *cap_sets;
 } fmt_group;
 
+typedef struct _seq_loc{
+	const c16 *beg;
+	const c16 *end;
+} seq_loc;
+
 // Format group character 
 #define FMT_GRP 		L"\\"
 
@@ -208,7 +213,7 @@ axres seq_match(
 axres seq_locate(
 	_in const c16		*text,
 	_in fmt_group 		*grp,
-	_out const c16		**loc
+	_out seq_loc		*loc
 );
 
 /*
@@ -225,12 +230,12 @@ axres seq_locate(
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out const c16 		**loc
+	_out seq_loc		*loc
 );
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs // Access by *index_as(locs, 0, c16**)
+	_in_out ax_list		*locs // Access by index_as(locs, 0, seq_loc*)
 );
 
 #define SEQ_CAP_ASCII		L"{\x20-\x7f}"
@@ -408,7 +413,7 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs // Access by *index_as(locs, 0, c16**)
+	_in_out ax_list		*locs // Access by index_as(locs, 0, seq_loc*)
 );
 
 /*

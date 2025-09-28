@@ -7,7 +7,10 @@ int main(
 	axres res = AX_SUCC;
 
 	noded_doc *doc = nullptr; 
-	res = noded_init_doc(L"D:\\share\\ax_info.noded", &doc);
+	res = noded_load_doc(L"D:\\share\\ax_info.noded", &doc);
+	axcheck(res, ax_log(res));
+
+	res = noded_unload_doc(&doc);
 	axcheck(res, ax_log(res));
 
 	unref(res);

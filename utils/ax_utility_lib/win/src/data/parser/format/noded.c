@@ -42,35 +42,41 @@ axres noded_load_sym(
 
 	// Add noded sects based on the sect sequence find
 	noded_sect curr = {0};
+
+	// Per location info
+	seq_loc *loc = nullptr;
 	u64 label_off = 0;
 	u64 label_len = 0;
 	c16 *label_buf = nullptr;
 
-	// Iterate over section sequences
+	// Iterate over section locations
 	for (u64 i = 0; i < sym_list->count; i++){
-		label_off = dif_b(doc->file->map.root, *index_as(sym_list, i, c16**));
-		doc->file->offset = label_off;
+		loc = index_as(sym_list, i, seq_loc*);
+		label_off = dif_b(doc->file->map.root, loc->beg);
+		label_len = dif_c16(loc->beg, loc->end) + 2;
 
 		// Read label
-		res = read_line_f(doc->file, &label_len, nullptr);
-		axcheck_b(res);
-
-		label_buf = axmalloc(label_len * sizeof(c16));
-
-		res = read_line_f(doc->file, &label_len, label_buf);
-		axcheck_b(res, axfree(label_buf));
+		label_buf = axmalloc((label_len + 1) * sizeof(c16));
+		memcpy(label_buf, loc->beg, label_len * sizeof(c16));
+		label_buf[label_len] = L'\0';
 
 		// Load into sect buffer
 		curr.label = label_buf;
 		curr.offset = label_off;
+		curr.kvp = nullptr;
 
 		// Add sect buffer to list
 		res = sect_list->add(sect_list, &curr, sizeof(noded_sect));
 		axcheck_b(res);
 	}
 
+	// Delete sym_list
+	sym_list->delete(sect_list);
+
 	// Cleanup sect_list if failed
 	axcheck(res, 
+		// Free in case of failing to add
+		axfree(label_buf);
 		sect_list->iter(sect_list, (ax_structures_iter_act)noded_load_sym_iter);
 		sect_list->delete(sect_list);
 	);

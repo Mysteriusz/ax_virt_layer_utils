@@ -17,27 +17,20 @@
 	Sections CAN`T be multi-lined.
 
 	Examples:
-	[[
+		[section a]:
+		node 1 = a
+		node 2 = b
+		node 3 = c
 
-	[section a]:
-	(node 1)
-	(node 2)
-	(node 3)
-
-	[section_b]:
-	(node 4)
-	(node 5)
-
-	]]
-
-	[[
+		[section_b]:
+		node 4 = d
+		node 5 = e
 		
-	[secti\non a]: -> INVALID (have to be one-lined)
-	[section a] -> INVALID (no ':' character)
-	[se]ction a] -> INVALID
-	[sectio[n a] -> INVALID
-
-	]]
+	Invalid:
+		[secti\non a]: -> INVALID (have to be one-lined)
+		[section a] -> INVALID (no ':' character)
+		[se]ction a] -> INVALID
+		[sectio[n a] -> INVALID
 
 	==========================================
 
@@ -46,13 +39,11 @@
 	|		|		|		|
 	Key		Delimiter	Value		Suffix
 
-	value_name=1; -> Key-value pair node. 
+	Key_name=1; -> Key-value pair node. 
 	Node name(key) CAN be contained in: (ANY of the following)
 		[Key]
-		<Key>
 
 	Nodes must end with a suffix as: (ANY of the following)
-		<Suffix>
 		;
 		L'\n' (new-line)
 
@@ -64,16 +55,12 @@
 	As sections node CAN contain white spaces but CAN`T be multi-lined.
 
 	Examples:
-	[[
-
-	[section a]:
-	node 1=1;
-	[node2] := 2;
-	node 5=5<my_suffix>
-	node 6 = 5.my_suffix.
-	<node 7> = 5;
-
-	]]
+		[section a]:
+		node 1=1;
+		[node2] := 2;
+		node 3=5
+		node 4 = 5
+		[node 5] :: 5
 
 */
 
@@ -87,9 +74,6 @@ typedef struct _noded_doc{
 	io_file			*file;
 	ax_list			*sect_list; // List of noded_sect
 } noded_doc;
-bool noded_doc_inv(
-	_in noded_doc 		*doc
-);
 
 typedef struct _noded_sect{
 	c16			*label;
@@ -108,6 +92,16 @@ typedef struct _node_kvp{
 /*
  	noded global
 */
+bool noded_doc_inv(
+	_in noded_doc 		*doc
+);
+bool noded_sect_inv(
+	_in noded_sect 		*sect
+);
+bool noded_kvp_inv(
+	_in noded_kvp		*kvp
+);
+
 axres noded_load_sym(
 	_in noded_doc 		*doc
 );
@@ -117,15 +111,12 @@ axres noded_load_sym(
 */
 
 // Initialize document by loading symbols etc.
-axres noded_init_doc(
+axres noded_load_doc(
 	_in const c16		*path,
 	_out noded_doc		**buf
 );
-axres noded_load_doc(
-	_in noded_doc		*doc
-);
 axres noded_unload_doc(
-	_in noded_doc		*doc
+	_in noded_doc		**doc
 );
 
 /*

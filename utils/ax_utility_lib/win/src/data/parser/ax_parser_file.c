@@ -60,12 +60,12 @@ axres seq_find_f(
 	// fmap with file offset
 	const c16 *fmap_off = file->map.root + file->offset;
 	// Location of substr in fmap
-	const c16 *loc = file->map.root;
+	seq_loc buf = {0};
 
-	res = seq_find(fmap_off, fmt, &loc);
+	res = seq_find(fmap_off, fmt, &buf);
 	axcheck(res);
 
-	file->offset = dif_b(file->map.root, loc);
+	file->offset = (u64)buf.beg;
 
 	return AX_SUCC;
 }
