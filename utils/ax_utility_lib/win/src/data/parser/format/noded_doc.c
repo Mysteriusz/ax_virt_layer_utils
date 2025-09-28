@@ -2,45 +2,45 @@
 
 axres noded_load_doc(
 	_in const c16		*path,
-	_out noded_doc		**buf
+	_out noded_doc		**doc
 ){
 	if (path == nullptr){
 		return AX_INV_ARG;
 	}
-	if (buf == nullptr){
+	if (doc == nullptr){
 		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
 
-	noded_doc *doc = axmalloc(sizeof(noded_doc));
+	noded_doc *doc_buf = axmalloc(sizeof(noded_doc));
 	io_file *file = axmalloc(sizeof(io_file));
-	doc->file = file;
+	doc_buf->file = file;
 
 	res = io_fo(path, IO_FILE_R, file);
-	axcheck(res, axfree(doc), axfree(file));
+	axcheck(res, axfree(doc_buf), axfree(file));
 
-	res = noded_load_sym(doc);
+	res = noded_load_sym(doc_buf);
 	axcheck(res,
 		io_fc(file),
-		axfree(doc),
+		axfree(doc_buf),
 		axfree(file)
 	);
 
-	*buf = doc;
+	// Document write-back
+	*doc = doc_buf;
 
 	return AX_SUCC;
 }
 
-void noded_unload_iter(
-	const ax_list list _prepass,
-	const ax_list_node node _prepass
+iter_code noded_unload_iter(
+	ax_list_iter_stack 	stack _prepass
 ){
-	noded_sect *sect = (noded_sect*)node->value;
+	noded_sect *sect = (noded_sect*)stack->node->value;
 	// TODO: Cleanup sect->kvp
 	axfree(sect->label);
 
-	return;
+	return ITER_NONE;
 }
 axres noded_unload_doc(
 	_in noded_doc		**doc
@@ -50,7 +50,7 @@ axres noded_unload_doc(
 		return AX_INV_ARG;
 	}
 
-	(*doc)->sect_list->iter((*doc)->sect_list, (ax_structures_iter_act)noded_unload_iter);
+	(*doc)->sect_list->iter((*doc)->sect_list, (ax_iter_act)noded_unload_iter, nullptr, nullptr);
 	io_fc((*doc)->file);
 	axfree(*doc);
 

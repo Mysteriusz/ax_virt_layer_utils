@@ -13,15 +13,14 @@ bool noded_doc_inv(
 	return false;
 }
 
-void noded_load_sym_iter(
-	const ax_list list _prepass,
-	const ax_list_node node _prepass
+iter_code noded_load_sym_iter(
+	ax_list_iter_stack 	stack _prepass
 ){
-	noded_sect *sect = (noded_sect*)node->value;
+	noded_sect *sect = (noded_sect*)stack->node->value;
 	ax_list_delete(sect->kvp);
 	axfree(sect->label);
 
-	return;
+	return ITER_NONE;
 }
 axres noded_load_sym(
 	_in noded_doc 		*doc
@@ -71,14 +70,14 @@ axres noded_load_sym(
 	}
 
 	// Delete sym_list
-	sym_list->delete(sect_list);
+	sym_list->delete(sym_list);
 
 	// Cleanup sect_list if failed
 	axcheck(res, 
 		// Free in case of failing to add
-		axfree(label_buf);
-		sect_list->iter(sect_list, (ax_structures_iter_act)noded_load_sym_iter);
-		sect_list->delete(sect_list);
+		axfree(label_buf),
+		sect_list->iter(sect_list, (ax_iter_act)noded_load_sym_iter, nullptr, nullptr),
+		sect_list->delete(sect_list)
 	);
 
 	doc->sect_list = sect_list;

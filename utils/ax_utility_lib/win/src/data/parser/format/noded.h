@@ -113,7 +113,7 @@ axres noded_load_sym(
 // Initialize document by loading symbols etc.
 axres noded_load_doc(
 	_in const c16		*path,
-	_out noded_doc		**buf
+	_out noded_doc		**doc
 );
 axres noded_unload_doc(
 	_in noded_doc		**doc
@@ -124,7 +124,7 @@ axres noded_unload_doc(
 */
 
 #define NODED_SECT_BEG 		L"["
-#define NODED_SECT_END 		L"]:\n"
+#define NODED_SECT_END 		L"]:"
 
 // All ASCII writable without L'[' AND L']' characters
 #define NODED_SECT_FMT		FMT_GRP L"[<" SEQ_CAP_ASCII L"-{[}-{]}>]:" FMT_GRP
@@ -132,7 +132,8 @@ axres noded_unload_doc(
 // Load section and it`s nodes
 axres noded_load_sect(
 	_in noded_doc		*doc,
-	_in const c16		*sect_name
+	_in const c16		*sect_name,
+	_out noded_sect		**sect
 );
 
 /*

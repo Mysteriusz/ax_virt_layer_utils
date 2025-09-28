@@ -1,8 +1,25 @@
 #include "noded.h"
 
+iter_code noded_load_sect_iter(
+	ax_list_iter_stack 	stack _prepass
+){
+	noded_sect *sect = (noded_sect*)stack->node->value;
+	if (sfmemcmp(
+		sect->label,
+		stack->data, 
+		_c16len_b(sect->label), 
+		_c16len_b(stack->data)) == 0
+	){
+		return ITER_STOP;
+	}
+
+	return ITER_NONE;
+}
+
 axres noded_load_sect(
 	_in noded_doc		*doc,
-	_in const c16		*sect_name
+	_in const c16		*sect_name,
+	_out noded_sect		**sect
 ){
 	if (noded_doc_inv(doc)){
 		return AX_INV_FILE;
@@ -13,22 +30,30 @@ axres noded_load_sect(
 
 	axres res = AX_SUCC;
 
-	c16 *sect_full = nullptr;
-	u64 sect_full_s = 0;
+	c16 *sect_label = nullptr;
+	u64 sect_label_len = 0;
 
-	res = join_with(sect_full, &sect_full_s, 3,
+	// Join into sect
+	res = join_with(sect_label, &sect_label_len, 3,
 		NODED_SECT_BEG, sect_name, NODED_SECT_END);
 	axcheck(res);
 
-	sect_full = axmalloc(sect_full_s * sizeof(c16));
+	sect_label = axmalloc(sect_label_len * sizeof(c16));
 
-	res = join_with(sect_full, &sect_full_s, 3,
+	res = join_with(sect_label, &sect_label_len, 3,
 		NODED_SECT_BEG, sect_name, NODED_SECT_END);
-	axcheck(res, axfree(sect_full));
+	axcheck(res, axfree(sect_label));
 
-	res = find_substr_f(doc->file, sect_full);
-	axfree(sect_full);
+	// Iterate to find if exists as symbol
+	const ax_list_node *node = nullptr;
+	res = doc->sect_list->iter(doc->sect_list, (ax_iter_act)noded_load_sect_iter, sect_label, (const void**)&node);
+
+	// Cleanup
+	axfree(sect_label);
 	axcheck(res);
+
+	noded_sect *sect_sym = (noded_sect*)node->value;
+	unref(sect_sym);
 
 	return AX_SUCC;
 }

@@ -12,6 +12,7 @@ axres ax_list_init(
 	list->count = 0;
 
 	list->add = (ax_structures_add)ax_list_add;
+	list->contains = (ax_structures_contains)ax_list_contains;
 	list->remove = (ax_structures_remove)ax_list_remove;
 	list->at = (ax_structures_at)ax_list_at;
 	list->at_v = (ax_structures_at_v)ax_list_at_v;
@@ -56,6 +57,30 @@ axres ax_list_add(
 	list->count++;
 
 	return AX_SUCC;
+}
+axres ax_list_contains(
+	_in ax_list 			*list,
+	_in void 			*value,
+	_in u64 			size
+){
+	if (list == nullptr
+	|| value == nullptr){
+		return AX_INV_ARG;
+	}
+
+	ax_list_node *curr = list->root;
+	while(curr != nullptr){
+		// Found 
+		if (sfmemcmp(curr->value, value, curr->size, size) == 0){
+			break;
+		}
+
+		curr = curr->next;
+	}
+
+	return (curr != nullptr) 
+		? AX_SUCC
+		: AX_NOT_FND;
 }
 axres ax_list_remove(
 	_in ax_list 			*list,
@@ -147,22 +172,47 @@ void *ax_list_at_v(
 }
 axres ax_list_iter(
 	_in const ax_list 		*list,
-	_in ax_structures_iter_act	action
+	_in ax_iter_act			action,
+	_in_opt void 			*data,
+	_out_opt const ax_list_node	**buf
 ){
 	if (list == nullptr
 	|| action == nullptr){
 		return AX_INV_ARG;
 	}
 
+	iter_code code = ITER_NONE;
+	ax_list_iter_stack stack = {0};
+
 	ax_list_node *node = list->root;
 	while(node != nullptr){
-		// Execute action with 
-		action(
-			(u8*)list,
-			(u8*)node
+		// Execute action with list stack
+redo_code:
+		stack = (ax_list_iter_stack){
+			.list = list,
+			.node = node,
+			.data = data,
+		};
+		code = action(
+			(u8*)&stack
 		);
 
+		switch(code){
+		case ITER_NONE:
+			break;
+		case ITER_REDO:
+			goto redo_code;
+		case ITER_STOP:
+			goto stop_code;
+		default:
+			return AX_INV_CODE;
+		}
+
 		node = node->next;
+	}
+stop_code:
+	if (buf != nullptr){
+		*buf = node;
 	}
 
 	return AX_SUCC;

@@ -342,15 +342,14 @@ error_jump:
 	return AX_SUCC;
 }
 
-void seq_split_fmt_iter(
-	const ax_list list _prepass,
-	const ax_list_node node _prepass
+iter_code seq_split_fmt_iter(
+	ax_list_iter_stack 	stack _prepass
 ){
-	fmt_group *grp = (fmt_group*)node->value;
+	fmt_group *grp = (fmt_group*)stack->node->value;
 	ax_list_delete(grp->cap_sets);
 	ax_list_delete(grp->seq_list);
 
-	return;	
+	return ITER_NONE;
 }
 axres seq_split_fmt(
 	_in const c16 		*fmt,
@@ -406,7 +405,7 @@ axres seq_split_fmt(
 
 	// Free the temp group buffer axfree(grp); Cleanup check
 	axcheck(res,
-		list->iter(list, (ax_structures_iter_act)seq_split_fmt_iter),
+		list->iter(list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr),
 		list->delete(list)
 	);
 
@@ -562,7 +561,7 @@ axres seq_find(
 	res = seq_locate(text, index_as(grp_list, 0, fmt_group*), &buf);
 
 	// Iterate grp_list cleanup function
-	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
+	grp_list->iter(grp_list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr);
 	axcheck(res);
 
 	*loc = buf;
@@ -609,14 +608,14 @@ axres seq_find_all(
 		);
 	}
 
-	// No occurrences added and res is not internal err
+	// No occurrences added and res is not internal error
 	if (locs->count != 0
 	&& res == AX_NOT_FND){
 		res = AX_SUCC;
 	}
 
 	// Iterate grp_list cleanup function
-	grp_list->iter(grp_list, (ax_structures_iter_act)seq_split_fmt_iter);
+	grp_list->iter(grp_list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr);
 	axcheck(res, locs->clear(locs));
 
 	return AX_SUCC;

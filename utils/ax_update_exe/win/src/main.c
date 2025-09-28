@@ -10,8 +10,12 @@ int main(
 	res = noded_load_doc(L"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
 
-	res = noded_unload_doc(&doc);
+	noded_sect *sect = nullptr;
+	res = noded_load_sect(doc, L"sectb", &sect);
 	axcheck(res, ax_log(res));
+
+	/*res = noded_unload_doc(&doc);
+	axcheck(res, ax_log(res));*/
 
 	unref(res);
 
