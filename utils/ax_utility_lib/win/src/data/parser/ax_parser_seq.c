@@ -6,6 +6,16 @@ enum set_mode{
 	difference = L'-', // Mathematical Remove (\) 
 };
 
+// fmt_spec list cleanup iterator
+iter_code fmt_spec_iter(
+	ax_list_iter_stack 	stack _prepass
+){
+	fmt_spec *spec = (fmt_spec*)stack->node->value;
+	axfree((void*)spec->value);
+
+	return ITER_NONE;
+}
+
 c16 *_rng_to_set(
 	const c16 a,
 	const c16 b
@@ -341,7 +351,7 @@ axres seq_read_group(
 error_jump:
 	axcheck(
 		res,
-		//grp->spec_list->delete(grp->spec_list)
+		grp->spec_list->iter(grp->spec_list, (ax_iter_act)fmt_spec_iter, nullptr, nullptr);
 	);
 
 	return AX_SUCC;
@@ -350,7 +360,9 @@ error_jump:
 iter_code seq_split_fmt_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
-	//fmt_group *grp = (fmt_group*)stack->node->value;
+	fmt_group *grp = (fmt_group*)stack->node->value;
+	grp->spec_list->iter(grp->spec_list, (ax_iter_act)fmt_spec_iter, nullptr, nullptr);
+	grp->spec_list->delete(grp->spec_list);
 
 	return ITER_NONE;
 }
@@ -408,7 +420,8 @@ axres seq_split_fmt(
 	// Free the temp group buffer axfree(grp); Cleanup check
 	axcheck(res,
 		list->iter(list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr),
-		list->delete(list)
+		list->delete(list),
+		axfree(grp)
 	);
 
 	*grp_list = list;
