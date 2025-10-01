@@ -58,8 +58,8 @@ axres read_range(
 
 	u64 text_len = _c16len(text);
 	if (to <= from
-	|| (text_len - 1) < from // from index check
-	|| (text_len - 1) < to){ // to index check
+	|| text_len < from // from index check
+	|| text_len < to){ // to index check
 		return AX_INV_IND;
 	}
 	

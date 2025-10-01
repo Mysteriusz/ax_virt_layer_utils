@@ -77,17 +77,23 @@ typedef struct _noded_doc{
 
 typedef struct _noded_sect{
 	c16			*label;
-	u64			offset;
-	ax_list 		*kvp;
+	u64			beg;
+	u64			end;
+	ax_list 		*kvp_list;
+	noded_doc 		*doc;
 } noded_sect;
+
+typedef enum _noded_kvp_type{
+	kvp_intiger = 0x00, // Always as i64/u64
+} noded_kvp_type;
 // kvp - key-value-pair
-typedef struct _node_kvp{
+typedef struct _noded_kvp{
 	c16			*key;
-	u32			line;
 	void			*val;
+	u64			val_size;
+	noded_kvp_type 		val_type;
 	noded_sect		*sect;
-	noded_kvp		*next;
-} node_kvp;
+} noded_kvp;
 
 /*
  	noded global
@@ -115,6 +121,7 @@ axres noded_load_doc(
 	_in const c16		*path,
 	_out noded_doc		**doc
 );
+// Call only after noded_load_doc to uninitialize all symbols
 axres noded_unload_doc(
 	_in noded_doc		**doc
 );
@@ -139,6 +146,19 @@ axres noded_load_sect(
 /*
  	noded_kvp related
 */
+
+#define NODED_SUFFIX_CHARSET L"\n;"
+axres noded_kvp_line_value(
+	_in c16 		*line,
+	_out noded_kvp_type	*type,
+	_out void		**buf,
+	_out u64		*size
+);
+axres noded_load_kvp(
+	_in noded_sect 		*sect,
+	_in const c16 		*kvp_name,
+	_out noded_kvp 		**kvp
+);
 
 #endif // !defined(AX_PARSER_NODED_INT)
 

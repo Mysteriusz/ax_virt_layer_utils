@@ -396,7 +396,7 @@ axres io_fmmap(
 	);
 	void *map_buf = MapViewOfFile(
 		map_hdl,
-		FILE_MAP_READ,
+		FILE_MAP_READ | PAGE_WRITECOPY,
 		0,
 		0,
 		0
@@ -406,6 +406,9 @@ axres io_fmmap(
 		return AX_INV_DATA;
 	}
 
+	/*
+	 	MAP IS ALWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CALLING MMAP!!!!
+	*/
 #elif defined(AX_LINUX)
 	#error "TODO"
 #endif

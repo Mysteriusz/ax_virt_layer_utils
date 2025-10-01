@@ -12,12 +12,28 @@ bool noded_doc_inv(
 
 	return false;
 }
+bool noded_sect_inv(
+	_in noded_sect 		*sect
+){
+	if (sect == nullptr){
+		return true;
+	}
+	if (sect->doc == nullptr
+	|| sect->label == nullptr){
+		return true;
+	}
+	if (noded_doc_inv(sect->doc)){
+		return true;
+	}
+
+	return false;
+}
 
 iter_code noded_load_sym_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
 	noded_sect *sect = (noded_sect*)stack->node->value;
-	ax_list_delete(sect->kvp);
+	ax_list_delete(sect->kvp_list);
 	axfree(sect->label);
 
 	return ITER_NONE;
@@ -44,14 +60,14 @@ axres noded_load_sym(
 
 	// Per location info
 	seq_loc *loc = nullptr;
-	u64 label_off = 0;
-	u64 label_len = 0;
 	c16 *label_buf = nullptr;
+	u64 label_len = 0;
+	u64 curr_off = 0;
+	u64 next_off = 0;
 
 	// Iterate over section locations
 	for (u64 i = 0; i < sym_list->count; i++){
 		loc = index_as(sym_list, i, seq_loc*);
-		label_off = dif_b(doc->file->map.root, loc->beg);
 		label_len = dif_c16(loc->beg, loc->end) + 2;
 
 		// Read label
@@ -59,10 +75,20 @@ axres noded_load_sym(
 		memcpy(label_buf, loc->beg, label_len * sizeof(c16));
 		label_buf[label_len] = L'\0';
 
-		// Load into sect buffer
+		// Calculate curr_off and next_off 
+		curr_off = dif_b(doc->file->map.root, loc->beg);
+		if (i == sym_list->count - 1){
+			next_off = _c16len(doc->file->map.root) * sizeof(c16);
+		}else{
+			next_off = dif_b(doc->file->map.root, index_as(sym_list, i + 1, seq_loc*)->beg);
+		}
+
+		// Load into sect buffer (curr)
+		curr.doc = doc;
 		curr.label = label_buf;
-		curr.offset = label_off;
-		curr.kvp = nullptr;
+		curr.beg = curr_off;
+		curr.end = next_off;
+		curr.kvp_list = nullptr;
 
 		// Add sect buffer to list
 		res = sect_list->add(sect_list, &curr, sizeof(noded_sect));

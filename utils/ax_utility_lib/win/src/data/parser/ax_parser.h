@@ -154,17 +154,17 @@ axres find_substr(
 // Charset of sequence starting identifiers
 #define CHARSET_SEQ 			L"<\\"
 typedef struct _fmt_group{
-	ax_list *seq_list;
-/* 
- 	Each capture set has to be separated.
-	
-	Invalid:
-		- L"[[<{.}><{.}>]]" // TODO: Capture set joining
-	Valid: 
-		- L"[[<{.}>]<{.}>]"
-*/
-	ax_list *cap_sets;
+	ax_list *spec_list; // List of _fmt_spec
 } fmt_group;
+
+enum spec_type{
+	sequence = 0,
+	capture_set = 1,
+};
+typedef struct _fmt_spec{
+	const c16 *value;
+	enum spec_type type;
+} fmt_spec;
 
 typedef struct _seq_loc{
 	const c16 *beg;
@@ -202,7 +202,7 @@ bool seq_cap_to_charset_inv(
 // LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
-	_out ax_list 		**grps // Access by index_as(locs, 0, fmt_group*)
+	_out ax_list 		**grp_list // Access by index_as(locs, 0, fmt_group*)
 );
 axres seq_match(
 	_in const c16		*text,

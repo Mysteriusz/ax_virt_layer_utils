@@ -46,14 +46,23 @@ axres noded_load_sect(
 
 	// Iterate to find if exists as symbol
 	const ax_list_node *node = nullptr;
-	res = doc->sect_list->iter(doc->sect_list, (ax_iter_act)noded_load_sect_iter, sect_label, (const void**)&node);
+	doc->sect_list->iter(
+		doc->sect_list,
+		(ax_iter_act)noded_load_sect_iter,
+		sect_label,
+		(const void**)&node
+	);
 
 	// Cleanup
 	axfree(sect_label);
-	axcheck(res);
+	if (node == nullptr){
+		return AX_NOT_FND;
+	}
 
 	noded_sect *sect_sym = (noded_sect*)node->value;
-	unref(sect_sym);
+
+	// Write-back
+	*sect = sect_sym;
 
 	return AX_SUCC;
 }

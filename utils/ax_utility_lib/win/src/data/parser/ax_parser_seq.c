@@ -294,10 +294,13 @@ axres seq_read_group(
 				goto error_jump;
 			}
 
-			grp->cap_sets->add(
-				grp->cap_sets,
-				(void*)cap_set,
-				_c16len_b(cap_set) + sizeof(c16) // Include null-terminator
+			grp->spec_list->add(
+				grp->spec_list,
+				&(fmt_spec){
+					.value = cap_set,
+					.type = capture_set,
+				},
+				sizeof(fmt_spec)
 			); 
 
 			fmt_char += spec_len;
@@ -320,10 +323,13 @@ axres seq_read_group(
 			res = read_until(fmt_char, L"<\\", &rng_len, rng);
 			if (AX_ERR(res)){ goto error_jump; }
 
-			grp->seq_list->add(
-				grp->seq_list,
-				rng,
-				rng_len * sizeof(c16) // Include null-terminator
+			grp->spec_list->add(
+				grp->spec_list,
+				&(fmt_spec){
+					.value = rng,
+					.type = sequence,
+				},
+				sizeof(fmt_spec)
 			);
 
 			// Without null-terminator
@@ -335,8 +341,7 @@ axres seq_read_group(
 error_jump:
 	axcheck(
 		res,
-		grp->cap_sets->delete(grp->cap_sets),
-		grp->seq_list->delete(grp->seq_list)
+		//grp->spec_list->delete(grp->spec_list)
 	);
 
 	return AX_SUCC;
@@ -345,20 +350,18 @@ error_jump:
 iter_code seq_split_fmt_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
-	fmt_group *grp = (fmt_group*)stack->node->value;
-	ax_list_delete(grp->cap_sets);
-	ax_list_delete(grp->seq_list);
+	//fmt_group *grp = (fmt_group*)stack->node->value;
 
 	return ITER_NONE;
 }
 axres seq_split_fmt(
 	_in const c16 		*fmt,
-	_out ax_list 		**grps
+	_out ax_list 		**grp_list
 ){
 	if (fmt == nullptr){
 		return AX_INV_FMT;
 	}
-	if (grps == nullptr){
+	if (grp_list == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -368,21 +371,21 @@ axres seq_split_fmt(
 	const c16 *grp_char = nullptr;
 
 	// Count group chars
-	u32 grps_c = 0;
-	res = charset_count(fmt, FMT_GRP, &grps_c);
-	if (grps_c < 2){
+	u32 grp_list_c = 0;
+	res = charset_count(fmt, FMT_GRP, &grp_list_c);
+	if (grp_list_c < 2){
 		res = AX_INV_FMT;
 	}
 
 	axcheck(res);
-	grps_c /= 1.5f;
+	grp_list_c /= 1.5f;
 
 	ax_list *list = nullptr;
 	res = ax_list_init(&list);
 	axcheck(res);
 
 	fmt_group *grp = axmalloc(sizeof(fmt_group));
-	for (u32 i = 0; i < grps_c; i++){
+	for (u32 i = 0; i < grp_list_c; i++){
 		grp_char = fmt_char;
 
 		// Find group ending
@@ -390,8 +393,7 @@ axres seq_split_fmt(
 		axcheck_b(res);
 
 		// Initialize group lists
-		res = ax_list_init(&grp->cap_sets);
-		res = ax_list_init(&grp->seq_list);
+		res = ax_list_init(&grp->spec_list);
 
 		// Parse group
 		res = seq_read_group(grp_char, dif_c16(grp_char, fmt_char), grp);
@@ -409,7 +411,7 @@ axres seq_split_fmt(
 		list->delete(list)
 	);
 
-	*grps = list;
+	*grp_list = list;
 
 	return AX_SUCC;
 }
@@ -450,6 +452,57 @@ axres seq_match(
 
 	return AX_SUCC;
 }
+axres seq_locate_action(
+	_in const c16		*text,
+	_in fmt_spec 		*spec,
+	_out const c16		**seq_beg,
+	_out const c16		**seq_end
+){
+	if (text == nullptr
+	|| spec == nullptr){
+		return AX_INV_ARG;
+	}
+	if (seq_beg == nullptr
+	|| seq_end == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	const c16 *spec_beg = text;
+	const c16 *spec_end = spec_beg + _c16len(spec->value);
+
+	switch(spec->type){
+	case sequence: // Match with sequence
+		res = starts_with(
+			text,
+			spec->value,
+			&spec_beg
+		);
+		break;
+	case capture_set: // Match with capture group
+		res = skip_while(
+			text,
+			spec->value,
+			&spec_end
+		);
+		res = seq_match(
+			text,
+			spec_beg,
+			spec_end, 
+			spec->value
+		);
+		break;
+	default:
+	}
+	axcheck(res);
+
+	// Write-back
+	*seq_beg = spec_beg;
+	*seq_end = spec_end;
+	
+	return AX_SUCC;
+}
 axres seq_locate(
 	_in const c16		*text,
 	_in fmt_group 		*grp,
@@ -470,69 +523,53 @@ axres seq_locate(
 	const c16 *beg_char = text; 
 
 	u32 seq_i = 0;
-	u32 cap_i = 0;
 	const c16 *seq_beg = text_char;
 	const c16 *seq_end = text_char;
 
+	fmt_spec *curr = nullptr;
+
 	while(in_c16_s(text, text_char, text_len)
-	&& seq_i < (grp->seq_list->count - 1)){
-		// Find sequence start
-		res = find_substr(
+	&& seq_i < grp->spec_list->count){
+		// Sequence check
+		curr = index_as(grp->spec_list, seq_i, fmt_spec*);
+//	io_str(curr->value);
+
+		// Perform action
+		res = seq_locate_action(
 			text_char,
-			index_as(grp->seq_list, seq_i, c16*),
+			curr,
 			&seq_beg,
-			nullptr
-		); 
-		axcheck_b(res);
+			&seq_end
+		);
 
 		// First check
 		if (seq_i == 0){
 			beg_char = seq_beg;
 		}
-
-		seq_beg+= _c16len(index_as(grp->seq_list, seq_i, c16*));
 		seq_i++;
-		
-		// Find sequence end
-		res = find_substr(
-			seq_beg,
-			index_as(grp->seq_list, seq_i, c16*),
-			&seq_end,
-			nullptr
-		); 
-		axcheck_b(res);
 
-		// Match with capture group
-		res = seq_match(
-			text_char,
-			seq_beg,
-			seq_end, 
-			index_as(grp->cap_sets, cap_i, c16*)
-		);
 		// Capture group failed
 		// Reset search
 		if(AX_ERR(res)){
-			text_char = beg_char + _c16len(index_as(grp->seq_list, 0, c16*));
+			text_char++;
 			seq_beg = text_char;
 			seq_end = text_char;
-			cap_i = 0;
 			seq_i = 0;
 			beg_char = nullptr;
 		}
 		else{
 			// Move to another sequence
 			text_char = seq_end;
-			cap_i++;
 		}
 	}
 
-	if (beg_char == nullptr){
+	if (seq_i < grp->spec_list->count){
 		return AX_NOT_FND;
 	}
 	else axcheck(res);
 
 	loc->beg = beg_char;
-	loc->end = text_char;
+	loc->end = seq_end;
 
 	return AX_SUCC;
 }
@@ -598,14 +635,14 @@ axres seq_find_all(
 		axcheck_b(res);
 
 		// Add the sequence occurrence to the list
-		locs->add(locs, &buf, sizeof(seq_loc));
+		/*locs->add(locs, &buf, sizeof(seq_loc));
 		text_char = buf.beg + _c16len(
 			index_as(
 				grp->seq_list,
 				0,
 				c16*
 			)
-		);
+		);*/
 	}
 
 	// No occurrences added and res is not internal error
