@@ -96,7 +96,7 @@ axres compare(
 axres charset_count(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*count
+	_out u64		*count
 );
 axres reverse(
 	_in const c16 		*text,
@@ -129,11 +129,73 @@ axres trim(
 
 /*
  
+ 	Skip interface
+
+*/
+
+#if !defined(AX_PARSER_SKIP_INT)
+#define AX_PARSER_SKIP_INT
+
+#define UNICODE_ANY		L"\uFEFE"
+#define CHARSET_ANY 		UNICODE_ANY
+
+#define CHARSET_NL 		L"\x0a\x0d"
+#define CHARSET_WS 		L"\x20\t"
+#define CHARSET_PUNCT     	L".,;:!?()[]{}"
+
+axres skip_until(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out const c16		**loc
+);
+axres skip_until_n(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_in u32			n,
+	_out const c16		**loc
+);
+axres skip_until_r(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out const c16		**loc
+);
+
+axres skip_word(
+	_in const c16 		*text,
+	_in c16			*word,
+	_out const c16		**loc
+);
+
+axres skip_while(
+	_in const c16		*text,
+	_in const c16		*charset,
+	_out const c16		**loc
+);
+
+axres skip_line(
+	_in const c16		*text,
+	_out const c16		**loc
+);
+axres skip_line_n(
+	_in const c16		*text,
+	_in u32			n,
+	_out const c16		**loc
+);
+
+axres skip_ws(
+	_in const c16		*text,
+	_out const c16		**loc
+);
+
+#endif // !defined(AX_PARSER_SKIP_INT)
+
+/*
+ 
  	Find interface
 
 */
 
-#if !defined(AX_PARSER_FIND_INT)
+#if !defined(AX_PARSER_FIND_INT) && defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_FIND_INT
 
 axres find_char(
@@ -243,68 +305,6 @@ axres seq_find_all(
 #endif // !defined(AX_PARSER_SEQUENCE_INT)
 
 #endif // !defined(AX_PARSER_FIND_INT)
-
-/*
- 
- 	Skip interface
-
-*/
-
-#if !defined(AX_PARSER_SKIP_INT)
-#define AX_PARSER_SKIP_INT
-
-#define UNICODE_ANY		L"\uFEFE"
-#define CHARSET_ANY 		UNICODE_ANY
-
-#define CHARSET_NL 		L"\x0a\x0d"
-#define CHARSET_WS 		L"\x20\t"
-#define CHARSET_PUNCT     	L".,;:!?()[]{}"
-
-axres skip_until(
-	_in const c16		*text,
-	_in const c16		*charset,
-	_out const c16		**loc
-);
-axres skip_until_n(
-	_in const c16		*text,
-	_in const c16		*charset,
-	_in u32			n,
-	_out const c16		**loc
-);
-axres skip_until_r(
-	_in const c16		*text,
-	_in const c16		*charset,
-	_out const c16		**loc
-);
-
-axres skip_word(
-	_in const c16 		*text,
-	_in c16			*word,
-	_out const c16		**loc
-);
-
-axres skip_while(
-	_in const c16		*text,
-	_in const c16		*charset,
-	_out const c16		**loc
-);
-
-axres skip_line(
-	_in const c16		*text,
-	_out const c16		**loc
-);
-axres skip_line_n(
-	_in const c16		*text,
-	_in u32			n,
-	_out const c16		**loc
-);
-
-axres skip_ws(
-	_in const c16		*text,
-	_out const c16		**loc
-);
-
-#endif // !defined(AX_PARSER_SKIP_INT)
 
 /*
  

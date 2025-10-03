@@ -124,7 +124,7 @@ axres compare(
 axres charset_count(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u32		*count
+	_out u64		*count
 ){
 	if (text == nullptr
 	|| charset == nullptr){
@@ -137,8 +137,7 @@ axres charset_count(
 	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
 
-	u32 occ = 0; 
-
+	u64 occ = 0; 
 	while(in_c16_s(text, text_char, text_len)){
 		if (contains(charset, *text_char) == AX_SUCC){
 			occ++;

@@ -23,7 +23,7 @@ c16 *_rng_to_set(
 	u32 c = (u32)a;
 	u32 d = (u32)b;
 
-	// Invert <c-d> -> <d-c>
+	// Invert <z-a> -> <a-z>
 	if (c > d){
 		u32 temp = d;
 		d = c;
@@ -357,6 +357,7 @@ error_jump:
 	return AX_SUCC;
 }
 
+// fmt_group cleanup iterator
 iter_code seq_split_fmt_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
@@ -383,7 +384,7 @@ axres seq_split_fmt(
 	const c16 *grp_char = nullptr;
 
 	// Count group chars
-	u32 grp_list_c = 0;
+	u64 grp_list_c = 0;
 	res = charset_count(fmt, FMT_GRP, &grp_list_c);
 	if (grp_list_c < 2){
 		res = AX_INV_FMT;
@@ -431,17 +432,32 @@ axres seq_split_fmt(
 
 axres seq_match(
 	_in const c16		*text,
+	_in const c16		*cap,
 	_in const c16 		*seq_beg,
-	_in const c16 		*seq_end,
-	_in const c16		*cap
+	_in_opt const c16 	*seq_end
 ){
+	if(text == nullptr
+	|| cap == nullptr 
+	|| seq_beg == nullptr){
+		return AX_INV_ARG;
+	}
+
 	axres res = AX_SUCC;
 
 	u64 inv_set_s = 0;
 	c16 *inv_beg = nullptr;
 
+	if (seq_end == nullptr){
+		res = skip_until(text, cap, &seq_end);
+		axcheck(res);
+	}
+
 	u64 from = dif_c16(text, seq_beg);
 	u64 to = dif_c16(text, seq_end);
+
+	/*io_str(text);
+	io_str(seq_beg);
+	io_str(seq_end);*/
 
 	// Read range
 	res = read_range(text, from, to, &inv_set_s, nullptr);
@@ -467,53 +483,68 @@ axres seq_match(
 }
 axres seq_locate_action(
 	_in const c16		*text,
-	_in fmt_spec 		*spec,
-	_out const c16		**seq_beg,
-	_out const c16		**seq_end
+	_in fmt_spec 		*curr,
+	_in_opt fmt_spec 	*next,
+	_out const c16		**loc
 ){
 	if (text == nullptr
-	|| spec == nullptr){
+	|| curr == nullptr){
 		return AX_INV_ARG;
 	}
-	if (seq_beg == nullptr
-	|| seq_end == nullptr){
+	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
 
 	const c16 *spec_beg = text;
-	const c16 *spec_end = spec_beg + _c16len(spec->value);
+	const c16 *spec_end = text;
 
-	switch(spec->type){
+	if (next != nullptr
+	&& next->type == sequence
+	&& curr->type == capture_set){
+		while((contains(curr->value, *spec_end) == AX_SUCC)
+		&& (starts_with(spec_end, next->value, nullptr) == AX_SUCC)){
+			spec_end++;
+		}
+
+		if (spec_end != spec_beg){
+			spec_end--;
+		}else{
+			res = find_substr(spec_beg, next->value, &spec_end, nullptr);
+			axcheck(res);
+		}
+	}else if(curr->type == capture_set){
+		res = skip_while(spec_beg, curr->value, &spec_end);
+		axcheck(res);
+	}
+
+	// Skip with respect to next
+	switch(curr->type){
 	case sequence: // Match with sequence
 		res = starts_with(
 			text,
-			spec->value,
-			&spec_beg
+			curr->value,
+			nullptr
 		);
+		spec_end = text + _c16len(curr->value);
 		break;
 	case capture_set: // Match with capture group
-		res = skip_while(
-			text,
-			spec->value,
-			&spec_end
-		);
 		res = seq_match(
 			text,
+			curr->value,
 			spec_beg,
-			spec_end, 
-			spec->value
+			spec_end
 		);
 		break;
 	default:
+		return AX_INV_DATA;
+		break;
 	}
+	
+	*loc = spec_end;
 	axcheck(res);
 
-	// Write-back
-	*seq_beg = spec_beg;
-	*seq_end = spec_end;
-	
 	return AX_SUCC;
 }
 axres seq_locate(
@@ -536,43 +567,31 @@ axres seq_locate(
 	const c16 *beg_char = text; 
 
 	u32 seq_i = 0;
-	const c16 *seq_beg = text_char;
-	const c16 *seq_end = text_char;
 
+	fmt_spec *next = nullptr;
 	fmt_spec *curr = nullptr;
 
 	while(in_c16_s(text, text_char, text_len)
 	&& seq_i < grp->spec_list->count){
 		// Sequence check
 		curr = index_as(grp->spec_list, seq_i, fmt_spec*);
-//	io_str(curr->value);
-
-		// Perform action
-		res = seq_locate_action(
-			text_char,
-			curr,
-			&seq_beg,
-			&seq_end
-		);
-
+		next = index_as(grp->spec_list, seq_i + 1, fmt_spec*); // nullptr if not found
+								       //
 		// First check
 		if (seq_i == 0){
-			beg_char = seq_beg;
+			beg_char = text_char;
 		}
 		seq_i++;
+
+		// Move text_char based on the curr and next
+		res = seq_locate_action(text_char, curr, next, &text_char);
 
 		// Capture group failed
 		// Reset search
 		if(AX_ERR(res)){
-			text_char++;
-			seq_beg = text_char;
-			seq_end = text_char;
+			text_char = beg_char + 1;
 			seq_i = 0;
 			beg_char = nullptr;
-		}
-		else{
-			// Move to another sequence
-			text_char = seq_end;
 		}
 	}
 
@@ -582,7 +601,7 @@ axres seq_locate(
 	else axcheck(res);
 
 	loc->beg = beg_char;
-	loc->end = seq_end;
+	loc->end = text_char;
 
 	return AX_SUCC;
 }
@@ -648,14 +667,8 @@ axres seq_find_all(
 		axcheck_b(res);
 
 		// Add the sequence occurrence to the list
-		/*locs->add(locs, &buf, sizeof(seq_loc));
-		text_char = buf.beg + _c16len(
-			index_as(
-				grp->seq_list,
-				0,
-				c16*
-			)
-		);*/
+		locs->add(locs, &buf, sizeof(seq_loc));
+		text_char++;
 	}
 
 	// No occurrences added and res is not internal error

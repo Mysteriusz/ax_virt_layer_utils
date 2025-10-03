@@ -66,6 +66,7 @@ axres seq_find_f(
 	axcheck(res);
 
 	file->offset = (u64)buf.beg;
+	io_str((const c16*)file->offset);
 
 	return AX_SUCC;
 }

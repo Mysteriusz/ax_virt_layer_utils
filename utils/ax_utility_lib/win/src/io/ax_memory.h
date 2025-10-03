@@ -4,6 +4,19 @@
 #include "ax_type.h"
 
 /*
+ 	Global memory state variables.
+*/
+
+// All allocated
+extern u64 _MEM_USED;
+
+// Allocated not freed
+extern u64 _MEM_ACTIVE;
+
+// Freed after allocating
+extern u64 _MEM_FREED;
+
+/*
  	These macros should be used when writing multi-platform/multi-build memory abstraction.
 */
 
@@ -14,10 +27,17 @@
 #define axmalloc(size) ({ \
 	void *ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size)); \
 	asrt(ptr != nullptr); \
+	_MEM_ACTIVE += size; \
+	_MEM_USED += size; \
 	ptr; \
 })
 #define axfree(ptr) ({ \
-	if (ptr) HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
+	if (ptr){ \
+		u64 size = HeapSize(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
+		_MEM_ACTIVE -= size; \
+		_MEM_FREED += size; \
+		HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
+	} \
 })
 
 #elif defined(AX_LINUX)
