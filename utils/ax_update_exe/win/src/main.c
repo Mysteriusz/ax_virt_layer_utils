@@ -6,13 +6,9 @@ int main(
 ){
 	axres res = AX_SUCC;
 
-	seq_loc buf = {0};
-	//res = seq_find(L"[[secta]:", L"\\<{[}>[<{a-z}>]:\\", &buf);
-	res = seq_find(L"[[[[secta]]]]", L"\\[<{[}>[<{a-z}>]\\", &buf);
+	io_i64(_MEM_ACTIVE);
 	axcheck(res, ax_log(res));
 
-	io_str(buf.beg);
-	io_str(buf.end);
 	/*io_file file = {0};
 	res = io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file);
 	axcheck(res, ax_log(res));

@@ -228,6 +228,7 @@ axres ax_list_clear(
 	ax_list_node *next = nullptr;
 	while(node != nullptr){
 		next = node->next;
+		axfree(node->value);
 		axfree(node);
 		node = next;
 	}
@@ -246,6 +247,7 @@ axres ax_list_delete(
 	axres res = AX_SUCC;
 	res = ax_list_clear(list);
 	if (AX_ERR(res)){
+		return res;
 	}
 	axfree(list);
 

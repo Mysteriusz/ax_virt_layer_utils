@@ -312,7 +312,6 @@ axres seq_read_group(
 				},
 				sizeof(fmt_spec)
 			); 
-
 			fmt_char += spec_len;
 
 			axfree(spec_buf);
@@ -349,9 +348,10 @@ axres seq_read_group(
 	}
 
 error_jump:
-	axcheck(
-		res,
-		grp->spec_list->iter(grp->spec_list, (ax_iter_act)fmt_spec_iter, nullptr, nullptr);
+	axcheck(res,
+		grp->spec_list->iter(grp->spec_list, (ax_iter_act)fmt_spec_iter, nullptr, nullptr),
+		grp->spec_list->delete(grp->spec_list),
+		axfree(spec_buf)
 	);
 
 	return AX_SUCC;
@@ -397,7 +397,7 @@ axres seq_split_fmt(
 	res = ax_list_init(&list);
 	axcheck(res);
 
-	fmt_group *grp = axmalloc(sizeof(fmt_group));
+	fmt_group grp = {0};
 	for (u32 i = 0; i < grp_list_c; i++){
 		grp_char = fmt_char;
 
@@ -406,13 +406,13 @@ axres seq_split_fmt(
 		axcheck_b(res);
 
 		// Initialize group lists
-		res = ax_list_init(&grp->spec_list);
+		res = ax_list_init(&grp.spec_list);
 
 		// Parse group
-		res = seq_read_group(grp_char, dif_c16(grp_char, fmt_char), grp);
+		res = seq_read_group(grp_char, dif_c16(grp_char, fmt_char), &grp);
 		axcheck_b(res);
 
-		res = list->add(list, grp, sizeof(fmt_group));
+		res = list->add(list, &grp, sizeof(fmt_group));
 		axcheck_b(res);
 
 		fmt_char++;
@@ -421,8 +421,7 @@ axres seq_split_fmt(
 	// Free the temp group buffer axfree(grp); Cleanup check
 	axcheck(res,
 		list->iter(list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr),
-		list->delete(list),
-		axfree(grp)
+		list->delete(list)
 	);
 
 	*grp_list = list;
@@ -454,10 +453,6 @@ axres seq_match(
 
 	u64 from = dif_c16(text, seq_beg);
 	u64 to = dif_c16(text, seq_end);
-
-	/*io_str(text);
-	io_str(seq_beg);
-	io_str(seq_end);*/
 
 	// Read range
 	res = read_range(text, from, to, &inv_set_s, nullptr);
@@ -500,8 +495,29 @@ axres seq_locate_action(
 	const c16 *spec_beg = text;
 	const c16 *spec_end = text;
 
+	/*
+	 	Continous block skipping with respect for next->value
+		
+		Example:
+			L"[[[secta]]]]" 
+			WITH curr->value == L"[" 
+			AND curr->type == capture_set
+			AND next == nullptr
+
+			For block of L'[' it will skip all of its characters resulting in:
+			L"secta]]]]"
+
+			L"[[[secta]]]]" 
+			WITH curr->value == L"[" 
+			AND curr->type == capture_set
+			AND next == nullptr
+			AND next->value == L"["
+
+			The result would be:
+			L"[secta]]]]"
+			which considers next expected sequence
+	*/
 	if (next != nullptr
-	&& next->type == sequence
 	&& curr->type == capture_set){
 		while((contains(curr->value, *spec_end) == AX_SUCC)
 		&& (starts_with(spec_end, next->value, nullptr) == AX_SUCC)){
@@ -631,6 +647,7 @@ axres seq_find(
 
 	// Iterate grp_list cleanup function
 	grp_list->iter(grp_list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr);
+	grp_list->delete(grp_list);
 	axcheck(res);
 
 	*loc = buf;
@@ -668,7 +685,7 @@ axres seq_find_all(
 
 		// Add the sequence occurrence to the list
 		locs->add(locs, &buf, sizeof(seq_loc));
-		text_char++;
+		text_char = buf.beg + 1;
 	}
 
 	// No occurrences added and res is not internal error
@@ -679,6 +696,7 @@ axres seq_find_all(
 
 	// Iterate grp_list cleanup function
 	grp_list->iter(grp_list, (ax_iter_act)seq_split_fmt_iter, nullptr, nullptr);
+	grp_list->delete(grp_list);
 	axcheck(res, locs->clear(locs));
 
 	return AX_SUCC;

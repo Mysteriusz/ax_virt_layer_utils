@@ -113,7 +113,7 @@ typedef struct _io_file{
 	io_fmap			map; // Memory mapped file
 	io_file_acc		acc; // File access
 	io_file_enc 		enc; // Optional field (default = UTF16LE)
-	u64			offset; // Optional field (default = 0)
+	u64			offset; // (IN BYTES) Optional field (default = 0)
 } io_file;
 
 // Invalidate file and check encoding (exp_enc = 0 if no encoding check)

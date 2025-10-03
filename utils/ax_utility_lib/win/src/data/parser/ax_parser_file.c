@@ -89,7 +89,6 @@ axres seq_find_all_f(
 
 	// fmap with file offset
 	const c16 *fmap_off = file->map.root;
-
 	res = seq_find_all(fmap_off, fmt, locs);
 	axcheck(res);
 
