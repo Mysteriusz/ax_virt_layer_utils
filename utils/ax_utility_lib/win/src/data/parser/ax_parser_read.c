@@ -24,8 +24,13 @@ axres read_until(
 	const c16 *start = text;
 	const c16 *end = nullptr;
 
- 	res = skip_until(start, charset, &end);
-	axcheck(res);
+	// Read to end WHEN charset == L""
+	if (_c16len(charset) == 0){
+		end = &start[_c16len(start)];
+	}else{
+ 		res = skip_until(start, charset, &end);
+		axcheck(res);
+	}
 	 
 	u64 buf_size = dif_c16(start, end); 
 	// Adjust size for null-terminator

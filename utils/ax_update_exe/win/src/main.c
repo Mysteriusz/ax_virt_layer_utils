@@ -15,8 +15,12 @@ int main(
 	seq_find_f(file, L"\\(0->'$')[sect b]:\\");
 	io_fc(file);*/
 
-	io_str(L"fds");
-	io_i64(seq_func_to_cond_inv(L"(!:[$])"));
+	fmt_cond *cond = seq_func_to_cond(L"(!:[[[[[$f)"); 
+	axcheck((cond == nullptr));
+
+	io_str(cond->bef);
+	io_str(cond->aft);
+	io_i64(cond->mode);
 
 	/*seq_loc loc = {0};
 	seq_find(L"adhfa[sec]:jdskejsl", L"\\(!->[$])[<{a-z}>]:\\", &loc);

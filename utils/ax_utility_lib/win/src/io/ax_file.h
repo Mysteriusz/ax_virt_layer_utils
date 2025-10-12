@@ -98,7 +98,7 @@ typedef struct _io_fmap{
 } io_fmap;
 
 typedef struct _io_file{
-	_heap c16		*path;
+	 c16		*path;
 #if defined(AX_UM)
 	FILE			*hdl;
 #elif defined(AX_KM)

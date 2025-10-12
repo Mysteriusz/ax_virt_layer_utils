@@ -5,7 +5,7 @@ enum set_mode{
 	collide = L'&', // Mathematical Intersect (∩)
 	difference = L'-', // Mathematical Remove (\) 
 };
-c16 *_rng_to_set(
+_free c16 *_rng_to_set(
 	const c16 a,
 	const c16 b
 ){
@@ -126,7 +126,7 @@ error_jump:
 	return false;
 }
 
-const c16 *seq_cap_to_charset(
+_free const c16 *seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 ){
 	if (seq_cap_to_charset_inv(cap)){
@@ -319,10 +319,10 @@ bool seq_func_to_cond_inv(
 
 	// Get function return mode
 	switch(*func_char){
-	case L'!': // Not true statement
-	case L'+': // True statement
+	case L'!': // Not true mode
+	case L'+': // True mode
 		break;
-	default: // Unknown statement value
+	default: // Unknown mode value
 		return true;
 	}
 	func_char++;
@@ -333,14 +333,102 @@ bool seq_func_to_cond_inv(
 	}
 	func_char++;
 
-	// Count special characters
+	// Count any characters
 	u64 c = 0;
-	charset_count(func_char, SEQ_COND_CHARSET, &c);
+	charset_count(func_char, L"$", &c);
 	if (c == 0){
 		return true;
 	}
 
 	return false;
+}
+_free fmt_cond *seq_func_to_cond(
+	_in const c16		*func // func for function
+){
+	if (seq_func_to_cond_inv(func)){
+		return nullptr;
+	}
+
+	axres res = AX_SUCC;
+
+	u64 func_len = _c16len(func);
+	const c16 *func_char = func;
+
+	fmt_cond *cond = axmalloc(sizeof(fmt_cond));
+
+	enum cond_mode mode = 0;
+
+	c16 *bef_buf = nullptr;
+	u64 bef_len = 0;
+
+	c16 *aft_buf = nullptr;
+	u64 aft_len = 0;
+
+	// Skip first '('
+	func_char++; 
+
+	// Read return type
+	bool ret = (*func_char == L'!') 
+		? false
+		: true;
+
+	// Skip mode char '!' or '+'
+	func_char++;
+
+	// Skip forwarding char ':'
+	func_char++;
+
+	// Read the before string
+	res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
+	axcheck_g(res, cleanup);
+
+	// Finish the read if there are characters between func_char and SEQ_COND_CHARSET
+	if (bef_len > 1){
+		bef_buf = axmalloc(bef_len * sizeof(c16));
+
+		res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
+		axcheck_g(res, cleanup);
+
+		mode |= condition_bef;
+	}
+
+	// Skip bef_buf
+	func_char += bef_len;
+
+	// Read the after string
+	res = read_range(
+		func,
+		dif_c16(func, func_char),
+		func_len - 1, // One char before L")"
+		&aft_len,
+		aft_buf
+	);
+	if (AX_ERR(res) == false){
+		aft_buf = axmalloc(aft_len * sizeof(c16));
+
+		res = read_range(
+			func,
+			dif_c16(func, func_char),
+			func_len - 1, // One char before L")"
+			&aft_len,
+			aft_buf
+		);
+		axcheck_g(res, cleanup);
+		mode |= condition_aft;
+	}
+	
+	// Read the after string
+	cond->bef = bef_buf;
+	cond->aft = aft_buf;
+	cond->ret = ret;
+	cond->mode = mode;
+
+	return cond;
+
+cleanup:
+	axfree(aft_buf);
+	axfree(bef_buf);
+	return nullptr;
 }
 
 axres seq_group_condition(

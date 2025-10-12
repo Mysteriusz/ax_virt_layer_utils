@@ -76,7 +76,7 @@ typedef struct _noded_doc{
 } noded_doc;
 
 typedef struct _noded_sect{
-	_heap c16		*name;
+	 c16		*name;
 	u64			beg;
 	u64			end;
 	noded_doc 		*doc;

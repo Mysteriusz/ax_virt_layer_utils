@@ -77,12 +77,12 @@ typedef iter_code (*ax_structures_iter)(
 
 typedef struct _ax_list_node ax_list_node;
 typedef struct _ax_list_node{
-	_heap void *value;
+	 void *value;
 	u64 size;
-	_heap ax_list_node *next;
+	 ax_list_node *next;
 } ax_list_node;
 typedef struct _ax_list{
-	_heap ax_list_node *root;
+	 ax_list_node *root;
 	u32 count;
 	struct { AX_STRUCTURE_CMD };
 } ax_list;
@@ -116,8 +116,8 @@ void *ax_list_at_v(
 );
 
 typedef struct _ax_list_iter_stack{
-	_heap const ax_list 		*list;
-	_heap const ax_list_node	*node;
+	 const ax_list 		*list;
+	 const ax_list_node	*node;
 	void 				*data;
 } ax_list_iter_stack;
 axres ax_list_iter(

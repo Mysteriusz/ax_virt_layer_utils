@@ -55,7 +55,7 @@ axres write_data_inv(
 
 typedef struct _data_con{
 	u8 			id; // Context identifier
-	_heap c16		*path; // Duplicated path of the initial URI
+	 c16		*path; // Duplicated path of the initial URI
 	i64			rule; // Rules of the handle
 	bool 			is_open; // Is handle active
 	/*
@@ -66,7 +66,7 @@ typedef struct _data_con{
 		FOR id == CON_FILE
 			data = io_file* 
 	*/
-	_heap void		*data;  // System defined context data
+	 void		*data;  // System defined context data
 	void			*user_data; // User defined context data
 } data_con;
 

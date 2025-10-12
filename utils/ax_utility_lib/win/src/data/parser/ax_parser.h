@@ -227,6 +227,7 @@ axres find_substr(
 #define CHARSET_SEQ 			L"<\x2\x3\\"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
+	ax_list *cond_list; // List of _fmt_cond
 } fmt_group;
 
 enum spec_type{
@@ -234,12 +235,22 @@ enum spec_type{
 	capture_set = 1,
 	control_beg = 2,
 	control_end = 3,
-	function = 4,
 };
 typedef struct _fmt_spec{
 	const c16 *value;
 	enum spec_type type;
 } fmt_spec;
+
+enum cond_mode{
+	condition_bef = 0x1,
+	condition_aft = 0x2
+};
+typedef struct _fmt_cond{
+	bool ret;
+	enum cond_mode mode;
+	const c16 *bef; // Before $ string
+	const c16 *aft; // After $ string
+} fmt_cond;
 
 typedef struct _seq_loc{
 	const c16 *beg;
@@ -297,6 +308,10 @@ axres seq_find_all(
 
 // ====================== CHARSET ======================
 
+// Syntax invalidation for seq_cap_to_charset
+bool seq_cap_to_charset_inv(
+	_in const c16		*cap // cap FOR capture group
+);
 /*
    	Input of cap has to start with:
 		L'{'
@@ -314,11 +329,7 @@ axres seq_find_all(
 	OR you can add them by adding single character like so:
 		{a-z}+{{}+{-}+{<}
 */
-const c16 *seq_cap_to_charset(
-	_in const c16		*cap // cap FOR capture group
-);
-// Syntax invalidation for seq_cap_to_charset
-bool seq_cap_to_charset_inv(
+_free const c16 *seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 );
 
@@ -341,6 +352,14 @@ axres seq_group_capture_set(
 
 #define SEQ_COND_CHARSET L"$"
 
+/* 
+	Function has to consist of at least one control character.
+	Recognized characters:
+		$ - Any character
+*/
+bool seq_func_to_cond_inv(
+	_in const c16		*func // func for function
+);
 /*
    	Input of func has to start with:
 		L'('
@@ -351,17 +370,10 @@ axres seq_group_capture_set(
 		(+:[[$]])
 		(!:<$>)
 		(!::$>:)
-
+	
+	Returns HEAP ALLOCATED condition function
 */
-bool seq_func_to_cond(
-	_in const c16		*func // func for function
-);
-/* 
-	Function has to consist of at least one control character.
-	Recognized characters:
-		$ - Any character
-*/
-bool seq_func_to_cond_inv(
+_free fmt_cond *seq_func_to_cond(
 	_in const c16		*func // func for function
 );
 

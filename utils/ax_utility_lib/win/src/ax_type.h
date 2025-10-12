@@ -91,7 +91,7 @@
 
 	Only applicable to pointer types.
 */
-#define _heap
+#define _free
 
 #if defined(_MSC_VER)
 #define __builtin_trap() __debugbreak()
