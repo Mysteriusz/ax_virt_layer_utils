@@ -87,7 +87,7 @@ static inline const c16 *_io_file_conv(
 }
 
 typedef struct _io_fmap{
-	void *root;
+	void *root; 
 
 #if defined(AX_WIN64)
 	HANDLE hdl;
@@ -98,7 +98,7 @@ typedef struct _io_fmap{
 } io_fmap;
 
 typedef struct _io_file{
-	c16			*path;
+	_heap c16		*path;
 #if defined(AX_UM)
 	FILE			*hdl;
 #elif defined(AX_KM)
@@ -139,13 +139,11 @@ axres io_fsize(
 	_out u64		*size
 );
 
-// Open file
-// REQUIRES BOM
-// Non BOM files will return AX_INV_ENC.
+// Open BOM encoded file
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
-	_in_out io_file		*buf
+	_out io_file		**buf
 );
 // Close file 
 axres io_fc(

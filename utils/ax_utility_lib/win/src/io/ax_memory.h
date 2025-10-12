@@ -29,7 +29,7 @@ extern u64 _MEM_FREED;
 #define axmalloc(size) ({ \
 	void *ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size)); \
 	asrt(ptr != nullptr); \
-	printf("%s: %s AT LINE: %i WITH PTR: %p\n", __FUNCTION__, "alloc", __LINE__, ptr); \
+	printf("%s: %s AT LINE: %i WITH PTR: %p OF SIZE: %llu\n", __FUNCTION__, "alloc", __LINE__, ptr, ((u64)size)); \
 	_MEM_ACTIVE += size; \
 	_MEM_USED += size; \
 	ptr; \
@@ -38,7 +38,7 @@ extern u64 _MEM_FREED;
 	if (ptr){ \
 		u64 size = HeapSize(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
 		_MEM_ACTIVE -= size; \
-		printf("%s: %s AT LINE: %i WITH PTR: %p\n", __FUNCTION__, "free", __LINE__, ptr); \
+		printf("%s: %s AT LINE: %i WITH PTR: %p OF SIZE: %llu\n", __FUNCTION__, "free", __LINE__, ptr, ((u64)size)); \
 		_MEM_FREED += size; \
 		HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \
 	} \

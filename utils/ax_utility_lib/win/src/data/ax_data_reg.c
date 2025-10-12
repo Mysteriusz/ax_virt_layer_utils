@@ -13,7 +13,7 @@ axres push_data_reg(
 
 	data_reg_desc *desc = axmalloc(sizeof(data_reg_desc));
 	desc->type = type;
-	desc->name = _wcsdup(name);
+	desc->name = _c16dup(name);
 
 	hdl->con.user_data = desc;
 
@@ -150,7 +150,7 @@ axres open_data_reg(
 	hdl->ops = &_ops_reg; 
 	
 	hdl->con.id = CON_REG;
-	hdl->con.path = _wcsdup(path);
+	hdl->con.path = _c16dup(path);
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
 

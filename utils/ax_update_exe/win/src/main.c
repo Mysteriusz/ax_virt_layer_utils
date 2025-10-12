@@ -6,27 +6,24 @@ int main(
 ){
 	axres res = AX_SUCC;
 
+	/*noded_doc *doc = nullptr;
+	res = noded_doc_load(L"D:\\share\\ax_info.noded", &doc);
+	noded_doc_unload(doc);*/
+
+	/*io_file *file = nullptr;
+	io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file);
+	seq_find_f(file, L"\\(0->'$')[sect b]:\\");
+	io_fc(file);*/
+
+	io_str(L"fds");
+	io_i64(seq_func_to_cond_inv(L"(!:[$])"));
+
+	/*seq_loc loc = {0};
+	seq_find(L"adhfa[sec]:jdskejsl", L"\\(!->[$])[<{a-z}>]:\\", &loc);
+	io_str(loc.beg);*/
+
 	io_i64(_MEM_ACTIVE);
 	axcheck(res, ax_log(res));
-
-	/*io_file file = {0};
-	res = io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file);
-	axcheck(res, ax_log(res));
-	res = seq_find_f(&file, L"\\<{[}>[<{a-z}>]:\\");
-	axcheck(res, ax_log(res));*/
-
-	/*noded_doc *doc = nullptr; 
-	res = noded_load_doc(L"D:\\share\\ax_info.noded", &doc);
-	axcheck(res, ax_log(res));*/
-
-	/*noded_sect *sect = nullptr;
-	res = noded_load_sect(doc, L"secta", &sect);
-	axcheck(res, ax_log(res));
-
-	noded_kvp *kvp = nullptr;
-	res = noded_load_kvp(sect, L"node1", &kvp);
-	axcheck(res, ax_log(res));*/
-
 	unref(res);
 
 	return 0;

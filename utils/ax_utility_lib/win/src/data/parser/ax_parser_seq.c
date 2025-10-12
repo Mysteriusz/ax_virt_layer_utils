@@ -1,11 +1,5 @@
 #include "ax_parser.h"
 
-enum set_mode{
-	add = L'+', // Mathematical Union (U)
-	collide = L'&', // Mathematical Intersect (∩)
-	difference = L'-', // Mathematical Remove (\) 
-};
-
 // fmt_spec list cleanup iterator
 iter_code fmt_spec_iter(
 	ax_list_iter_stack 	stack _prepass
@@ -14,221 +8,6 @@ iter_code fmt_spec_iter(
 	axfree((void*)spec->value);
 
 	return ITER_NONE;
-}
-
-c16 *_rng_to_set(
-	const c16 a,
-	const c16 b
-){
-	u32 c = (u32)a;
-	u32 d = (u32)b;
-
-	// Invert <z-a> -> <a-z>
-	if (c > d){
-		u32 temp = d;
-		d = c;
-		c = temp;
-	}
-
-	// Alloc space for set and write range
-	c16 *set = axmalloc(((d - c) + 2) * sizeof(c16));
-	u32 i = 0;
-	while(c <= d){
-		set[i] = (c16)c;
-		c++;
-		i++;
-	}
-
-	return set;
-}
-
-bool seq_cap_to_charset_inv(
-	_in const c16		*cap // cap FOR capture group
-){
-	if (cap == nullptr){
-		return true;
-	}
-
-	u64 cap_len = _c16len(cap);
-	const c16 *cap_char = cap;
-
-	if (cap[0] != L'{'){
-		return true;
-	}
-	if (cap[cap_len - 1] != L'}'){
-		return true;
-	}
-
-	const c16 *set_char = nullptr;
-	const c16 *rng_char = nullptr;
-	unref(rng_char);
-
-	bool in_set = false;
-	while(in_c16_s(cap, cap_char, cap_len)){
-		switch(*cap_char){
-		case L'{':
-			if (in_set == false){
-				set_char = cap_char;
-			}
-			in_set = true;
-			break;
-		case L'}':
-			// Default set_char if exiting set
-			if (in_set == true){
-				set_char = nullptr;
-			}
-			in_set = false;
-			break;
-		case add:
-			break;
-		case difference:
-			break;
-		case collide:
-			break;
-		default:
-			// Not in set and unknown character
-			if (in_set == false){
-				goto error_jump;
-			}
-			break;
-		}
-
-		// If cap_char in one of the sets
-		if (in_set){
-			set_char++;
-			if (in_c16_s(cap, set_char, cap_len) == false){
-				goto error_jump;
-			}
-
-			rng_char = set_char + 1;
-			if (in_c16_s(cap, rng_char, cap_len) == false){
-				goto error_jump;
-			}
-
-			switch(*rng_char){
-			// Expect range: {a-z}
-			case L'-':
-				set_char = rng_char + 1; 
-				if (in_c16_s(cap, set_char, cap_len) == false){
-					goto error_jump;
-				}
-
-				break;
-			// Expect one character: {a}
-			case L'}':
-				break;
-			default:
-				goto error_jump;
-			}
-			cap_char = set_char;
-
-			if (*(cap_char + 1) != L'}'){
-				goto error_jump;
-			}
-		}
-
-		cap_char++;
-	}
-	
-error_jump:
-	// Not fully checked
-	if (*cap_char != L'\0'){
-		return true;
-	}
-	
-	return false;
-}
-
-const c16 *seq_cap_to_charset(
-	_in const c16		*cap // cap FOR capture group
-){
-	if (seq_cap_to_charset_inv(cap)){
-		return nullptr;
-	}
-
-	u64 cap_len = _c16len(cap);
-	const c16 *cap_char = cap;
-	const c16 *not_char = nullptr;
-
-	enum set_mode mode = 0;
-	const c16 *charset = nullptr;
-	// Set containing temp data to be merged with charset based on mode
-	const c16 *wrkset = nullptr;
-
-	// Capture set parse {a-z}-{c-m}+{l}
-	while(in_c16_s(cap, cap_char, cap_len)){
-		if (*cap_char != L'{'){
-			cap_char++;
-			continue;
-		}
-		if (charset != nullptr){
-			mode = *(cap_char - 1);
-		}
-
-		not_char = cap_char;
-
-		/* 
-		 	Get the wrkset for operation.
-			Index read is safe since the cap is validated by seq_cap_to_charset_inv.
-
-			not_char[0] == L'{'
-			not_char[1] == (from_range_char OR single_char)
-			not_char[2] == (range_char OR L'}')
-			not_char[3] == (to_range_char OR out_of_range)
-			not_char[4] == (L'}' OR out_of_range)
-		*/
-		
-		// Single char
-		if (not_char[2] == L'}'){
-			wrkset = _rng_to_set(not_char[1], not_char[1]);
-			cap_char = &not_char[2];
-		// Range
-		}else{
-			wrkset = _rng_to_set(not_char[1], not_char[3]);
-			cap_char = &not_char[4];
-		}
-
-		/* 
-		 	 Perform mode operation on the wrkset and charset.
-		*/
-
-		// Initialize charset on first iteration 
-		if (charset == nullptr){
-			charset = wrkset;
-			continue;
-		}
-
-		c16 *temp_set = nullptr;
-		u64 temp_size = 0;
-		
-		// Perform operation
-		switch(mode){
-		case add:
-			c16_union(charset, wrkset, &temp_size, temp_set);
-			temp_set = axmalloc(temp_size * sizeof(c16));
-			c16_union(charset, wrkset, &temp_size, temp_set);
-			break;
-		case difference:
-			c16_difference(charset, wrkset, &temp_size, temp_set);
-			temp_set = axmalloc(temp_size * sizeof(c16));
-			c16_difference(charset, wrkset, &temp_size, temp_set);
-			break;
-		default:
-			break;
-		}
-
-		// Cleanup previous charset
-		axfree((void*)charset);
-
-		// Write to charset
-		charset = temp_set;
-
-		// Reset for next set
-		mode = L'\0';
-		axfree((void*)wrkset);
-	}
-
-	return charset;
 }
 
 axres seq_read_group(
@@ -256,11 +35,8 @@ axres seq_read_group(
 	Iterate group 
 	Example:
 		Only the string between \\ will be read.
- 		- L"\\[<.>]\\"
+ 		- L"\\(!->"$")[\x2<{a-z}+{[-]}>\x3]\\"
 */
-	const c16 *spec_char = nullptr;
-
-	u64 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
@@ -270,53 +46,28 @@ axres seq_read_group(
 		}
 
 		switch(*fmt_char){
-		case L'<': // Capture group
-			fmt_char++;
-			spec_char = fmt_char;
-
-			// Read inside of the capture group
-			res = find_substr(fmt_char, L"}>", &spec_char, nullptr);
-			if (AX_ERR(res)){ goto error_jump; }
-
-			res = read_range(
-				fmt,
-				dif_c16(fmt, fmt_char),
-				dif_c16(fmt, spec_char + 1),
-				&spec_len,
-				spec_buf
-			);
-			if (AX_ERR(res)){ goto error_jump; }
-			
-			spec_buf = axmalloc(spec_len * sizeof(c16));
-
-			res = read_range(
-				fmt,
-				dif_c16(fmt, fmt_char),
-				dif_c16(fmt, spec_char + 1),
-				&spec_len,
-				spec_buf
-			);
-			if (AX_ERR(res)){ goto error_jump; }
-
-			const c16 *cap_set = seq_cap_to_charset(spec_buf);
-			if (cap_set == nullptr){
-				res = AX_INV_FMT;
-				goto error_jump;
-			}
-
+		case L'<': // Capture set
+			res = seq_group_capture_set(fmt, fmt_char, grp->spec_list, &fmt_char);
+			if (AX_ERR(res)) { goto error_jump; }
+			break;
+		case L'\x2': // seq_loc start indicator
+		case L'\x3': // seq_loc end indicator
+			// Load character to fmt_spec as control
+			c16 *buf = axmalloc(sizeof(c16));
+			*buf = *fmt_char;
 			grp->spec_list->add(
 				grp->spec_list,
 				&(fmt_spec){
-					.value = cap_set,
-					.type = capture_set,
+					.value = buf,
+					.type = (*fmt_char == L'\x2' ? control_beg : control_end),
 				},
 				sizeof(fmt_spec)
-			); 
-			fmt_char += spec_len;
-
-			axfree(spec_buf);
-			spec_buf = nullptr;
-			spec_len = 0;
+			);
+			fmt_char++;
+			break;
+		case L'(': // Condition start
+			res = seq_group_condition(fmt, fmt_char, grp->spec_list, &fmt_char);
+			if (AX_ERR(res)) { goto error_jump; }
 			break;
 		default:
 			// Reset
@@ -324,12 +75,12 @@ axres seq_read_group(
 			rng_len = 0;
 
 			// Add all non-needed as charset ranges
-			res = read_until(fmt_char, L"<\\", &rng_len, rng);
+			res = read_until(fmt_char, CHARSET_SEQ, &rng_len, rng);
 			if (AX_ERR(res)){ goto error_jump; }
 
 			rng = axmalloc(rng_len * sizeof(c16)); 
 
-			res = read_until(fmt_char, L"<\\", &rng_len, rng);
+			res = read_until(fmt_char, CHARSET_SEQ, &rng_len, rng);
 			if (AX_ERR(res)){ goto error_jump; }
 
 			grp->spec_list->add(
@@ -478,15 +229,19 @@ axres seq_match(
 }
 axres seq_locate_action(
 	_in const c16		*text,
-	_in fmt_spec 		*curr,
-	_in_opt fmt_spec 	*next,
-	_out const c16		**loc
+	_in u64 		curr_i,
+	_in ax_list		*spec_list,
+	_out const c16		**loc,
+	_out const c16		**beg_char, // Returned only in case of control_beg
+	_out const c16		**end_char // Returned only in case of control_end
 ){
 	if (text == nullptr
-	|| curr == nullptr){
+	|| spec_list == nullptr){
 		return AX_INV_ARG;
 	}
-	if (loc == nullptr){
+	if (loc == nullptr
+	|| beg_char == nullptr
+	|| end_char == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -494,6 +249,19 @@ axres seq_locate_action(
 
 	const c16 *spec_beg = text;
 	const c16 *spec_end = text;
+
+	fmt_spec *curr = index_as(spec_list, curr_i, fmt_spec*);
+
+	// Find next 'physical' type sequence to validate with capture_set
+	u64 next_i = curr_i + 1;
+	fmt_spec *next = curr;
+	while(curr->type == capture_set
+	&& next != nullptr){
+		if (next->type == sequence){
+			break;
+		}
+		next = index_as(spec_list, next_i++, fmt_spec*);
+	}
 
 	/*
 	 	Continous block skipping with respect for next->value
@@ -510,7 +278,7 @@ axres seq_locate_action(
 			L"[[[secta]]]]" 
 			WITH curr->value == L"[" 
 			AND curr->type == capture_set
-			AND next == nullptr
+			AND next != nullptr
 			AND next->value == L"["
 
 			The result would be:
@@ -543,6 +311,7 @@ axres seq_locate_action(
 			curr->value,
 			nullptr
 		);
+
 		spec_end = text + _c16len(curr->value);
 		break;
 	case capture_set: // Match with capture group
@@ -553,8 +322,13 @@ axres seq_locate_action(
 			spec_end
 		);
 		break;
+	case control_beg:
+		*beg_char = text;
+		break;
+	case control_end:
+		*end_char = text;
+		break;
 	default:
-		return AX_INV_DATA;
 		break;
 	}
 	
@@ -580,34 +354,47 @@ axres seq_locate(
 
 	u64 text_len = _c16len(text);
 	const c16 *text_char = text;
-	const c16 *beg_char = text; 
+
+	const c16 *root_char = text;
+	const c16 *beg_char = text; // Indicated by \0x2 character or seq beg
+	const c16 *end_char = text; // Indicated by \0x3 character or seq end
 
 	u32 seq_i = 0;
 
-	fmt_spec *next = nullptr;
-	fmt_spec *curr = nullptr;
-
 	while(in_c16_s(text, text_char, text_len)
 	&& seq_i < grp->spec_list->count){
-		// Sequence check
-		curr = index_as(grp->spec_list, seq_i, fmt_spec*);
-		next = index_as(grp->spec_list, seq_i + 1, fmt_spec*); // nullptr if not found
-								       //
 		// First check
 		if (seq_i == 0){
-			beg_char = text_char;
+			root_char = text_char;
+			if (beg_char == nullptr){
+				beg_char = text_char;
+			}
 		}
-		seq_i++;
 
 		// Move text_char based on the curr and next
-		res = seq_locate_action(text_char, curr, next, &text_char);
+		res = seq_locate_action(
+			text_char, 
+			seq_i, 
+			grp->spec_list, 
+			&text_char,
+			&beg_char,
+			&end_char
+		);
+		
+		seq_i++;
+		if (seq_i == grp->spec_list->count
+		&& end_char == nullptr){
+			end_char = text_char;
+		}
 
 		// Capture group failed
 		// Reset search
 		if(AX_ERR(res)){
-			text_char = beg_char + 1;
+			text_char = root_char + 1;
 			seq_i = 0;
 			beg_char = nullptr;
+			end_char = nullptr;
+			root_char = nullptr;
 		}
 	}
 
@@ -617,7 +404,7 @@ axres seq_locate(
 	else axcheck(res);
 
 	loc->beg = beg_char;
-	loc->end = text_char;
+	loc->end = end_char;
 
 	return AX_SUCC;
 }

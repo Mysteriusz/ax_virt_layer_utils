@@ -55,18 +55,18 @@ axres write_data_inv(
 
 typedef struct _data_con{
 	u8 			id; // Context identifier
-	c16			*path; // Duplicated path of the initial URI
+	_heap c16		*path; // Duplicated path of the initial URI
 	i64			rule; // Rules of the handle
 	bool 			is_open; // Is handle active
 	/*
 		FOR id == CON_REG
-			data = HANDLE as HKEY
+			data = HANDLE as HKEY for windows registry key
 		FOR id == CON_DIR
 			data = nullptr 
 		FOR id == CON_FILE
 			data = io_file* 
 	*/
-	void			*data; // System defined context data
+	_heap void		*data;  // System defined context data
 	void			*user_data; // User defined context data
 } data_con;
 

@@ -9,6 +9,9 @@ bool noded_doc_inv(
 	if (io_finv(doc->file, UTF16)){
 		return true;
 	}
+	if (doc->sect_list == nullptr){
+		return true;
+	}
 
 	return false;
 }
@@ -19,7 +22,7 @@ bool noded_sect_inv(
 		return true;
 	}
 	if (sect->doc == nullptr
-	|| sect->label == nullptr){
+	|| sect->name == nullptr){
 		return true;
 	}
 	if (noded_doc_inv(sect->doc)){
@@ -27,87 +30,5 @@ bool noded_sect_inv(
 	}
 
 	return false;
-}
-
-iter_code noded_load_sym_iter(
-	ax_list_iter_stack 	stack _prepass
-){
-	noded_sect *sect = (noded_sect*)stack->node->value;
-	ax_list_delete(sect->kvp_list);
-	axfree(sect->label);
-
-	return ITER_NONE;
-}
-axres noded_load_sym(
-	_in noded_doc 		*doc
-){
-	if (noded_doc_inv(doc)){
-		return AX_INV_ARG;
-	}
-
-	axres res = AX_SUCC;
-
-	ax_list *sect_list = nullptr;
-	ax_list_init(&sect_list);
-	ax_list *sym_list = nullptr;
-	ax_list_init(&sym_list);
-
-	res = seq_find_all_f(doc->file, NODED_SECT_FMT, sym_list);
-	axcheck(res);
-
-	// Add noded sects based on the sect sequence find
-	noded_sect curr = {0};
-
-	// Per location info
-	seq_loc *loc = nullptr;
-	c16 *label_buf = nullptr;
-	u64 label_len = 0;
-	u64 curr_off = 0;
-	u64 next_off = 0;
-
-	// Iterate over section locations
-	for (u64 i = 0; i < sym_list->count; i++){
-		loc = index_as(sym_list, i, seq_loc*);
-		label_len = dif_c16(loc->beg, loc->end) + 2;
-
-		// Read label
-		label_buf = axmalloc((label_len + 1) * sizeof(c16));
-		memcpy(label_buf, loc->beg, label_len * sizeof(c16));
-		label_buf[label_len] = L'\0';
-
-		// Calculate curr_off and next_off 
-		curr_off = dif_b(doc->file->map.root, loc->beg);
-		if (i == sym_list->count - 1){
-			next_off = _c16len(doc->file->map.root) * sizeof(c16);
-		}else{
-			next_off = dif_b(doc->file->map.root, index_as(sym_list, i + 1, seq_loc*)->beg);
-		}
-
-		// Load into sect buffer (curr)
-		curr.doc = doc;
-		curr.label = label_buf;
-		curr.beg = curr_off;
-		curr.end = next_off;
-		curr.kvp_list = nullptr;
-
-		// Add sect buffer to list
-		res = sect_list->add(sect_list, &curr, sizeof(noded_sect));
-		axcheck_b(res);
-	}
-
-	// Delete sym_list
-	sym_list->delete(sym_list);
-
-	// Cleanup sect_list if failed
-	axcheck(res, 
-		// Free in case of failing to add
-		axfree(label_buf),
-		sect_list->iter(sect_list, (ax_iter_act)noded_load_sym_iter, nullptr, nullptr),
-		sect_list->delete(sect_list)
-	);
-
-	doc->sect_list = sect_list;
-
-	return AX_SUCC;
 }
 

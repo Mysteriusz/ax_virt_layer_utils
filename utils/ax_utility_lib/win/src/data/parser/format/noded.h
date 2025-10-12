@@ -76,24 +76,11 @@ typedef struct _noded_doc{
 } noded_doc;
 
 typedef struct _noded_sect{
-	c16			*label;
+	_heap c16		*name;
 	u64			beg;
 	u64			end;
-	ax_list 		*kvp_list;
 	noded_doc 		*doc;
 } noded_sect;
-
-typedef enum _noded_kvp_type{
-	kvp_intiger = 0x00, // Always as i64/u64
-} noded_kvp_type;
-// kvp - key-value-pair
-typedef struct _noded_kvp{
-	c16			*key;
-	void			*val;
-	u64			val_size;
-	noded_kvp_type 		val_type;
-	noded_sect		*sect;
-} noded_kvp;
 
 /*
  	noded global
@@ -104,26 +91,19 @@ bool noded_doc_inv(
 bool noded_sect_inv(
 	_in noded_sect 		*sect
 );
-bool noded_kvp_inv(
-	_in noded_kvp		*kvp
-);
-
-axres noded_load_sym(
-	_in noded_doc 		*doc
-);
 
 /*
  	noded_doc related
 */
 
 // Initialize document by loading symbols etc.
-axres noded_load_doc(
+axres noded_doc_load(
 	_in const c16		*path,
 	_out noded_doc		**doc
 );
 // Call only after noded_load_doc to uninitialize all symbols
-axres noded_unload_doc(
-	_in noded_doc		**doc
+axres noded_doc_unload(
+	_in noded_doc		*doc
 );
 
 /*
@@ -134,31 +114,26 @@ axres noded_unload_doc(
 #define NODED_SECT_END 		L"]:"
 
 // All ASCII writable without L'[' AND L']' characters
-#define NODED_SECT_FMT		FMT_GRP L"[<" SEQ_CAP_ASCII L"-{[}-{]}>]:" FMT_GRP
+#define NODED_SECT_FMT		FMT_GRP \
+				L"[\x2" \
+				L"<" CAPTURE_FMT_ASCII L"-{[}-{]}" L">"  \
+				L"\x3]:" \
+				L"<" CAPTURE_FMT_NL L">" \
+				FMT_GRP 
 
 // Load section and it`s nodes
-axres noded_load_sect(
+axres noded_sect_load(
 	_in noded_doc		*doc,
 	_in const c16		*sect_name,
 	_out noded_sect		**sect
+);
+axres noded_sect_unload(
+	_in noded_sect		*sect
 );
 
 /*
  	noded_kvp related
 */
-
-#define NODED_SUFFIX_CHARSET L"\n;"
-axres noded_kvp_line_value(
-	_in c16 		*line,
-	_out noded_kvp_type	*type,
-	_out void		**buf,
-	_out u64		*size
-);
-axres noded_load_kvp(
-	_in noded_sect 		*sect,
-	_in const c16 		*kvp_name,
-	_out noded_kvp 		**kvp
-);
 
 #endif // !defined(AX_PARSER_NODED_INT)
 

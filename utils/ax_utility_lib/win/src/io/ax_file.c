@@ -1,6 +1,7 @@
 #include "ax_file.h"
 #include "ax_error.h"
 #include "ax_io.h"
+#include "ax_parser.h"
 
 bool io_finv(
 	_in io_file 		*file,
@@ -178,7 +179,7 @@ axres io_fsize(
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
-	_in_out io_file		*buf
+	_out io_file		**buf
 ){
 	if (path == nullptr
 	|| acc == 0){
@@ -189,7 +190,7 @@ axres io_fo(
 	}
 
 #if defined(AX_UM)
-	FILE *file = nullptr;
+	FILE *hdl = nullptr;
 
 	bool exists = (io_fex(path) == AX_SUCC);
 	if (!exists
@@ -206,7 +207,7 @@ axres io_fo(
 	}
 
 	// Try to open
-	err = _wfopen_s((FILE**)&file, path, mode);
+	err = _wfopen_s((FILE**)&hdl, path, mode);
 	if (err == ENOENT){
 		return AX_NOT_FND;
 	} else if (err != 0){
@@ -216,7 +217,7 @@ axres io_fo(
 	// Platform/mode specific cleanup phase when anything after opening the file fails
 	if (0){
 CLEANUP:
-		fclose(file);
+		fclose(hdl);
 		return AX_INV_DATA;
 	}
 
@@ -241,22 +242,27 @@ CLEANUP:
 	// Get file memory map
 	io_fmap map = {0};
 	// Pass file handle
-	res = io_fmmap(file, &map);
+	res = io_fmmap(hdl, &map);
 	axcheck(res, goto CLEANUP);
 
-	buf->offset = _enc_size(enc);
-	buf->path = _wcsdup(path);
-	buf->acc = acc;
-	buf->enc = enc;
-	buf->hdl = file;
-	buf->map = map;
+	// Create buffer and load it
+	io_file *file = axmalloc(sizeof(io_file));
+
+	file->offset = _enc_size(enc);
+	file->path = _c16dup(path);
+	file->acc = acc;
+	file->enc = enc;
+	file->hdl = hdl;
+	file->map = map;
+
+	*buf = file;
 
 	return AX_SUCC;
 }
 axres io_fc(
 	_in io_file		*file
 ){
-	if (file == nullptr){
+	if (io_finv(file, 0)){
 		return AX_INV_FILE;
 	}
 
@@ -283,6 +289,7 @@ axres io_fc(
 	axcheck(res);
 
 	axfree(file->path);
+	axfree(file);
 
 	return AX_SUCC;
 }
@@ -292,7 +299,7 @@ axres io_fr(
 	_in_out void 		*buf,
 	_out_opt u64		*read
 ){
-	if (file == nullptr){
+	if (io_finv(file, 0)){
 		return AX_INV_FILE;
 	}
 	if (buf == nullptr){
@@ -341,7 +348,7 @@ axres io_fw(
 	_in void 		*buf,
 	_out_opt u64		*writ
 ){
-	if (file == nullptr){
+	if (io_finv(file, 0)){
 		return AX_INV_FILE;
 	}
 	if (buf == nullptr){

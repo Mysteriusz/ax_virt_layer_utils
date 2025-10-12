@@ -49,13 +49,13 @@ axres read_data_dir(
 	axres res = read_data_inv(hdl, size, buf, &ret_size);
 	axcheck(res);
 
-	io_file	file = {0};	
+	io_file	*file = nullptr;	
 
 	res = io_fo(hdl->con.user_data, IO_FILE_R, &file);
 	axcheck(res);
 
 	u64 fsize = 0;
-	res = io_fsize(file.path, &fsize);
+	res = io_fsize(file->path, &fsize);
 	axcheck(res);
 
 	// Validate buffer size 
@@ -64,14 +64,14 @@ axres read_data_dir(
 	if (AX_ERR(res)
 	|| ret_size){
 		*size = astp(u32,fsize);
-		io_fc(&file);
+		io_fc(file);
 		return AX_SUCC;
 	}
 
-	res = io_fr(&file, *size, buf, nullptr);
+	res = io_fr(file, *size, buf, nullptr);
 	axcheck(res);
 
-	io_fc(&file);
+	io_fc(file);
 
 	return AX_SUCC;
 }
@@ -83,15 +83,15 @@ axres write_data_dir(
 	axres res = write_data_inv(hdl, size, buf);
 	axcheck(res);
 
-	io_file file = {0};
+	io_file *file = nullptr;
 
 	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), &file);
 	axcheck(res);
 
-	res = io_fw(&file, size, buf, nullptr);
+	res = io_fw(file, size, buf, nullptr);
 	axcheck(res);
 
-	io_fc(&file);
+	io_fc(file);
 
 	return AX_SUCC;
 }
@@ -116,7 +116,7 @@ axres open_data_dir(
 	hdl->ops = &_ops_dir; 
 	
 	hdl->con.id = CON_DIR;
-	hdl->con.path = _wcsdup(path);
+	hdl->con.path = _c16dup(path);
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
 	hdl->con.data = nullptr;

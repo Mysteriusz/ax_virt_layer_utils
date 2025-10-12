@@ -12,11 +12,11 @@ axres con_file_data(
 	}
 
 	axres res = AX_SUCC;
-	io_file *file = axmalloc(sizeof(io_file));
+	io_file *file = nullptr;
 
 #if defined(AX_UM)
 
-	res = io_fo(hdl->con.path, rule_to_io(hdl->con.rule), file); 
+	res = io_fo(hdl->con.path, rule_to_io(hdl->con.rule), &file); 
 	axcheck(res);
 
 #elif defined(AX_KM)

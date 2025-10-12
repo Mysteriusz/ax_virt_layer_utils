@@ -85,6 +85,14 @@
 */
 #define _prepass [static 1]
 
+/*
+ 	Internally heap allocated variable indicator (freeable).
+	Means the value is stored on the heap and freeable if internal call succeded.
+
+	Only applicable to pointer types.
+*/
+#define _heap
+
 #if defined(_MSC_VER)
 #define __builtin_trap() __debugbreak()
 #endif

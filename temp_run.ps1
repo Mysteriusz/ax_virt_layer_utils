@@ -2,5 +2,7 @@ $location = $(get-location).Path
 
 $path = $location+"\utils\ax_update_exe\win\build\ax_update.exe"
 
-& $path
+if (test-path($path)){
+	& $path
+}
 

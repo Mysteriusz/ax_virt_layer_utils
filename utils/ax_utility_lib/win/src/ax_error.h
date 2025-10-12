@@ -31,8 +31,6 @@
 	if(AX_ERR(r)){__VA_ARGS__; goto gt;} \
 } while(0)
 
-
-
 /*
  	Inline break AX_ERR(r) alias
 */

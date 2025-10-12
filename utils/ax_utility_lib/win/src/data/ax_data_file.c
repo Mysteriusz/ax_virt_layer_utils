@@ -67,9 +67,8 @@ axres open_data_file(
 	}
 
 	hdl->ops = &_ops_file; 
-	
 	hdl->con.id = CON_FILE;
-	hdl->con.path = _wcsdup(path);
+	hdl->con.path = _c16dup(path);
 	hdl->con.rule = rule;
 	hdl->con.is_open = true;
 

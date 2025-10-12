@@ -26,6 +26,16 @@ static inline u32 _c16len_b(
 	return _c16len(text) * sizeof(c16);
 }
 
+static inline c16 *_c16dup(
+	_in const c16 		*text
+){
+	u64 text_size = _c16len_b(text);
+	c16 *ptr = axmalloc(text_size + sizeof(c16));
+	memcpy(ptr, text, text_size);
+	ptr[text_size - 1] = L'\0';
+	return ptr;
+}
+
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
 #define dif_c16(s,e)		((c16*)(e) - (c16*)(s))
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
@@ -214,7 +224,7 @@ axres find_substr(
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			L"<\\"
+#define CHARSET_SEQ 			L"<\x2\x3\\"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 } fmt_group;
@@ -222,6 +232,9 @@ typedef struct _fmt_group{
 enum spec_type{
 	sequence = 0,
 	capture_set = 1,
+	control_beg = 2,
+	control_end = 3,
+	function = 4,
 };
 typedef struct _fmt_spec{
 	const c16 *value;
@@ -235,31 +248,7 @@ typedef struct _seq_loc{
 
 // Format group character 
 #define FMT_GRP 		L"\\"
-
-/*
-   	Input of cap has to start with:
-		L'{'
-	and end with:
-		L'}'
-
- 	Example:
-		{.}
-		{a-z}+{x-z}+{_}
-		{l-n}+{x}
-		{\x20-\x45}+{\x6f}
-
-	In case you want to include syntax characters ({, }, -)
-	You either have to include them in the capture range like above
-	OR you can add them by adding single character like so:
-		{a-z}+{{}+{-}+{<}
-*/
-const c16 *seq_cap_to_charset(
-	_in const c16		*cap // cap FOR capture group
-);
-// Syntax invalidation for seq_cap_to_charset
-bool seq_cap_to_charset_inv(
-	_in const c16		*cap // cap FOR capture group
-);
+#define CAPTURE_FMT_NL		L"{\r}+{\n}"
 
 // LIFO sequence finder stack  
 axres seq_split_fmt(
@@ -300,7 +289,96 @@ axres seq_find_all(
 	_in_out ax_list		*locs // Access by index_as(locs, 0, seq_loc*)
 );
 
-#define SEQ_CAP_ASCII		L"{\x20-\x7f}"
+#define CAPTURE_FMT_ASCII	L"{\x20-\x7f}"
+
+/*
+ 	SEQUENCE INTERNAL UTILITIES
+*/
+
+// ====================== CHARSET ======================
+
+/*
+   	Input of cap has to start with:
+		L'{'
+	and end with:
+		L'}'
+
+	Example:
+		{.}
+		{a-z}+{x-z}+{_}
+		{l-n}+{x}
+		{\x20-\x45}+{\x6f}
+
+	In case you want to include syntax characters ({, }, -)
+	You either have to include them in the capture range like above
+	OR you can add them by adding single character like so:
+		{a-z}+{{}+{-}+{<}
+*/
+const c16 *seq_cap_to_charset(
+	_in const c16		*cap // cap FOR capture group
+);
+// Syntax invalidation for seq_cap_to_charset
+bool seq_cap_to_charset_inv(
+	_in const c16		*cap // cap FOR capture group
+);
+
+/*
+ 	Capture set parsing.
+
+	Input:
+		L"<{a-k}-{d}>"
+	Output:
+		Parsed capture set in form of a string L"abcefghijk"
+*/
+axres seq_group_capture_set(
+	_in const c16		*fmt,
+	_in const c16		*fmt_char,
+	_in ax_list 		*spec_list,
+	_out const c16		**loc
+);
+
+// ====================== FUNCTION ======================
+
+#define SEQ_COND_CHARSET L"$"
+
+/*
+   	Input of func has to start with:
+		L'('
+	and end with:
+		L')'
+
+	Example:
+		(+:[[$]])
+		(!:<$>)
+		(!::$>:)
+
+*/
+bool seq_func_to_cond(
+	_in const c16		*func // func for function
+);
+/* 
+	Function has to consist of at least one control character.
+	Recognized characters:
+		$ - Any character
+*/
+bool seq_func_to_cond_inv(
+	_in const c16		*func // func for function
+);
+
+/*
+ 	Condition parsing.
+
+	Input:
+		L"(!:[$])"
+	Output:
+		Parsed function that validates if ANY next char is NOT between L'[' AND L']'
+*/
+axres seq_group_condition(
+	_in const c16		*fmt,
+	_in const c16		*fmt_char,
+	_in ax_list 		*spec_list,
+	_out const c16		**loc
+);
 
 #endif // !defined(AX_PARSER_SEQUENCE_INT)
 
