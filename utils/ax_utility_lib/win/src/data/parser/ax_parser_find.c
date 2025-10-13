@@ -84,6 +84,53 @@ axres find_substr(
 		? AX_SUCC
 		: AX_NOT_FND;
 }
+axres find_substr_range(
+	_in const c16 		*text,
+	_in const c16 		*substr,
+	_in u64			from,
+	_in u64			to,
+	_out const c16		**loc // text substr start location
+){
+	if (text == nullptr
+	|| substr == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	u64 text_len = _c16len(text);
+	if (to <= from
+	|| text_len < from // from index check
+	|| text_len < to){ // to index check
+		return AX_INV_IND;
+	}
+
+	u64 sub_len = _c16len(substr);
+	u64 rng_len = dif_c16(&text[from], &text[to]) + 1;
+
+	const c16 *text_char = &text[from];
+	bool found = false;
+
+	while(in_c16_s(text, text_char, text_len)
+	&& in_c16_s(&text[from], text_char + sub_len, rng_len)){
+		// Check if found
+		found = (starts_with(text_char, substr, nullptr) == AX_SUCC);
+		if (found){
+			break;
+		}
+
+		text_char++;
+	}
+
+	if (found){
+		*loc = text_char;
+	}
+
+	return (!found)
+		? AX_NOT_FND 
+		: AX_SUCC;
+}
 
 c16 parens_map[256] = {
 	[L'('] = L')',

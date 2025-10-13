@@ -26,19 +26,19 @@ axres starts_with(
 		str_char++;
 	}
 
-	bool full_find = (*str_char == L'\0');
-	bool part_find = !full_find && (*text_char == L'\0');
+	bool full_found = (*str_char == L'\0');
+	bool part_found = !full_found && (*text_char == L'\0');
 
-	bool find = full_find;
+	bool found = full_found;
 
 	if (loc != nullptr
-	&& (part_find || full_find)){
+	&& (part_found || full_found)){
 		*loc = str_char;
-		find = true; // Act as found if reading loc
+		found = true; // Act as found if reading loc
 	}
 
 	// Got to the end of substr
-	return (find == true)
+	return (found == true)
 		? AX_SUCC
 		: AX_NOT_FND;
 }

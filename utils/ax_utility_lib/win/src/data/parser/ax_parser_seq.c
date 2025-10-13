@@ -211,6 +211,39 @@ axres seq_match(
 
 	return AX_SUCC;
 }
+axres seq_match_conditions(
+	_in const c16		*text,
+	_in ax_list		*cond_list,
+	_out const c16		**loc
+){
+	if (text == nullptr
+	|| cond_list == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	const c16 *text_char = text;
+
+	fmt_cond *curr = nullptr;
+	for (u64 i = 0; i < cond_list->count; i++){
+		curr = index_as(cond_list, i, fmt_cond*);
+
+		if (chkf(curr->mode, condition_bef)){
+			find_substr(text_char, curr->bef, &text_char, nullptr);
+			text_char += _c16len(curr->bef);
+		}
+		if (chkf(curr->mode, condition_aft)){
+			find_substr(text_char, curr->aft, &text_char, nullptr);
+			text_char += _c16len(curr->aft);
+		}
+	}
+
+	*loc = text_char;
+
+	return AX_SUCC;
+}
 axres seq_locate_action(
 	_in const c16		*text,
 	_in u64 		curr_i,
@@ -353,6 +386,14 @@ axres seq_locate(
 			if (beg_char == nullptr){
 				beg_char = text_char;
 			}
+
+			// Match current text_char against conditions
+			res = seq_match_conditions(
+				text_char,
+				grp->cond_list,
+				&text_char
+			);
+			axcheck(res);
 		}
 
 		// Move text_char based on the curr and next
@@ -364,6 +405,7 @@ axres seq_locate(
 			&beg_char,
 			&end_char
 		);
+		axcheck_g(res, skip_occ);
 		
 		seq_i++;
 		if (seq_i == grp->spec_list->count
@@ -371,7 +413,7 @@ axres seq_locate(
 			end_char = text_char;
 		}
 
-		// Capture group failed
+skip_occ:
 		// Reset search
 		if(AX_ERR(res)){
 			text_char = root_char + 1;

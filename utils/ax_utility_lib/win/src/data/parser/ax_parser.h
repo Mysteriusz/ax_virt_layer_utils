@@ -219,6 +219,14 @@ axres find_substr(
 	_out const c16		**loc, // text substr start location
 	_out_opt const c16	**sub_loc  // substr partially found offset
 );
+axres find_substr_range(
+	_in const c16 		*text,
+	_in const c16 		*substr,
+	_in u64			from,
+	_in u64			to,
+	_out const c16		**loc // text substr start location
+);
+
 axres find_parentheses(
 	_in const c16 		*text,
 	_in c16			parens,
@@ -248,7 +256,7 @@ typedef struct _fmt_spec{
 
 enum cond_mode{
 	condition_bef = 0x1,
-	condition_aft = 0x2
+	condition_aft = 0x2,
 };
 typedef struct _fmt_cond{
 	bool ret;
@@ -275,6 +283,11 @@ axres seq_match(
 	_in const c16 		*seq_set,
 	_in const c16 		*seq_end,
 	_in const c16		*cap
+);
+axres seq_match_conditions(
+	_in const c16		*text,
+	_in ax_list		*cond_list,
+	_out const c16		**loc
 );
 axres seq_locate(
 	_in const c16		*text,

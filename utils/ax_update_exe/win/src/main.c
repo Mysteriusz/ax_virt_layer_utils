@@ -31,9 +31,16 @@ int main(
 	axcheck(res, ax_log(res));
 	io_str(loc);*/
 	seq_loc loc = {0};
-	seq_find(L"adhfa[sec]:jdskejsl", L"(!:`\"$\"`)[\x2<{a-z}+{[-]}>\x3]", &loc);
+	res = seq_find(L"adhf\"a[sec]:jd\"ske\"j[sec]:\"j[sec]:sl", L"(!:`\"$\"`)[\x2<{a-z}+{[-]}>\x3]", &loc);
+	ax_log(res);
 	io_str(loc.beg);
 	io_str(loc.end);
+
+	/*const c16 *text = L"some_text,other_text";
+	const c16 *loc = nullptr;
+	res = find_substr_range(text, L"er", 12, 20, &loc);
+	axcheck(res, ax_log(res));
+	io_str(loc);*/
 
 	io_i64(_MEM_ACTIVE);
 	axcheck(res, ax_log(res));
