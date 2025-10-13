@@ -1,5 +1,13 @@
 #include "ax_parser.h"
 
+/*
+ 	TODO:
+		seq_group_capture_set 
+		AND
+		seq_group_condition
+		reading with backtracking.
+*/
+
 enum set_mode{
 	add = L'+', // Mathematical Union (U)
 	collide = L'&', // Mathematical Intersect (∩)
@@ -144,10 +152,6 @@ _free const c16 *seq_cap_to_charset(
 
 	// Capture set parse {a-z}-{c-m}+{l}
 	while(in_c16_s(cap, cap_char, cap_len)){
-		if (*cap_char != L'{'){
-			cap_char++;
-			continue;
-		}
 		if (charset != nullptr){
 			mode = *(cap_char - 1);
 		}
@@ -174,6 +178,8 @@ _free const c16 *seq_cap_to_charset(
 			wrkset = _rng_to_set(not_char[1], not_char[3]);
 			cap_char = &not_char[4];
 		}
+		// Skip '}' and next mode character
+		cap_char += 2;
 
 		/* 
 		 	 Perform mode operation on the wrkset and charset.
@@ -217,6 +223,7 @@ _free const c16 *seq_cap_to_charset(
 
 	return charset;
 }
+// TODO: Refactor for simplicity
 axres seq_group_capture_set(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
@@ -230,9 +237,6 @@ axres seq_group_capture_set(
 	}
 	if (loc == nullptr){
 		return AX_INV_BUF;
-	}
-	if (*fmt_char != L'<'){
-		return AX_INV_FMT;
 	}
 
 	axres res = AX_SUCC;
@@ -269,10 +273,7 @@ axres seq_group_capture_set(
 	axcheck(res, axfree(spec_buf));
 
 	const c16 *cap_set = seq_cap_to_charset(spec_buf);
-	res = (cap_set != nullptr) 
-		? AX_SUCC
-		: AX_INV_FMT;
-	axcheck(res, axfree(spec_buf));
+	axcheck_r((cap_set == nullptr), AX_INV_FMT, axfree(spec_buf));
 
 	// Push to spec_list and offset fmt_char
 	spec_list->add(
@@ -304,11 +305,11 @@ bool seq_func_to_cond_inv(
 	u64 func_len = _c16len(func);
 	const c16 *func_char = func;
 
-	// Check func bound characters
+	// Check function bound characters
 	if (*func_char != L'('){
 		return true;
 	}
-	if (func_char[func_len - 1] != L')'){
+	if (func[func_len - 1] != L')'){
 		return true;
 	}
 
@@ -331,7 +332,19 @@ bool seq_func_to_cond_inv(
 	|| *func_char != L':'){
 		return true;
 	}
+
 	func_char++;
+	if (in_c16_s(func, func_char, func_len) == false){
+		return true;
+	}
+
+	// Check condition bound characters
+	if (*func_char != L'`'){
+		return true;
+	}
+	if (func[func_len - 2] != L'`'){
+		return true;
+	}
 
 	// Count any characters
 	u64 c = 0;
@@ -375,8 +388,8 @@ _free fmt_cond *seq_func_to_cond(
 	// Skip mode char '!' or '+'
 	func_char++;
 
-	// Skip forwarding char ':'
-	func_char++;
+	// Skip forwarding char ':`'
+	func_char += 2;
 
 	// Read the before string
 	res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
@@ -399,7 +412,7 @@ _free fmt_cond *seq_func_to_cond(
 	res = read_range(
 		func,
 		dif_c16(func, func_char),
-		func_len - 1, // One char before L")"
+		func_len - 2, // One char before L"`"
 		&aft_len,
 		aft_buf
 	);
@@ -409,7 +422,7 @@ _free fmt_cond *seq_func_to_cond(
 		res = read_range(
 			func,
 			dif_c16(func, func_char),
-			func_len - 1, // One char before L")"
+			func_len - 2, // One char before L"`"
 			&aft_len,
 			aft_buf
 		);
@@ -434,12 +447,12 @@ cleanup:
 axres seq_group_condition(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
-	_in ax_list 		*spec_list,
+	_in ax_list 		*cond_list,
 	_out const c16		**loc
 ){
 	if (fmt == nullptr
 	|| fmt_char == nullptr
-	|| spec_list == nullptr){
+	|| cond_list == nullptr){
 		return AX_INV_ARG;
 	}
 	if (loc == nullptr){
@@ -449,8 +462,53 @@ axres seq_group_condition(
 		return AX_INV_FMT;
 	}
 
-	fmt_char++;
+	axres res = AX_SUCC;
 
+	const c16 *spec_char = nullptr;
+
+	u64 spec_len = 0;
+	c16 *spec_buf = nullptr;
+
+	// Find ending of the function
+	res = find_substr(fmt_char, L"`)", &spec_char, nullptr);
+	axcheck(res);
+
+	// Read inside of the function
+	res = read_range(
+		fmt,
+		dif_c16(fmt, fmt_char),
+		dif_c16(fmt, spec_char + 2),
+		&spec_len,
+		spec_buf
+	);
+	axcheck(res);
+	
+	spec_buf = axmalloc(spec_len * sizeof(c16));
+
+	res = read_range(
+		fmt,
+		dif_c16(fmt, fmt_char),
+		dif_c16(fmt, spec_char + 2),
+		&spec_len,
+		spec_buf
+	);
+	axcheck(res, axfree(spec_buf));
+
+	fmt_cond* cond = seq_func_to_cond(spec_buf);
+	axcheck_r((cond == nullptr), AX_INV_FMT, axfree(spec_buf));
+
+	cond_list->add(
+		cond_list,
+		cond,
+		sizeof(fmt_cond)
+	);
+	fmt_char += (spec_len - 1);
+
+	// Cleanup
+	axfree(cond);
+	axfree(spec_buf);
+
+	// Write-back
 	*loc = fmt_char;
 
 	return AX_SUCC;

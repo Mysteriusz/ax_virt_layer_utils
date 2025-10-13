@@ -85,3 +85,61 @@ axres find_substr(
 		: AX_NOT_FND;
 }
 
+c16 parens_map[256] = {
+	[L'('] = L')',
+	[L'['] = L']',
+	[L'{'] = L'}',
+	[L'<'] = L'>',
+	[L'"'] = L'"',
+	[L'`'] = L'`',
+	[L'\\'] = L'\\',
+	[L'\''] = L'\'',
+};
+axres find_parentheses(
+	_in const c16 		*text,
+	_in c16			parens,
+	_out_opt const c16	**loc // text location of the opposite parentheses character
+){
+	if (text == nullptr){
+		return AX_INV_ARG;
+	}
+
+	c16 beg_char = parens;
+	c16 end_char = parens_map[parens];
+
+	// Invalid parentheses character
+	if (end_char == 0){
+		return AX_INV_DATA;
+	}
+
+	u64 text_len = _c16len(text);
+	const c16 *text_char = text;
+
+	bool found = false;
+	i64 bal = 0;
+
+	while(in_c16_s(text, text_char, text_len)){
+		if (*text_char == beg_char){
+			bal++;
+		}else if (*text_char == end_char){
+			bal--;
+			found = bal == 0;
+		}
+
+		if (found){
+			break;
+		}
+
+		text_char++;
+	}
+
+	if (!found){
+		return AX_NOT_FND;
+	}
+	if (loc != nullptr){
+		*loc = text_char; 
+	}
+
+	return AX_SUCC;
+}
+

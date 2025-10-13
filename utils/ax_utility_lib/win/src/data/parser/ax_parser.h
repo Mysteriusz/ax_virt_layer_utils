@@ -219,12 +219,17 @@ axres find_substr(
 	_out const c16		**loc, // text substr start location
 	_out_opt const c16	**sub_loc  // substr partially found offset
 );
+axres find_parentheses(
+	_in const c16 		*text,
+	_in c16			parens,
+	_out_opt const c16	**loc // text location of the opposite parentheses character
+);
 
 #if !defined(AX_PARSER_SEQUENCE_INT)
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			L"<\x2\x3\\"
+#define CHARSET_SEQ 			L"<\x2\x3"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *cond_list; // List of _fmt_cond
@@ -258,13 +263,12 @@ typedef struct _seq_loc{
 } seq_loc;
 
 // Format group character 
-#define FMT_GRP 		L"\\"
 #define CAPTURE_FMT_NL		L"{\r}+{\n}"
 
 // LIFO sequence finder stack  
 axres seq_split_fmt(
 	_in const c16 		*fmt,
-	_out ax_list 		**grp_list // Access by index_as(locs, 0, fmt_group*)
+	_in_out fmt_group 	*buf
 );
 axres seq_match(
 	_in const c16		*text,
@@ -388,7 +392,7 @@ _free fmt_cond *seq_func_to_cond(
 axres seq_group_condition(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
-	_in ax_list 		*spec_list,
+	_in ax_list 		*cond_list,
 	_out const c16		**loc
 );
 

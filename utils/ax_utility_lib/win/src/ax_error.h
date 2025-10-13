@@ -14,14 +14,14 @@
  	Inline return AX_ERR(r) alias
 */
 #define axcheck(r,...)			do { \
-	if(AX_ERR(r)){__VA_ARGS__; return (axres)r;} \
+	if(AX_ERR(r)){__VA_ARGS__; return ((axres)r);} \
 } while(0)
 
 /*
  	Inline custom return AX_ERR(r) alias
 */
 #define axcheck_r(r, fr,...)		do { \
-	if(AX_ERR(r)){__VA_ARGS__; return fr;} \
+	if(AX_ERR(r)){__VA_ARGS__; return (fr);} \
 } while(0)
 
 /*
