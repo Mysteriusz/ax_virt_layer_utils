@@ -35,6 +35,18 @@ static inline c16 *_c16dup(
 	ptr[text_size - 1] = L'\0';
 	return ptr;
 }
+static inline bool _is_esc(
+	_in const c16 		*text,
+	_in const c16 		*text_char
+){
+	const c16 *esc_char = (text_char - 1);
+	if (esc_char >= text
+	&& *esc_char == L'\\'){
+		return true;
+	}
+
+	return false;
+}
 
 #define end_c16(tp)		((c16*)(tp + _c16len(tp)))
 #define dif_c16(s,e)		((c16*)(e) - (c16*)(s))
@@ -127,6 +139,13 @@ axres c16_union(
 axres c16_difference(
 	_in const c16 		*a,
 	_in const c16		*b,
+	_in_out u64 		*size, // _in for buffer size safety
+	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
+);
+// Remove all occurences of b in string a
+axres c16_remove(
+	_in const c16 		*a,
+	_in const c16		b,
 	_in_out u64 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 );
@@ -237,7 +256,7 @@ axres find_parentheses(
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			L"<\x2\x3"
+#define CHARSET_SEQ 			L"<($^"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *cond_list; // List of _fmt_cond
@@ -273,22 +292,21 @@ typedef struct _seq_loc{
 // Format group character 
 #define CAPTURE_FMT_NL		L"{\r}+{\n}"
 
-// LIFO sequence finder stack  
+/*
+ 	LIFO sequence finder stack  
+*/
+
+// Parser fmt_group
+axres seq_read_group(
+	_in const c16		*fmt,
+	_in_out fmt_group 	*grp
+);
+// Parse and load fmt_group
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_in_out fmt_group 	*buf
 );
-axres seq_match(
-	_in const c16		*text,
-	_in const c16 		*seq_set,
-	_in const c16 		*seq_end,
-	_in const c16		*cap
-);
-axres seq_match_conditions(
-	_in const c16		*text,
-	_in ax_list		*cond_list,
-	_out const c16		**loc
-);
+// Locate first match of fmt_group in text
 axres seq_locate(
 	_in const c16		*text,
 	_in fmt_group 		*grp,
@@ -297,7 +315,8 @@ axres seq_locate(
 
 /*
  	Known issues:
-		- seq: L"\\[<{a-z}>|<{.}>]:\\"
+ 	Solved issues:
+		- seq: L"[<{a-z}>|<{.}>]:"
 		- text: L"l[section|other_text||a|b]:"
 		Result is AX_NOT_FND.
 		Cause and possible fix:
@@ -351,6 +370,15 @@ _free const c16 *seq_cap_to_charset(
 );
 
 /*
+ 	Locate ending of the capture set sequence
+*/
+axres seq_group_cap_end(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out const c16		**loc
+);
+
+/*
  	Capture set parsing.
 
 	Input:
@@ -358,11 +386,26 @@ _free const c16 *seq_cap_to_charset(
 	Output:
 		Parsed capture set in form of a string L"abcefghijk"
 */
-axres seq_group_capture_set(
+axres seq_group_cap(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*spec_list,
 	_out const c16		**loc
+);
+
+/*
+ 	Match string range with charset occurence.
+
+	Input:
+		L"(c16[]){abcdefg}"
+	Output:
+		AX_SUCC if matches. 
+*/
+axres seq_charset_match(
+	_in const c16		*text,
+	_in const c16 		*seq_set,
+	_in const c16 		*seq_end,
+	_in const c16		*cap
 );
 
 // ====================== FUNCTION ======================
@@ -402,10 +445,19 @@ _free fmt_cond *seq_func_to_cond(
 	Output:
 		Parsed function that validates if ANY next char is NOT between L'[' AND L']'
 */
-axres seq_group_condition(
+axres seq_group_conditions(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*cond_list,
+	_out const c16		**loc
+);
+
+/*
+ 	Match parsed condition list against text location.
+*/
+axres seq_conditions_match(
+	_in const c16		*text,
+	_in ax_list		*cond_list,
 	_out const c16		**loc
 );
 

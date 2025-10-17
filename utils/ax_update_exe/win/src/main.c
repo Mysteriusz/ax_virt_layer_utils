@@ -6,40 +6,24 @@ int main(
 ){
 	axres res = AX_SUCC;
 
-	/*noded_doc *doc = nullptr;
-	res = noded_doc_load(L"D:\\share\\ax_info.noded", &doc);
-	noded_doc_unload(doc);*/
 
-	/*io_file *file = nullptr;
-	io_fo(L"D:\\share\\ax_info.noded", IO_FILE_R, &file);
-	seq_find_f(file, L"\\(0->'$')[sect b]:\\");
-	io_fc(file);*/
-
-	/*fmt_cond *cond = seq_func_to_cond(L"(!:`[$]`)"); 
-	io_i64((cond == nullptr));
-	axcheck((cond == nullptr));
-
-	io_str(cond->bef);
-	io_str(cond->aft);
-	io_i64(cond->mode);*/
-	/*const c16 *fmt = L"(!:`\"$\"`)[\x2<{a-z}+{[-]}>\x3]";
-	ax_list *spec_list = nullptr;
-	ax_list_init(&spec_list);
-
-	const c16 *loc = nullptr;
-	res = seq_group_condition(fmt, &fmt[0], spec_list, &loc);
-	axcheck(res, ax_log(res));
-	io_str(loc);*/
 	seq_loc loc = {0};
-	res = seq_find(L"adhf\"a[sec]:jd\"ske\"j[sec]:\"j[sec]:sl", L"(!:`\"$\"`)[\x2<{a-z}+{[-]}>\x3]", &loc);
+	//res = seq_find(L"spmedfjkljds[sec]::dfsjdfks", L"[<{a-z}>]:", &loc);
+	res = seq_find(L"l[^section|other_text||a|b]:", L"[\\^<{a-z}>|<{.}>]:", &loc);
 	ax_log(res);
 	io_str(loc.beg);
 	io_str(loc.end);
 
-	/*const c16 *text = L"some_text,other_text";
+	/*fmt_group grp = {0};
+	ax_list_init(&grp.spec_list);
+	ax_list_init(&grp.cond_list);
+
+	seq_read_group(L"[^df<{a-z}>|$<{.}>]:", &grp);
+	io_str(index_as(grp.spec_list, 0, c16*));*/
+
+	/*const c16 *fmt = L"[<{a-z}\\{>+fdsjkfdsjjjjj\\>]<{:}:"; 
 	const c16 *loc = nullptr;
-	res = find_substr_range(text, L"er", 12, 20, &loc);
-	axcheck(res, ax_log(res));
+	ax_log(seq_group_cap_end(fmt, &fmt[1], &loc));
 	io_str(loc);*/
 
 	io_i64(_MEM_ACTIVE);

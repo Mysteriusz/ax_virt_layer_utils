@@ -24,15 +24,91 @@ iter_code fmt_cond_iter(
 	return ITER_NONE;
 }
 
+_free c16 *_seq_read_range(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out u64		*skip
+){
+	if (fmt == nullptr
+	|| fmt_char == nullptr){
+		return nullptr;
+	}
+	if (skip == nullptr){
+		return nullptr;
+	}
+
+	axres res = AX_SUCC;
+
+	u64 fmt_len = _c16len(fmt);
+
+	c16 *prev_buf = nullptr;
+	u64 prev_len = 0;
+
+	c16 *rng_buf = nullptr;
+	u64 rng_len = 0;
+
+	// Check if next character is a functional character which is marked as escaped
+	const c16 *beg_char = fmt_char;
+	const c16 *spec_char = nullptr;
+	while(in_c16_s(fmt, beg_char, fmt_len)){
+		axfree(prev_buf);
+
+		res = skip_until(beg_char, CHARSET_SEQ, &spec_char);
+		axcheck_b(res);
+
+		// No space in between last escape and next CHARSET_SEQ
+		if(dif_c16(beg_char, spec_char) == 0){
+			break;
+		}
+
+		// Copy everything before escape character (L'\\')
+		prev_buf = rng_buf;
+		prev_len = _c16len(prev_buf);
+
+		rng_len = dif_c16(beg_char, spec_char) + prev_len;
+		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
+
+		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
+		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, spec_char) * sizeof(c16));
+
+		// If escaped then load it as a character without L'\\'
+		if (_is_esc(fmt, spec_char)){
+			rng_buf[rng_len - 1] = *spec_char; 
+		}else{
+			break;
+		}
+
+		beg_char = spec_char + 1;
+	}
+	// Read to end
+	if (res == AX_NOT_FND){
+		prev_buf = rng_buf;
+		prev_len = _c16len(prev_buf);
+
+		rng_len = dif_c16(beg_char, &fmt[fmt_len]) + prev_len;
+		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
+
+		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
+		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, &fmt[fmt_len]) * sizeof(c16));
+
+		spec_char = &fmt[fmt_len];
+		axfree(prev_buf);
+	}else axcheck_r(res, nullptr, axfree(rng_buf));
+
+	*skip = dif_c16(fmt_char, spec_char);
+
+	return rng_buf;
+}
 axres seq_read_group(
 	_in const c16		*fmt,
-	_in u64 		grp_len,
 	_in_out fmt_group 	*grp
 ){
 	if (fmt == nullptr){
 		return AX_INV_ARG;
 	}
-	if (grp == nullptr){
+	if (grp == nullptr
+	|| grp->cond_list == nullptr
+	|| grp->spec_list == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -48,17 +124,16 @@ axres seq_read_group(
 /* 
 	Iterate group 
 	Example:
-		Only the string between \\ will be read.
- 		- L"\\(!:\"$\")[\x2<{a-z}+{[-]}>\x3]\\"
+ 		- L"[\x2<{a-z}+{[-]}>\x3]"
 */
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
 		switch(*fmt_char){
 		case L'<': // Capture set
-			res = seq_group_capture_set(fmt, fmt_char, grp->spec_list, &fmt_char);
-			if (AX_ERR(res)) { goto error_jump; }
+			res = seq_group_cap(fmt, fmt_char, grp->spec_list, &fmt_char);
+			axcheck_b(res);
 			break;
-		case L'\x2': // seq_loc start indicator
-		case L'\x3': // seq_loc end indicator
+		case L'^': // seq_loc start indicator
+		case L'$': // seq_loc end indicator
 			// Load character to fmt_spec as control
 			c16 *buf = axmalloc(sizeof(c16));
 			*buf = *fmt_char;
@@ -66,38 +141,23 @@ axres seq_read_group(
 				grp->spec_list,
 				&(fmt_spec){
 					.value = buf,
-					.type = (*fmt_char == L'\x2' ? control_beg : control_end),
+					.type = (*fmt_char == L'^' ? control_beg : control_end),
 				},
 				sizeof(fmt_spec)
 			);
 			fmt_char++;
 			break;
-		case L'(': // Condition start
-			res = seq_group_condition(fmt, fmt_char, grp->cond_list, &fmt_char);
-			if (AX_ERR(res)) { goto error_jump; }
+		case L'(': // Condition start TODO KURWA!!!!!!!!!!!!!
+			//res = seq_group_condition(fmt, fmt_char, grp->cond_list, &fmt_char);
+			//if (AX_ERR(res)) { goto error_jump; }
+			fmt_char++;
 			break;
 		default:
-			// Reset
-			rng = nullptr;
-			rng_len = 0;
+			rng = _seq_read_range(fmt, fmt_char, &rng_len);
+			axcheck((rng == nullptr));
+			io_str(rng);
 
-			// Count for next sequences and if there arent any read to end
-			u64 rng_c = 0;
-			charset_count(fmt_char, CHARSET_SEQ, &rng_c);
-			const c16 *rng_set = (rng_c == 0)
-				? L""
-				: CHARSET_SEQ; 
-
-			// Add all non-needed as charset ranges
-			res = read_until(fmt_char, rng_set, &rng_len, rng);
-			if (AX_ERR(res)){ goto error_jump; }
-
-			rng = axmalloc(rng_len * sizeof(c16)); 
-
-			res = read_until(fmt_char, rng_set, &rng_len, rng);
-			if (AX_ERR(res)){ goto error_jump; }
-
-			grp->spec_list->add(
+			res = grp->spec_list->add(
 				grp->spec_list,
 				&(fmt_spec){
 					.value = rng,
@@ -105,15 +165,12 @@ axres seq_read_group(
 				},
 				sizeof(fmt_spec)
 			);
+			axcheck(res, axfree(rng));
 
-			// Without null-terminator
-			fmt_char += (rng_len - 1);
+			fmt_char += rng_len;
 			break;
 		}
 	}
-
-error_jump:
-	axcheck(res);
 
 	return AX_SUCC;
 }
@@ -156,7 +213,7 @@ axres seq_split_fmt(
 	axcheck(res, grp_cleanup(&grp));
 
 	// Parse group
-	res = seq_read_group(fmt, _c16len(fmt), &grp);
+	res = seq_read_group(fmt, &grp);
 	axcheck(res, grp_cleanup(&grp));
 
 	*buf = grp;
@@ -164,86 +221,6 @@ axres seq_split_fmt(
 	return AX_SUCC;
 }
 
-axres seq_match(
-	_in const c16		*text,
-	_in const c16		*cap,
-	_in const c16 		*seq_beg,
-	_in_opt const c16 	*seq_end
-){
-	if(text == nullptr
-	|| cap == nullptr 
-	|| seq_beg == nullptr){
-		return AX_INV_ARG;
-	}
-
-	axres res = AX_SUCC;
-
-	u64 inv_set_s = 0;
-	c16 *inv_beg = nullptr;
-
-	if (seq_end == nullptr){
-		res = skip_until(text, cap, &seq_end);
-		axcheck(res);
-	}
-
-	u64 from = dif_c16(text, seq_beg);
-	u64 to = dif_c16(text, seq_end);
-
-	// Read range
-	res = read_range(text, from, to, &inv_set_s, nullptr);
-	axcheck(res);
-
-	inv_beg = axmalloc(inv_set_s * sizeof(c16));
-
-	res = read_range(text, from, to, &inv_set_s, inv_beg);
-	axcheck(res, axfree(inv_beg));
-
-	// Try to skip entire inv_begwith capture group
-	const c16 *inv_set_loc = nullptr;
-	res = skip_while(inv_beg, cap, &inv_set_loc);
-	axcheck(res, axfree(inv_beg));
-
-	axfree(inv_beg);
-	// Check if skip count was as seq_end expects
-	if (dif_c16(inv_beg, inv_set_loc) != dif_c16(seq_beg, seq_end)){
-		return AX_INV_DATA;
-	}
-
-	return AX_SUCC;
-}
-axres seq_match_conditions(
-	_in const c16		*text,
-	_in ax_list		*cond_list,
-	_out const c16		**loc
-){
-	if (text == nullptr
-	|| cond_list == nullptr){
-		return AX_INV_ARG;
-	}
-	if (loc == nullptr){
-		return AX_INV_BUF;
-	}
-
-	const c16 *text_char = text;
-
-	fmt_cond *curr = nullptr;
-	for (u64 i = 0; i < cond_list->count; i++){
-		curr = index_as(cond_list, i, fmt_cond*);
-
-		if (chkf(curr->mode, condition_bef)){
-			find_substr(text_char, curr->bef, &text_char, nullptr);
-			text_char += _c16len(curr->bef);
-		}
-		if (chkf(curr->mode, condition_aft)){
-			find_substr(text_char, curr->aft, &text_char, nullptr);
-			text_char += _c16len(curr->aft);
-		}
-	}
-
-	*loc = text_char;
-
-	return AX_SUCC;
-}
 axres seq_locate_action(
 	_in const c16		*text,
 	_in u64 		curr_i,
@@ -304,11 +281,13 @@ axres seq_locate_action(
 	*/
 	if (next != nullptr
 	&& curr->type == capture_set){
+		// Skip until next->value
 		while((contains(curr->value, *spec_end) == AX_SUCC)
 		&& (starts_with(spec_end, next->value, nullptr) == AX_SUCC)){
 			spec_end++;
 		}
 
+		// Check if next->value was just one character after
 		if (spec_end != spec_beg){
 			spec_end--;
 		}else{
@@ -332,7 +311,7 @@ axres seq_locate_action(
 		spec_end = text + _c16len(curr->value);
 		break;
 	case capture_set: // Match with capture group
-		res = seq_match(
+		res = seq_charset_match(
 			text,
 			curr->value,
 			spec_beg,
@@ -388,7 +367,7 @@ axres seq_locate(
 			}
 
 			// Match current text_char against conditions
-			res = seq_match_conditions(
+			res = seq_conditions_match(
 				text_char,
 				grp->cond_list,
 				&text_char

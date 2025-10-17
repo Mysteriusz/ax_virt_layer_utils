@@ -1,12 +1,8 @@
-#include "ax_parser.h"
-
 /*
- 	TODO:
-		seq_group_capture_set 
-		AND
-		seq_group_condition
-		reading with backtracking.
+ 	Sequence finder capture set interface
 */
+
+#include "ax_parser.h"
 
 enum set_mode{
 	add = L'+', // Mathematical Union (U)
@@ -171,7 +167,12 @@ _free const c16 *seq_cap_to_charset(
 		
 		// Single char
 		if (not_char[2] == L'}'){
-			wrkset = _rng_to_set(not_char[1], not_char[1]);
+			c16 set_val = not_char[1];
+			if (set_val == L'.'){
+				set_val = *CHARSET_ANY;
+			}
+
+			wrkset = _rng_to_set(set_val, set_val);
 			cap_char = &not_char[2];
 		// Range
 		}else{
@@ -223,8 +224,58 @@ _free const c16 *seq_cap_to_charset(
 
 	return charset;
 }
+axres seq_group_cap_end(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out const c16		**loc
+){
+	if (fmt == nullptr
+	|| fmt_char == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	u64 fmt_len = _c16len(fmt);
+	const c16 *spec_char = fmt_char;
+
+	bool in_set = false;
+
+	while(in_c16_s(fmt, spec_char, fmt_len)){
+		switch(*spec_char){
+		case L'{':
+			if (in_set == false
+			&& !_is_esc(fmt, spec_char)){
+				in_set = true;
+			}
+			break;
+		case L'}':
+			if (in_set == true
+			&& !_is_esc(fmt, spec_char)){
+				in_set = false;
+			}
+			break;
+		case L'>':
+			if (in_set == false
+			&& !_is_esc(fmt, spec_char)){
+				goto exit_jump;
+			}
+			break;
+		}
+		spec_char++;
+	}
+exit_jump:
+
+	if (*spec_char != L'>'){
+		return AX_NOT_FND;
+	}
+
+	*loc = spec_char;
+	return AX_SUCC;
+}
 // TODO: Refactor for simplicity
-axres seq_group_capture_set(
+axres seq_group_cap(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*spec_list,
@@ -248,14 +299,14 @@ axres seq_group_capture_set(
 	c16 *spec_buf = nullptr;
 
 	// Find ending of the capture group
-	res = find_substr(fmt_char, L"}>", &spec_char, nullptr);
+	res = seq_group_cap_end(fmt, fmt_char, &spec_char);
 	axcheck(res);
 
 	// Read inside of the capture group
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 1),
+		dif_c16(fmt, spec_char),
 		&spec_len,
 		spec_buf
 	);
@@ -266,7 +317,7 @@ axres seq_group_capture_set(
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 1),
+		dif_c16(fmt, spec_char),
 		&spec_len,
 		spec_buf
 	);
@@ -295,221 +346,50 @@ axres seq_group_capture_set(
 	return AX_SUCC;
 }
 
-bool seq_func_to_cond_inv(
-	_in const c16		*func // func for function
+axres seq_charset_match(
+	_in const c16		*text,
+	_in const c16		*cap,
+	_in const c16 		*seq_beg,
+	_in_opt const c16 	*seq_end
 ){
-	if (func == nullptr){
-		return true;
-	}
-
-	u64 func_len = _c16len(func);
-	const c16 *func_char = func;
-
-	// Check function bound characters
-	if (*func_char != L'('){
-		return true;
-	}
-	if (func[func_len - 1] != L')'){
-		return true;
-	}
-
-	func_char++;
-	if (in_c16_s(func, func_char, func_len) == false){
-		return true;
-	}
-
-	// Get function return mode
-	switch(*func_char){
-	case L'!': // Not true mode
-	case L'+': // True mode
-		break;
-	default: // Unknown mode value
-		return true;
-	}
-	func_char++;
-
-	if (in_c16_s(func, func_char, func_len) == false
-	|| *func_char != L':'){
-		return true;
-	}
-
-	func_char++;
-	if (in_c16_s(func, func_char, func_len) == false){
-		return true;
-	}
-
-	// Check condition bound characters
-	if (*func_char != L'`'){
-		return true;
-	}
-	if (func[func_len - 2] != L'`'){
-		return true;
-	}
-
-	// Count any characters
-	u64 c = 0;
-	charset_count(func_char, L"$", &c);
-	if (c == 0){
-		return true;
-	}
-
-	return false;
-}
-_free fmt_cond *seq_func_to_cond(
-	_in const c16		*func // func for function
-){
-	if (seq_func_to_cond_inv(func)){
-		return nullptr;
-	}
-
-	axres res = AX_SUCC;
-
-	u64 func_len = _c16len(func);
-	const c16 *func_char = func;
-
-	fmt_cond *cond = axmalloc(sizeof(fmt_cond));
-
-	enum cond_mode mode = 0;
-
-	c16 *bef_buf = nullptr;
-	u64 bef_len = 0;
-
-	c16 *aft_buf = nullptr;
-	u64 aft_len = 0;
-
-	// Skip first '('
-	func_char++; 
-
-	// Read return type
-	bool ret = (*func_char == L'!') 
-		? false
-		: true;
-
-	// Skip mode char '!' or '+'
-	func_char++;
-
-	// Skip forwarding char ':`'
-	func_char += 2;
-
-	// Read the before string
-	res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
-	axcheck_g(res, cleanup);
-
-	// Finish the read if there are characters between func_char and SEQ_COND_CHARSET
-	if (bef_len > 1){
-		bef_buf = axmalloc(bef_len * sizeof(c16));
-
-		res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
-		axcheck_g(res, cleanup);
-
-		mode |= condition_bef;
-	}
-
-	// Skip bef_buf
-	func_char += bef_len;
-
-	// Read the after string
-	res = read_range(
-		func,
-		dif_c16(func, func_char),
-		func_len - 2, // One char before L"`"
-		&aft_len,
-		aft_buf
-	);
-	if (AX_ERR(res) == false){
-		aft_buf = axmalloc(aft_len * sizeof(c16));
-
-		res = read_range(
-			func,
-			dif_c16(func, func_char),
-			func_len - 2, // One char before L"`"
-			&aft_len,
-			aft_buf
-		);
-		axcheck_g(res, cleanup);
-		mode |= condition_aft;
-	}
-	
-	// Read the after string
-	cond->bef = bef_buf;
-	cond->aft = aft_buf;
-	cond->ret = ret;
-	cond->mode = mode;
-
-	return cond;
-
-cleanup:
-	axfree(aft_buf);
-	axfree(bef_buf);
-	return nullptr;
-}
-
-axres seq_group_condition(
-	_in const c16		*fmt,
-	_in const c16		*fmt_char,
-	_in ax_list 		*cond_list,
-	_out const c16		**loc
-){
-	if (fmt == nullptr
-	|| fmt_char == nullptr
-	|| cond_list == nullptr){
+	if(text == nullptr
+	|| cap == nullptr 
+	|| seq_beg == nullptr){
 		return AX_INV_ARG;
 	}
-	if (loc == nullptr){
-		return AX_INV_BUF;
-	}
-	if (*fmt_char != L'('){
-		return AX_INV_FMT;
-	}
 
 	axres res = AX_SUCC;
 
-	const c16 *spec_char = nullptr;
+	u64 inv_set_s = 0;
+	c16 *inv_beg = nullptr;
 
-	u64 spec_len = 0;
-	c16 *spec_buf = nullptr;
+	if (seq_end == nullptr){
+		res = skip_until(text, cap, &seq_end);
+		axcheck(res);
+	}
 
-	// Find ending of the function
-	res = find_substr(fmt_char, L"`)", &spec_char, nullptr);
+	u64 from = dif_c16(text, seq_beg);
+	u64 to = dif_c16(text, seq_end);
+
+	// Read range
+	res = read_range(text, from, to, &inv_set_s, nullptr);
 	axcheck(res);
 
-	// Read inside of the function
-	res = read_range(
-		fmt,
-		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 2),
-		&spec_len,
-		spec_buf
-	);
-	axcheck(res);
-	
-	spec_buf = axmalloc(spec_len * sizeof(c16));
+	inv_beg = axmalloc(inv_set_s * sizeof(c16));
 
-	res = read_range(
-		fmt,
-		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 2),
-		&spec_len,
-		spec_buf
-	);
-	axcheck(res, axfree(spec_buf));
+	res = read_range(text, from, to, &inv_set_s, inv_beg);
+	axcheck(res, axfree(inv_beg));
 
-	fmt_cond* cond = seq_func_to_cond(spec_buf);
-	axcheck_r((cond == nullptr), AX_INV_FMT, axfree(spec_buf));
+	// Try to skip entire inv_begwith capture group
+	const c16 *inv_set_loc = nullptr;
+	res = skip_while(inv_beg, cap, &inv_set_loc);
+	axcheck(res, axfree(inv_beg));
 
-	cond_list->add(
-		cond_list,
-		cond,
-		sizeof(fmt_cond)
-	);
-	fmt_char += (spec_len - 1);
-
-	// Cleanup
-	axfree(cond);
-	axfree(spec_buf);
-
-	// Write-back
-	*loc = fmt_char;
+	axfree(inv_beg);
+	// Check if skip count was as seq_end expects
+	if (dif_c16(inv_beg, inv_set_loc) != dif_c16(seq_beg, seq_end)){
+		return AX_INV_DATA;
+	}
 
 	return AX_SUCC;
 }
