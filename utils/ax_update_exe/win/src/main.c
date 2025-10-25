@@ -8,8 +8,9 @@ int main(
 
 	axres res = AX_SUCC;
 
-	io_str(L"Active memory:");
+	io_str(L"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);
+
 	axcheck(res, ax_log(res));
 	unref(res);
 
