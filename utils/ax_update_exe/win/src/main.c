@@ -8,6 +8,11 @@ int main(
 
 	axres res = AX_SUCC;
 
+	noded_doc *doc = nullptr;
+
+	res = noded_doc_load(L"D:\\share\\ax_info.noded", &doc);
+	axcheck(res, ax_log(res));
+
 	io_str(L"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);
 

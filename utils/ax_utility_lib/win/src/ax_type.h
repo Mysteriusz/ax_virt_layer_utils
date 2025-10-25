@@ -16,10 +16,19 @@
 #if defined(AX_KM)
 #ifndef AX_STRICT_BUF_SIZE
 #define AX_STRICT_BUF_SIZE 
+
+#define AX_MODE KM
+
 #endif
-#endif
+#elif defined(AX_UM)
+
+#define AX_MODE UM
+
+#endif // defined(AX_KM)
 
 #if defined(AX_WIN64)
+
+#define AX_PLATFORM WIN64
 
 /*
  	Windows specific architecture macros
@@ -54,7 +63,14 @@
 #pragma warning(disable:5045)
 #endif
 
+#elif defined(AX_LINUX)
+
+#define AX_PLATFORM LINUX
+
 #endif // defined(AX_WIN64)
+
+#define EXPAND(a,b) a##b
+#define CAT(a,b) EXPAND(a,b)
 
 #define _in
 #define _in_opt

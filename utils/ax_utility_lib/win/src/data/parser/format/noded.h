@@ -34,14 +34,14 @@
 
 	==========================================
 
-	value_name	=		1		;
+	node_name	=		1		;
 	^		^		^		^
 	|		|		|		|
 	Key		Delimiter	Value		Suffix
 
 	Key_name=1; -> Key-value pair node. 
-	Node name(key) CAN be contained in: (ANY of the following)
-		[Key]
+	Node name CAN be contained in: (ANY of the following)
+		[Name]
 
 	Nodes must end with a suffix as: (ANY of the following)
 		;
@@ -76,7 +76,7 @@ typedef struct _noded_doc{
 } noded_doc;
 
 typedef struct _noded_sect{
-	 c16		*name;
+	c16			*name;
 	u64			beg;
 	u64			end;
 	noded_doc 		*doc;
@@ -110,13 +110,8 @@ axres noded_doc_unload(
  	noded_sect related
 */
 
-#define NODED_SECT_BEG 		L"["
-#define NODED_SECT_END 		L"]:"
-
-// All ASCII writable without L'[' AND L']' characters
-#define NODED_SECT_FMT		L"[\x2" \
-				L"<" CAPTURE_FMT_ASCII L"-{[}-{]}" L">"  \
-				L"\x3]:" \
+// Sequence format for noded_sect
+#define NODED_SECT_FMT		L"[^<" CAPTURE_FMT_ASCII L"-{[}-{]}" L">$]:"  \
 				L"<" CAPTURE_FMT_NL L">"
 
 // Load section and it`s nodes
