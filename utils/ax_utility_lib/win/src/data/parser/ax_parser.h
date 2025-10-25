@@ -273,13 +273,14 @@ typedef struct _fmt_spec{
 	enum spec_type type;
 } fmt_spec;
 
-enum cond_mode{
-	condition_bef = 0x1,
-	condition_aft = 0x2,
+enum cond_state{
+	outside = 0,
+	inside = 1,
 };
+
 typedef struct _fmt_cond{
 	bool ret;
-	enum cond_mode mode;
+	enum cond_state state;
 	const c16 *bef; // Before $ string
 	const c16 *aft; // After $ string
 } fmt_cond;
@@ -349,23 +350,29 @@ bool seq_cap_to_charset_inv(
 	_in const c16		*cap // cap FOR capture group
 );
 /*
+	Rules:
    	Input of cap has to start with:
 		L'{'
 	and end with:
 		L'}'
+	Required input is a math set equation.
+	Syntax is char-sensitive.
+	Syntax doesn`t allow spaces.
 
-	Example:
+	Input example:
 		{.}
-		{a-z}+{x-z}+{_}
+		{a-z}-{x-z}+{_}
 		{l-n}+{x}
 		{\x20-\x45}+{\x6f}
 
-	In case you want to include syntax characters ({, }, -)
+	In case you want to include syntax characters -> {, }, -, +, etc...
 	You either have to include them in the capture range like above
 	OR you can add them by adding single character like so:
 		{a-z}+{{}+{-}+{<}
+	
+	Returns HEAP ALLOCATED condition structure
 */
-_free const c16 *seq_cap_to_charset(
+_free const c16 *_seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 );
 
@@ -410,7 +417,7 @@ axres seq_charset_match(
 
 // ====================== FUNCTION ======================
 
-#define SEQ_COND_CHARSET L"$"
+#define SEQ_COND_CHARSET L"."
 
 /* 
 	Function has to consist of at least one control character.
@@ -421,43 +428,36 @@ bool seq_func_to_cond_inv(
 	_in const c16		*func // func for function
 );
 /*
-   	Input of func has to start with:
-		L'('
-	and end with:
-		L')'
+	Rules:
+	Syntax is char-sensitive.
+	Syntax doesn`t allow spaces.
 
-	Example:
-		(+:[[$]])
-		(!:<$>)
-		(!::$>:)
+	Input example:
+		+:[[$]]
+		!:<$>
+		!::$>:
 	
-	Returns HEAP ALLOCATED condition function
+	Returns HEAP ALLOCATED condition structure
 */
-_free fmt_cond *seq_func_to_cond(
+_free fmt_cond *_seq_func_to_cond(
 	_in const c16		*func // func for function
 );
 
-/*
- 	Condition parsing.
-
-	Input:
-		L"(!:[$])"
-	Output:
-		Parsed function that validates if ANY next char is NOT between L'[' AND L']'
-*/
-axres seq_group_conditions(
+axres seq_group_cond_end(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out const c16		**loc
+);
+axres seq_group_cond(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*cond_list,
 	_out const c16		**loc
 );
-
-/*
- 	Match parsed condition list against text location.
-*/
-axres seq_conditions_match(
-	_in const c16		*text,
-	_in ax_list		*cond_list,
+axres seq_condition_match(
+	_in const c16 		*text,
+	_in const c16		*text_char,
+	_in fmt_cond 		*cond,
 	_out const c16		**loc
 );
 

@@ -14,19 +14,6 @@ bool seq_func_to_cond_inv(
 	u64 func_len = _c16len(func);
 	const c16 *func_char = func;
 
-	// Check function bound characters
-	if (*func_char != L'('){
-		return true;
-	}
-	if (func[func_len - 1] != L')'){
-		return true;
-	}
-
-	func_char++;
-	if (in_c16_s(func, func_char, func_len) == false){
-		return true;
-	}
-
 	// Get function return mode
 	switch(*func_char){
 	case L'!': // Not true mode
@@ -47,24 +34,16 @@ bool seq_func_to_cond_inv(
 		return true;
 	}
 
-	// Check condition bound characters
-	if (*func_char != L'`'){
-		return true;
-	}
-	if (func[func_len - 2] != L'`'){
-		return true;
-	}
-
 	// Count any characters
 	u64 c = 0;
-	charset_count(func_char, L"$", &c);
+	charset_count(func_char, SEQ_COND_CHARSET, &c);
 	if (c == 0){
 		return true;
 	}
 
 	return false;
 }
-_free fmt_cond *seq_func_to_cond(
+_free fmt_cond *_seq_func_to_cond(
 	_in const c16		*func // func for function
 ){
 	if (seq_func_to_cond_inv(func)){
@@ -78,16 +57,11 @@ _free fmt_cond *seq_func_to_cond(
 
 	fmt_cond *cond = axmalloc(sizeof(fmt_cond));
 
-	enum cond_mode mode = 0;
-
 	c16 *bef_buf = nullptr;
 	u64 bef_len = 0;
 
 	c16 *aft_buf = nullptr;
 	u64 aft_len = 0;
-
-	// Skip first '('
-	func_char++; 
 
 	// Read return type
 	bool ret = (*func_char == L'!') 
@@ -97,8 +71,8 @@ _free fmt_cond *seq_func_to_cond(
 	// Skip mode char '!' or '+'
 	func_char++;
 
-	// Skip forwarding char ':`'
-	func_char += 2;
+	// Skip forwarding char ':`
+	func_char++;
 
 	// Read the before string
 	res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
@@ -110,8 +84,6 @@ _free fmt_cond *seq_func_to_cond(
 
 		res = read_until(func_char, SEQ_COND_CHARSET, &bef_len, bef_buf);
 		axcheck_g(res, cleanup);
-
-		mode |= condition_bef;
 	}
 
 	// Skip bef_buf
@@ -121,29 +93,29 @@ _free fmt_cond *seq_func_to_cond(
 	res = read_range(
 		func,
 		dif_c16(func, func_char),
-		func_len - 2, // One char before L"`"
+		func_len,
 		&aft_len,
 		aft_buf
 	);
+
 	if (AX_ERR(res) == false){
 		aft_buf = axmalloc(aft_len * sizeof(c16));
 
 		res = read_range(
 			func,
 			dif_c16(func, func_char),
-			func_len - 2, // One char before L"`"
+			func_len,
 			&aft_len,
 			aft_buf
 		);
 		axcheck_g(res, cleanup);
-		mode |= condition_aft;
 	}
 	
 	// Read the after string
 	cond->bef = bef_buf;
 	cond->aft = aft_buf;
 	cond->ret = ret;
-	cond->mode = mode;
+	cond->state = outside;
 
 	return cond;
 
@@ -153,12 +125,49 @@ cleanup:
 	return nullptr;
 }
 
-axres seq_group_conditions(
+axres seq_group_cond_end(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out const c16		**loc
+){
+	if (fmt == nullptr
+	|| fmt_char == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	const c16 *spec_char = fmt_char;
+	u64 fmt_len = _c16len(fmt);
+
+	while(in_c16_s(fmt, spec_char, fmt_len)){
+		switch(*spec_char){
+		case L')':
+			if (!_is_esc(fmt, spec_char)){
+				goto exit_jump;
+			}
+			break;
+		default:
+			break;
+		}
+		spec_char++;
+	}
+exit_jump:
+
+	if (*spec_char != L')'){
+		return AX_NOT_FND;
+	}
+
+	*loc = spec_char;
+	return AX_SUCC;
+}
+axres seq_group_cond(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*cond_list,
 	_out const c16		**loc
-){
+){	
 	if (fmt == nullptr
 	|| fmt_char == nullptr
 	|| cond_list == nullptr){
@@ -166,9 +175,6 @@ axres seq_group_conditions(
 	}
 	if (loc == nullptr){
 		return AX_INV_BUF;
-	}
-	if (*fmt_char != L'('){
-		return AX_INV_FMT;
 	}
 
 	axres res = AX_SUCC;
@@ -178,15 +184,18 @@ axres seq_group_conditions(
 	u64 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
+	// Skip initial 
+	fmt_char++;
+
 	// Find ending of the function
-	res = find_substr(fmt_char, L"`)", &spec_char, nullptr);
+	res = seq_group_cond_end(fmt, fmt_char, &spec_char);
 	axcheck(res);
 
 	// Read inside of the function
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 2),
+		dif_c16(fmt, spec_char),
 		&spec_len,
 		spec_buf
 	);
@@ -197,56 +206,74 @@ axres seq_group_conditions(
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
-		dif_c16(fmt, spec_char + 2),
+		dif_c16(fmt, spec_char),
 		&spec_len,
 		spec_buf
 	);
 	axcheck(res, axfree(spec_buf));
 
-	fmt_cond* cond = seq_func_to_cond(spec_buf);
+	fmt_cond *cond = _seq_func_to_cond(spec_buf);
 	axcheck_r((cond == nullptr), AX_INV_FMT, axfree(spec_buf));
 
 	cond_list->add(
-		cond_list,
+		cond_list, 
 		cond,
 		sizeof(fmt_cond)
 	);
-	fmt_char += (spec_len - 1);
+	fmt_char += spec_len;
 
-	// Cleanup
-	axfree(cond);
-	axfree(spec_buf);
-
-	// Write-back
 	*loc = fmt_char;
+
+	axfree(spec_buf);
+	axfree(cond);
 
 	return AX_SUCC;
 }
-axres seq_conditions_match(
-	_in const c16		*text,
-	_in ax_list		*cond_list,
+
+axres seq_condition_match(
+	_in const c16 		*text,
+	_in const c16		*text_char,
+	_in fmt_cond 		*cond,
 	_out const c16		**loc
 ){
-	if (text == nullptr
-	|| cond_list == nullptr){
+	if(text == nullptr
+	|| text_char == nullptr
+	|| cond == nullptr){
 		return AX_INV_ARG;
 	}
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
 
-	// TODO: Condition checking logic update
-	axres res = AX_SUCC;
-	unref(res);
-	const c16 *text_char = text;
+	const c16 *spec_char = text_char;
 
-	fmt_cond *curr = nullptr;
-	unref(curr);
-	for (u64 i = 0; i < cond_list->count; i++){
-		curr = index_as(cond_list, i, fmt_cond*);
+	// Outside state and current text_char is a begining of the conditioned sector
+	if (cond->bef != nullptr
+	&& starts_with(text_char, cond->bef, nullptr) == AX_SUCC
+	&& cond->state == outside){
+		cond->state = inside;
+		spec_char += _c16len(cond->bef);
+	}
+	// Inside state and current text_char is an ending of the conditioned sector
+	else if (cond->aft != nullptr
+	&& starts_with(text_char, cond->aft, nullptr) == AX_SUCC
+	&& cond->state == inside){
+		cond->state = outside;
+		//find_substr(text_char, cond->aft, &spec_char, nullptr);
+		spec_char += _c16len(cond->aft);
 	}
 
-	*loc = text_char;
+	// Return based on the return mode of the condition
+	if(cond->state == inside
+	&& cond->ret == false){
+		return AX_NOT_FND;
+	}
+	if (cond->state == outside
+	&& cond->ret == true){
+		return AX_NOT_FND;
+	}
+
+	*loc = spec_char;
 
 	return AX_SUCC;
 }

@@ -8,8 +8,8 @@ int main(
 
 
 	seq_loc loc = {0};
-	//res = seq_find(L"spmedfjkljds[sec]::dfsjdfks", L"[<{a-z}>]:", &loc);
-	res = seq_find(L"l[^section|other_text||a|b]:", L"[\\^<{a-z}>|<{.}>]:", &loc);
+	res = seq_find(L"spmedfjkljds\"[sec]:\":df{[sec]:s}jdfks", L"(!:\".\")(+:{.})[^<{a-z}>$]:", &loc);
+	//res = seq_find(L"l[section$|other_text||a|b]:", L"[^<{a-z}>\\$$|<{.}>]:", &loc);
 	ax_log(res);
 	io_str(loc.beg);
 	io_str(loc.end);
@@ -21,7 +21,14 @@ int main(
 	seq_read_group(L"[^df<{a-z}>|$<{.}>]:", &grp);
 	io_str(index_as(grp.spec_list, 0, c16*));*/
 
-	/*const c16 *fmt = L"[<{a-z}\\{>+fdsjkfdsjjjjj\\>]<{:}:"; 
+	/*fmt_group grp = {0};
+	ax_list_init(&grp.cond_list);
+
+	const c16 *fmt = L"(!:[[.]])dfhajsfk"; 
+	const c16 *loc = nullptr;
+	res = seq_group_cond(fmt, &fmt[0], grp.cond_list, &loc);
+	ax_log(res);
+	//io_str((index_as(grp.cond_list, 0, fmt_cond*))->aft);
 	const c16 *loc = nullptr;
 	ax_log(seq_group_cap_end(fmt, &fmt[1], &loc));
 	io_str(loc);*/

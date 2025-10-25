@@ -34,6 +34,10 @@ extern u64 _MEM_FREED;
 	_MEM_USED += size; \
 	ptr; \
 })
+
+/*
+ 	Safe null-checking free abstraction
+*/
 #define axfree(ptr) ({ \
 	if (ptr){ \
 		u64 size = HeapSize(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr)); \

@@ -14,12 +14,8 @@ iter_code fmt_cond_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
 	fmt_cond *cond = (fmt_cond*)stack->node->value;
-	if (chkf(cond->mode, condition_bef)) {
-		axfree((void*)cond->bef);
-	}
-	if (chkf(cond->mode, condition_aft)) {
-		axfree((void*)cond->aft);
-	}
+	axfree((void*)cond->bef);
+	axfree((void*)cond->aft);
 
 	return ITER_NONE;
 }
@@ -124,7 +120,7 @@ axres seq_read_group(
 /* 
 	Iterate group 
 	Example:
- 		- L"[\x2<{a-z}+{[-]}>\x3]"
+ 		- L"[^<{a-z}+{[-]}>$]"
 */
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
 		switch(*fmt_char){
@@ -148,14 +144,12 @@ axres seq_read_group(
 			fmt_char++;
 			break;
 		case L'(': // Condition start TODO KURWA!!!!!!!!!!!!!
-			//res = seq_group_condition(fmt, fmt_char, grp->cond_list, &fmt_char);
-			//if (AX_ERR(res)) { goto error_jump; }
-			fmt_char++;
+			res = seq_group_cond(fmt, fmt_char, grp->cond_list, &fmt_char);
+			axcheck_b(res);
 			break;
 		default:
 			rng = _seq_read_range(fmt, fmt_char, &rng_len);
 			axcheck((rng == nullptr));
-			io_str(rng);
 
 			res = grp->spec_list->add(
 				grp->spec_list,
@@ -170,6 +164,7 @@ axres seq_read_group(
 			fmt_char += rng_len;
 			break;
 		}
+		axcheck(res);
 	}
 
 	return AX_SUCC;
@@ -352,8 +347,8 @@ axres seq_locate(
 	const c16 *text_char = text;
 
 	const c16 *root_char = text;
-	const c16 *beg_char = text; // Indicated by \0x2 character or seq beg
-	const c16 *end_char = text; // Indicated by \0x3 character or seq end
+	const c16 *beg_char = text; // Indicated by ^ character
+	const c16 *end_char = text; // Indicated by $ character
 
 	u32 seq_i = 0;
 
@@ -362,17 +357,21 @@ axres seq_locate(
 		// First check
 		if (seq_i == 0){
 			root_char = text_char;
+
 			if (beg_char == nullptr){
 				beg_char = text_char;
 			}
+		}
 
-			// Match current text_char against conditions
-			res = seq_conditions_match(
+		// Match current text_char against conditions
+		for (u32 i = 0; i < grp->cond_list->count; i++){
+			res = seq_condition_match(
+				text,
 				text_char,
-				grp->cond_list,
+				index_as(grp->cond_list, i, fmt_cond*),
 				&text_char
 			);
-			axcheck(res);
+			axcheck_g(res, skip_occ);
 		}
 
 		// Move text_char based on the curr and next

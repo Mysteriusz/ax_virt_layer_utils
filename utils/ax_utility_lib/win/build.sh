@@ -20,13 +20,12 @@ function compile(){
 		"${define[@]/#/$dalias}" \
 	    	"$salias" "$file" \
 	    	"$oalias" "$output" \
-	    	"${include_dirs[@]/#/$ialias}"
+	    	"${include_dirs[@]/#/$ialias}" \
 
 	if [[ $? != 0 ]]; then
 		kill 0
 		exit 2
 	fi
-	echo "$output"
 
 	return 0
 }

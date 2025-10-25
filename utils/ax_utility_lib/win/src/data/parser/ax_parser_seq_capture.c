@@ -130,7 +130,7 @@ error_jump:
 	return false;
 }
 
-_free const c16 *seq_cap_to_charset(
+_free const c16 *_seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 ){
 	if (seq_cap_to_charset_inv(cap)){
@@ -274,7 +274,6 @@ exit_jump:
 	*loc = spec_char;
 	return AX_SUCC;
 }
-// TODO: Refactor for simplicity
 axres seq_group_cap(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
@@ -292,17 +291,19 @@ axres seq_group_cap(
 
 	axres res = AX_SUCC;
 
-	fmt_char++;
-	const c16 *spec_char = fmt_char;
+	const c16 *spec_char = nullptr;
 
 	u64 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
-	// Find ending of the capture group
+	// Skip initial 
+	fmt_char++;
+
+	// Find ending of the capture set
 	res = seq_group_cap_end(fmt, fmt_char, &spec_char);
 	axcheck(res);
 
-	// Read inside of the capture group
+	// Read inside of the capture set
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
@@ -323,7 +324,7 @@ axres seq_group_cap(
 	);
 	axcheck(res, axfree(spec_buf));
 
-	const c16 *cap_set = seq_cap_to_charset(spec_buf);
+	const c16 *cap_set = _seq_cap_to_charset(spec_buf);
 	axcheck_r((cap_set == nullptr), AX_INV_FMT, axfree(spec_buf));
 
 	// Push to spec_list and offset fmt_char
