@@ -77,10 +77,17 @@ typedef struct _noded_doc{
 
 typedef struct _noded_sect{
 	c16			*name;
-	u64			beg;
-	u64			end;
+	const c16		*beg;
+	const c16		*end;
 	noded_doc 		*doc;
+	ax_list			*kvp_list; // List of noded_kvp
 } noded_sect;
+
+typedef struct _noded_kvp{
+	c16			*name;
+	c16			*value;
+	noded_sect 		*sect;
+} noded_kvp;
 
 /*
  	noded global
@@ -119,8 +126,7 @@ axres noded_doc_unload(
 // Load section and it`s nodes
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in const c16		*sect_loc,
-	_out noded_sect		**sect
+	_in const c16		*sect_loc
 );
 axres noded_sect_unload(
 	_in noded_sect		*sect

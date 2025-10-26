@@ -20,7 +20,7 @@ axres noded_doc_load(
 
 	ax_list_init(&doc->sect_list);
 
-	ax_list *seq_list =  nullptr;
+	ax_list *seq_list = nullptr;
 	ax_list_init(&seq_list);
 
 	// Capture all section sequences
@@ -31,23 +31,20 @@ axres noded_doc_load(
 	);
 
 	seq_loc *curr = nullptr; 
-	noded_sect *sect = nullptr;
 
-	io_i64(seq_list->count);
+	//io_i64(seq_list->count);
 	// Iterate all occurences and load them into doc->sect_list
 	for (u32 i = 0; i < seq_list->count; i++){
 		curr = index_as(seq_list, i, seq_loc*);
 		axcheck_b((curr == nullptr));
 
 		// Load sect into the doc
-		res = noded_sect_load(doc, curr->beg, &sect);
+		res = noded_sect_load(doc, curr->beg);
 		axcheck_b(res);
 	}
 
 	// Cleanup
 	seq_list->delete(seq_list);
-	axfree(sect);
-
 	axcheck(res,
 		noded_doc_unload(doc) // doc core loaded by now
 	);
@@ -58,13 +55,15 @@ axres noded_doc_load(
 	return AX_SUCC;
 }
 
-iter_code noded_doc_sect_unload_iter(
+iter_code noded_doc_unload_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
 	noded_sect *sect = stack->node->value;
+
+	io_str(sect->name);
 	noded_sect_unload(sect);
 
-	return AX_SUCC;
+	return ITER_NONE;
 }
 axres noded_doc_unload(
 	_in noded_doc		*doc
@@ -73,17 +72,16 @@ axres noded_doc_unload(
 		return AX_INV_ARG;
 	}
 
-	io_fc(doc->file);
-
 	// Cleanup noded_sect list
 	doc->sect_list->iter(
 		doc->sect_list,
-		(ax_iter_act)noded_doc_sect_unload_iter,
+		(ax_iter_act)noded_doc_unload_iter,
 		nullptr,
 		nullptr
 	);
 	doc->sect_list->delete(doc->sect_list);
 
+	io_fc(doc->file);
 	axfree(doc);
 
 	return AX_SUCC;

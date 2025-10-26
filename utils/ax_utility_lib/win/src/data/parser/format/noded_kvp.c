@@ -15,4 +15,10 @@ axres noded_kvp_load(
 
 	return AX_SUCC;
 }
+axres noded_kvp_unload(
+	_in noded_kvp		*kvp
+){
+	return AX_SUCC;
+}
+
 
