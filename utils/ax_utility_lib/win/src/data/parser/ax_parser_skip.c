@@ -200,7 +200,12 @@ axres skip_line(
 	res = skip_until(text, CHARSET_NL, &temp);
 	axcheck(res);
 
-	temp++;	// skip CHARSET_NL character
+	// Skip depening on EOL encoding
+	if (is_crlf(temp)){
+		temp += 2;
+	}else if(is_lf(temp)){
+		temp++;
+	}
 	*loc = temp;
 	
 	return AX_SUCC;

@@ -149,6 +149,28 @@ axres charset_count(
 
 	return AX_SUCC;
 }
+axres line_count(
+	_in const c16 		*text,
+	_out u64		*count
+){
+	if (text == nullptr){
+		return AX_INV_ARG;
+	}
+	if (count == nullptr){
+		return AX_INV_BUF;
+	}
+
+	const c16 *text_char = text;
+	u64 occ = 0;
+
+	while(skip_line(text_char, &text_char) == AX_SUCC){
+		occ++;
+	}
+
+	*count = occ;
+
+	return AX_SUCC;
+}
 axres reverse(
 	_in const c16 		*text,
 	_in_out c16 		*rev

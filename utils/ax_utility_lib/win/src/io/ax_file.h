@@ -98,22 +98,22 @@ typedef struct _io_fmap{
 } io_fmap;
 
 typedef struct _io_file{
-	 c16		*path;
+	c16 *path;
 #if defined(AX_UM)
-	FILE			*hdl;
+	FILE *hdl;
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
-	HANDLE			hdl;
+	HANDLE hdl;
 #elif defined(AX_LINUX)
-	void			*hdl;
+	void *hdl;
 #endif
 
 #endif
-	io_fmap			map; // Memory mapped file
-	io_file_acc		acc; // File access
-	io_file_enc 		enc; // Optional field (default = UTF16LE)
-	u64			offset; // (IN BYTES) Optional field (default = 0)
+	io_fmap	map; // Memory mapped file
+	io_file_acc acc; // File access
+	io_file_enc enc; // Optional field (default = UTF16LE)
+	u64 offset; // (IN BYTES) Optional field (default = 0)
 } io_file;
 
 // Invalidate file and check encoding (exp_enc = 0 if no encoding check)

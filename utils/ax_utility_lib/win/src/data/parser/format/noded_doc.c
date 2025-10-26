@@ -30,32 +30,17 @@ axres noded_doc_load(
 		noded_doc_unload(doc) // doc core loaded by now
 	);
 
-	u64 beg_off = 0;
-	u64 end_off = 0;
 	seq_loc *curr = nullptr; 
-
-	u64 value_len = 0;
-	c16 *value = nullptr;
-
 	noded_sect *sect = nullptr;
 
+	io_i64(seq_list->count);
+	// Iterate all occurences and load them into doc->sect_list
 	for (u32 i = 0; i < seq_list->count; i++){
 		curr = index_as(seq_list, i, seq_loc*);
+		axcheck_b((curr == nullptr));
 
-		beg_off = dif_c16(doc->file->map.root, curr->beg);
-		end_off = dif_c16(doc->file->map.root, curr->end);
-		value_len = dif_c16(beg_off, end_off + 1);
-
-		res = read_range(doc->file->map.root, beg_off, end_off, &value_len, nullptr);
-		axcheck_b(res);
-
-		value = axmalloc(value_len * sizeof(c16));
-
-		res = read_range(doc->file->map.root, beg_off, end_off, &value_len, value);
-		axcheck_b(res, axfree(value));
-
-		res = noded_sect_load(doc, value, &sect);
-		axfree(value);
+		// Load sect into the doc
+		res = noded_sect_load(doc, curr->beg, &sect);
 		axcheck_b(res);
 	}
 

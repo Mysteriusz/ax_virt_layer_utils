@@ -1,28 +1,9 @@
 #include "ax_memory.h"
 
-u64 _MEM_ID;
+bool _MEM_LOG;
 u64 _MEM_USED;
 u64 _MEM_ACTIVE;
 u64 _MEM_FREED;
-
-#if defined(AX_UM)
-
-#if defined(AX_WIN64)
-
-
-#elif defined(AX_LINUX)
-
-#endif // defined(AX_WIN64)
-
-#elif defined(AX_KM)
-
-#if defined(AX_WIN64)
-
-#elif defined(AX_LINUX)
-
-#endif
-
-#endif // defined(AX_UM)
 
 /*
  	-1 means a < b

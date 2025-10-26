@@ -13,12 +13,12 @@
 
 #elif defined(AX_LINUX)
 
-#include "ax_memory_linux.c"
+#include "ax_memory_linux.h"
 
 #endif // defined(AX_WIN64)
 
-#define axmalloc(size) CAT(CAT(axmalloc_,AX_PLATFORM),CAT(_,AX_MODE))(size)
-#define axfree(size) CAT(CAT(axfree_,AX_PLATFORM),CAT(_,AX_MODE))(size)
+#define axmalloc(size) CAT(CAT(axmalloc_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
+#define axfree(size) CAT(CAT(axfree_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
 
 i8 sfmemcmp(
 	_in const void* a,

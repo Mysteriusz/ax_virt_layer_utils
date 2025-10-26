@@ -4,25 +4,47 @@
 #if defined(AX_UM)
 
 static void *axmalloc_WIN64_UM(
-	_in u64 size
+	_in u64 size,
+	_in u32 line,
+	_in const c8* func
 ){
 	void *ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (size));
 	asrt(ptr != nullptr);
-#if defined(AX_MEMORY_LOG)
-	printf("%s: %s AT LINE: %i WITH PTR: %p OF SIZE: %llu\n", __FUNCTION__, "alloc", __LINE__, ptr, ((u64)size));
-#endif
+	if (_MEM_LOG){
+		printf("%s: %s"
+			" AT LINE: %i"
+			" WITH PTR: %p"
+			" OF SIZE: %llu\n",
+			func, "alloc",
+			line, 
+			ptr, 
+			((u64)size)
+		);
+	}
+
 	_MEM_ACTIVE += size;
 	_MEM_USED += size;
 	return ptr;
 }
 static void axfree_WIN64_UM(
-	_in void *ptr
+	_in void *ptr,
+	_in u32 line,
+	_in const c8* func
 ){
 	if (ptr){
 		u64 size = HeapSize(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr));
-#if defined(AX_MEMORY_LOG)
-		printf("%s: %s AT LINE: %i WITH PTR: %p OF SIZE: %llu\n", __FUNCTION__, "free", __LINE__, ptr, ((u64)size));
-#endif
+		if (_MEM_LOG){
+			printf("%s: %s"
+				" AT LINE: %i"
+				" WITH PTR: %p"
+				" OF SIZE: %llu\n",
+				func, "free", 
+				line, 
+				ptr, 
+				((u64)size)
+			);
+		}
+
 		_MEM_ACTIVE -= size;
 		_MEM_FREED += size;
 		HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, (ptr));

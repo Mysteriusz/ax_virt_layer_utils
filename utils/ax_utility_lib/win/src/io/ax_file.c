@@ -413,6 +413,8 @@ axres io_fmmap(
 		return AX_INV_DATA;
 	}
 
+	// Read map buffer size
+
 	/*
 	 	MAP IS ALWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CALLING MMAP!!!!
 	*/

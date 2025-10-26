@@ -53,6 +53,9 @@ static inline bool _is_esc(
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
 #define in_c16_s(tp,p,s)	(dif_c16(tp,p) < (s))
 
+#define is_crlf(tp)		(*(tp) == L'\r' && *((tp) + 1) == L'\n')
+#define is_lf(tp)		(*(tp) == L'\n')
+
 #define dif_b(s,e)		((u8*)(e) - (u8*)(s))
 
 /*
@@ -118,6 +121,10 @@ axres compare(
 axres charset_count(
 	_in const c16 		*text,
 	_in const c16		*charset,
+	_out u64		*count
+);
+axres line_count(
+	_in const c16 		*text,
 	_out u64		*count
 );
 axres reverse(

@@ -4,7 +4,8 @@
  	Global memory state variables.
 */
 
-extern u64 _MEM_ID;
+// Memory logging enabled/disabled
+extern bool _MEM_LOG;
 
 // All allocated
 extern u64 _MEM_USED;
