@@ -126,7 +126,7 @@ axres noded_doc_unload(
 // Load section and it`s nodes
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in const c16		*sect_loc
+	_in seq_loc		sect_loc
 );
 axres noded_sect_unload(
 	_in noded_sect		*sect
@@ -136,11 +136,14 @@ axres noded_sect_unload(
  	noded_kvp related
 */
 
+// Sequence format for noded_kvp
+#define NODED_KVP_FMT		L"?[" CAPTURE_FMT_ASCII L"?]" /* Main name block sequence */ \
+				L"<" CAPTURE_FMT_NL L">$" /* New line capture group */
+
 // Load kvp
 axres noded_kvp_load(
 	_in noded_sect		*sect,
-	_in const c16		*kvp_loc,
-	_out noded_kvp		**kvp
+	_in const c16		*kvp_loc
 );
 axres noded_kvp_unload(
 	_in noded_kvp		*kvp

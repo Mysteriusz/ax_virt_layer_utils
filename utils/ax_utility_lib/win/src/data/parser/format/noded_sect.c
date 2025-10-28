@@ -2,13 +2,10 @@
 
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in const c16		*sect_loc
+	_in seq_loc		sect_loc
 ){
 	if (noded_doc_inv(doc)){
-		return AX_INV_FILE;
-	}
-	if (sect_loc == nullptr){
-		return AX_INV_ARG;
+		return AX_INV_DATA;
 	}
 
 	axres res = AX_SUCC;
@@ -21,34 +18,34 @@ axres noded_sect_load(
 	u64 rng_len = 0;
 	c16 *rng_buf = nullptr;
 
-	sect_loc++;
+	const c16 *sect_char = sect_loc.beg;
 
 	// Read name of the section
-	res = read_until(sect_loc, L"]", &name_len, name_buf);
-	axcheck(res);
-
+	res = read_line(sect_loc.beg, &name_len, name_buf);
+	axcheck_g(res, error_jump);
+	
 	name_buf = axmalloc(name_len * sizeof(c16));
 
-	res = read_until(sect_loc, L"]", &name_len, name_buf);
+	res = read_line(sect_loc.beg, &name_len, name_buf);
 	axcheck_g(res, error_jump);
 
 	// Skip to section range
-	res = skip_line(sect_loc, &sect_loc);
+	res = skip_line(sect_char, &sect_char);
 	axcheck_g(res, error_jump);
 
 	// Skip to next section location
 	seq_loc next_loc = {0};
-	res = seq_find(sect_loc, NODED_SECT_FMT, &next_loc);
+	res = seq_find(sect_char, NODED_SECT_FMT, &next_loc);
 	if (res == AX_NOT_FND){
 		// If none found skip to doc->file->map.root end
-		next_loc.beg = sect_loc + _c16len(sect_loc);
+		next_loc.beg = sect_char + _c16len(sect_char);
 	}else axcheck_g(res, error_jump);
 
 	// Read section KVP range
 	res = read_range(
-		sect_loc,
+		sect_char,
 		0,
-		dif_c16(sect_loc, next_loc.beg), 
+		dif_c16(sect_char, next_loc.beg), 
 		&rng_len,
 		rng_buf
 	);
@@ -57,9 +54,9 @@ axres noded_sect_load(
 	rng_buf = axmalloc(rng_len * sizeof(c16));
 
 	res = read_range(
-		sect_loc,
+		sect_char,
 		0,
-		dif_c16(sect_loc, next_loc.beg), 
+		dif_c16(sect_char, next_loc.beg), 
 		&rng_len,
 		rng_buf
 	);
@@ -69,16 +66,10 @@ axres noded_sect_load(
 
 	ax_list_init(&sect.kvp_list);
 
+	// Iterate ranges and load into sect
 	do{
-		/*res = noded_kvp_load(sect, rng_char, &kvp_buf);
+		//res = noded_kvp_load(&sect, rng_char);
 		axcheck_b(res);
-
-		sect->kvp_list->add(
-			sect->kvp_list,
-			&kvp_buf,
-			sizeof(noded_kvp*)
-		);*/
-		io_str(L"LINE");
 	}while(skip_line(rng_char, &rng_char) == AX_SUCC);
 	
 	axcheck_g(res, error_jump);
@@ -86,10 +77,14 @@ axres noded_sect_load(
 
 	sect.name = name_buf;
 	sect.doc = doc;
-	sect.beg = sect_loc;
+	sect.beg = sect_char;
 	sect.end = next_loc.beg;
 
-	doc->sect_list->add(doc->sect_list, &sect, sizeof(noded_sect));
+	doc->sect_list->add(
+		doc->sect_list,
+		&sect,
+		sizeof(noded_sect)
+	);
 
 	return AX_SUCC;
 
@@ -112,18 +107,19 @@ iter_code noded_unload_sect_iter(
 axres noded_sect_unload(
 	_in noded_sect 		*sect
 ){
-	io_str(sect->doc->file->path);
-	if (noded_sect_inv(sect)){
+	if(sect == nullptr){
 		return AX_INV_ARG;
 	}
 
-	sect->kvp_list->iter(
-		sect->kvp_list,
-		(ax_iter_act)noded_unload_sect_iter,
-		nullptr,
-		nullptr
-	);
-	sect->kvp_list->delete(sect->kvp_list);
+	if (sect->kvp_list != nullptr){
+		sect->kvp_list->iter(
+			sect->kvp_list,
+			(ax_iter_act)noded_unload_sect_iter,
+			nullptr,
+			nullptr
+		);
+		sect->kvp_list->delete(sect->kvp_list);
+	}
 	axfree(sect->name);
 
 	return AX_SUCC;

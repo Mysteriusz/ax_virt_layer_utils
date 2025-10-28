@@ -35,6 +35,7 @@ static inline c16 *_c16dup(
 	ptr[text_size - 1] = L'\0';
 	return ptr;
 }
+// Checks for L'\\' before text_char
 static inline bool _is_esc(
 	_in const c16 		*text,
 	_in const c16 		*text_char
@@ -42,6 +43,19 @@ static inline bool _is_esc(
 	const c16 *esc_char = (text_char - 1);
 	if (esc_char >= text
 	&& *esc_char == L'\\'){
+		return true;
+	}
+
+	return false;
+}
+// Checks for L'?' before text_char
+static inline bool _is_opt(
+	_in const c16 		*text,
+	_in const c16 		*text_char
+){
+	const c16 *opt_char = (text_char - 1);
+	if (opt_char >= text
+	&& *opt_char == L'?'){
 		return true;
 	}
 
@@ -263,28 +277,32 @@ axres find_parentheses(
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			L"<($^"
+#define CHARSET_SEQ 			L"<($^?"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *cond_list; // List of _fmt_cond
 } fmt_group;
 
 enum spec_type{
-	sequence = 0,
-	capture_set = 1,
-	control_beg = 2,
-	control_end = 3,
+	spec_sequence = 0,
+	spec_capture_set = 1,
+	spec_control_beg = 2,
+	spec_control_end = 3,
+};
+enum spec_mode{
+	spec_none = 0,
+	spec_optional = 1
 };
 typedef struct _fmt_spec{
 	const c16 *value;
 	enum spec_type type;
+	enum spec_mode mode;
 } fmt_spec;
 
 enum cond_state{
 	outside = 0,
 	inside = 1,
 };
-
 typedef struct _fmt_cond{
 	bool ret;
 	enum cond_state state;
@@ -323,6 +341,14 @@ axres seq_locate(
 
 /*
  	Known issues:
+		- seq: L"|?<{a-c}>?|<{d-f}>]"
+		- text: L"|?<{a-c}>?|<{d-f}>]"
+		Result is AX_NOT_FND.
+		Cause and possible fix:
+			Current setup prohibits usage of 2 or more capture group one after another.
+			That makes the next search when not found the `physical sequence` return AX_NOT_FND
+			since there is no seq_end for the capture set to invalidate the range.
+			Could be fixed by not only iterating text for next but also iterating all next`s to find the seq_end.
  	Solved issues:
 		- seq: L"[<{a-z}>|<{.}>]:"
 		- text: L"l[section|other_text||a|b]:"
@@ -398,13 +424,13 @@ axres seq_group_cap_end(
 	Input:
 		L"<{a-k}-{d}>"
 	Output:
-		Parsed capture set in form of a string L"abcefghijk"
+		Parsed capture set in form of a string L"abcefghijk" in buf
 */
 axres seq_group_cap(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
-	_in ax_list 		*spec_list,
-	_out const c16		**loc
+	_out const c16		**loc,
+	_out fmt_spec		*buf
 );
 
 /*

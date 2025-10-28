@@ -49,6 +49,7 @@ _free c16 *_seq_read_range(
 	while(in_c16_s(fmt, beg_char, fmt_len)){
 		axfree(prev_buf);
 
+		// Skip to first possible charset character occurence
 		res = skip_until(beg_char, CHARSET_SEQ, &spec_char);
 		axcheck_b(res);
 
@@ -69,7 +70,7 @@ _free c16 *_seq_read_range(
 
 		// If escaped then load it as a character without L'\\'
 		if (_is_esc(fmt, spec_char)){
-			rng_buf[rng_len - 1] = *spec_char; 
+			rng_buf[rng_len - 1] = *spec_char;
 		}else{
 			break;
 		}
@@ -112,10 +113,14 @@ axres seq_read_group(
 
 	u64 fmt_len = _c16len(fmt);
 	const c16 *fmt_char = fmt;
+	const c16 *fmt_beg = nullptr;
 
 	// Sequence identifying characters
 	c16 *rng = nullptr;
 	u64 rng_len = 0;
+
+	fmt_spec spec = {0};
+	bool spec_add = false;
 
 /* 
 	Iterate group 
@@ -123,48 +128,62 @@ axres seq_read_group(
  		- L"[^<{a-z}+{[-]}>$]"
 */
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
+		fmt_beg = fmt_char;
+
 		switch(*fmt_char){
-		case L'<': // Capture set
-			res = seq_group_cap(fmt, fmt_char, grp->spec_list, &fmt_char);
-			axcheck_b(res);
-			break;
 		case L'^': // seq_loc start indicator
 		case L'$': // seq_loc end indicator
 			// Load character to fmt_spec as control
 			c16 *buf = axmalloc(sizeof(c16));
 			*buf = *fmt_char;
-			grp->spec_list->add(
-				grp->spec_list,
-				&(fmt_spec){
-					.value = buf,
-					.type = (*fmt_char == L'^' ? control_beg : control_end),
-				},
-				sizeof(fmt_spec)
-			);
+
+			spec.value = buf;
+			spec.type = (*fmt_char == L'^' ? spec_control_beg : spec_control_end);
+
 			fmt_char++;
+
+			spec_add = true;
 			break;
-		case L'(': // Condition start TODO KURWA!!!!!!!!!!!!!
+		case L'<': // Capture set
+			res = seq_group_cap(fmt, fmt_char, &fmt_char, &spec);
+			axcheck_b(res);
+
+			spec_add = true;
+			break;
+		case L'(':
 			res = seq_group_cond(fmt, fmt_char, grp->cond_list, &fmt_char);
 			axcheck_b(res);
 			break;
+		case L'?':
+			fmt_char++;
+			break;
 		default:
 			rng = _seq_read_range(fmt, fmt_char, &rng_len);
-			axcheck((rng == nullptr));
+			axcheck_b((rng == nullptr));
 
-			res = grp->spec_list->add(
-				grp->spec_list,
-				&(fmt_spec){
-					.value = rng,
-					.type = sequence,
-				},
-				sizeof(fmt_spec)
-			);
-			axcheck(res, axfree(rng));
+			spec.value = rng;
+			spec.type = spec_sequence;
 
 			fmt_char += rng_len;
+
+			spec_add = true;
 			break;
 		}
+
+		// If AX_ERR(res) then spec->value is expected to not be allocated
 		axcheck(res);
+
+		spec.mode = (_is_opt(fmt, fmt_beg) == true ? spec_optional : spec_none);
+		if (spec_add){
+			// Add buffer specifier
+			grp->spec_list->add(
+				grp->spec_list,
+				&spec,
+				sizeof(fmt_spec)
+			);
+			spec_add = false;
+		io_i64(spec.mode);
+		}
 	}
 
 	return AX_SUCC;
@@ -241,12 +260,12 @@ axres seq_locate_action(
 
 	fmt_spec *curr = index_as(spec_list, curr_i, fmt_spec*);
 
-	// Find next 'physical' type sequence to validate with capture_set
+	// Find next 'physical' type spec_sequence to validate with spec_capture_set
 	u64 next_i = curr_i + 1;
 	fmt_spec *next = curr;
-	while(curr->type == capture_set
+	while(curr->type == spec_capture_set
 	&& next != nullptr){
-		if (next->type == sequence){
+		if (next->type == spec_sequence){
 			break;
 		}
 		next = index_as(spec_list, next_i++, fmt_spec*);
@@ -258,7 +277,7 @@ axres seq_locate_action(
 		Example:
 			L"[[[secta]]]]" 
 			WITH curr->value == L"[" 
-			AND curr->type == capture_set
+			AND curr->type == spec_capture_set
 			AND next == nullptr
 
 			For block of L'[' it will skip all of its characters resulting in:
@@ -266,37 +285,37 @@ axres seq_locate_action(
 
 			L"[[[secta]]]]" 
 			WITH curr->value == L"[" 
-			AND curr->type == capture_set
+			AND curr->type == spec_capture_set
 			AND next != nullptr
 			AND next->value == L"["
 
 			The result would be:
 			L"[secta]]]]"
-			which considers next expected sequence
+			which considers next expected spec_sequence
 	*/
 	if (next != nullptr
-	&& curr->type == capture_set){
+	&& curr->type == spec_capture_set){
 		// Skip until next->value
 		while((contains(curr->value, *spec_end) == AX_SUCC)
 		&& (starts_with(spec_end, next->value, nullptr) == AX_SUCC)){
 			spec_end++;
 		}
 
-		// Check if next->value was just one character after
+		// Check if next->value was only one character after
 		if (spec_end != spec_beg){
 			spec_end--;
 		}else{
 			res = find_substr(spec_beg, next->value, &spec_end, nullptr);
 			axcheck(res);
 		}
-	}else if(curr->type == capture_set){
+	}else if(curr->type == spec_capture_set){
 		res = skip_while(spec_beg, curr->value, &spec_end);
 		axcheck(res);
 	}
 
 	// Skip with respect to next
 	switch(curr->type){
-	case sequence: // Match with sequence
+	case spec_sequence: // Match with spec_sequence
 		res = starts_with(
 			text,
 			curr->value,
@@ -305,7 +324,13 @@ axres seq_locate_action(
 
 		spec_end = text + _c16len(curr->value);
 		break;
-	case capture_set: // Match with capture group
+	case spec_capture_set: // Match with capture group
+		// Edge case where there is no distance
+		// Avoids AX_INV_IND
+		if (spec_beg == spec_end){
+			res = AX_NOT_FND;
+			break;
+		}
 		res = seq_charset_match(
 			text,
 			curr->value,
@@ -313,18 +338,22 @@ axres seq_locate_action(
 			spec_end
 		);
 		break;
-	case control_beg:
+	case spec_control_beg:
 		*beg_char = text;
 		break;
-	case control_end:
+	case spec_control_end:
 		*end_char = text;
 		break;
 	default:
 		break;
 	}
 	
+	if (res == AX_NOT_FND 
+	&& curr->mode == spec_optional){
+		spec_end = spec_beg;
+	}else axcheck(res);
+
 	*loc = spec_end;
-	axcheck(res);
 
 	return AX_SUCC;
 }
@@ -469,7 +498,7 @@ axres seq_find_all(
 		res = seq_locate(text_char, &grp, &buf);
 		axcheck_b(res);
 
-		// Add the sequence occurrence to the list
+		// Add the spec_sequence occurrence to the list
 		locs->add(locs, &buf, sizeof(seq_loc));
 		text_char = buf.beg + 1;
 	}

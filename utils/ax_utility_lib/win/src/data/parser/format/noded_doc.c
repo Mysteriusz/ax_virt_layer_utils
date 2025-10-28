@@ -39,7 +39,7 @@ axres noded_doc_load(
 		axcheck_b((curr == nullptr));
 
 		// Load sect into the doc
-		res = noded_sect_load(doc, curr->beg);
+		res = noded_sect_load(doc, *curr);
 		axcheck_b(res);
 	}
 
@@ -68,18 +68,20 @@ iter_code noded_doc_unload_iter(
 axres noded_doc_unload(
 	_in noded_doc		*doc
 ){
-	if (noded_doc_inv(doc)){
+	if(doc == nullptr){
 		return AX_INV_ARG;
 	}
 
-	// Cleanup noded_sect list
-	doc->sect_list->iter(
-		doc->sect_list,
-		(ax_iter_act)noded_doc_unload_iter,
-		nullptr,
-		nullptr
-	);
-	doc->sect_list->delete(doc->sect_list);
+	if (doc->sect_list != nullptr){
+		// Cleanup noded_sect list
+		doc->sect_list->iter(
+			doc->sect_list,
+			(ax_iter_act)noded_doc_unload_iter,
+			nullptr,
+			nullptr
+		);
+		doc->sect_list->delete(doc->sect_list);
+	}
 
 	io_fc(doc->file);
 	axfree(doc);
