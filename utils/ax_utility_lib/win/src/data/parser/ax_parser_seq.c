@@ -237,7 +237,7 @@ axres seq_split_fmt(
 
 axres seq_locate_action(
 	_in const c16		*text,
-	_in u64 		curr_i,
+	_in u32 		curr_i,
 	_in ax_list		*spec_list,
 	_out const c16		**loc,
 	_out const c16		**beg_char, // Returned only in case of control_beg
@@ -260,7 +260,7 @@ axres seq_locate_action(
 
 	fmt_spec *curr = index_as(spec_list, curr_i, fmt_spec*);
 
-	// Find next 'physical' type spec_sequence to validate with spec_capture_set
+	// Find next 'physical' sequence thats valid
 	u64 next_i = curr_i + 1;
 	fmt_spec *next = curr;
 	while(curr->type == spec_capture_set
@@ -305,12 +305,13 @@ axres seq_locate_action(
 		if (spec_end != spec_beg){
 			spec_end--;
 		}else{
+			// Find the ending position or move to next if optional
 			res = find_substr(spec_beg, next->value, &spec_end, nullptr);
-			axcheck(res);
+			axcheck_g(res, error_jump);
 		}
 	}else if(curr->type == spec_capture_set){
 		res = skip_while(spec_beg, curr->value, &spec_end);
-		axcheck(res);
+		axcheck_g(res, error_jump);
 	}
 
 	// Skip with respect to next
@@ -348,6 +349,7 @@ axres seq_locate_action(
 		break;
 	}
 	
+error_jump:
 	if (res == AX_NOT_FND 
 	&& curr->mode == spec_optional){
 		spec_end = spec_beg;

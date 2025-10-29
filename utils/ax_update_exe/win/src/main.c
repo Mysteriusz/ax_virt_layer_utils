@@ -15,7 +15,7 @@ int main(
 	noded_doc_unload(doc);*/
 
 	seq_loc loc = {0};
-	res = seq_find(L"text[te|def]dfj", L"|?<{a-c}>?|<{d-f}>]", &loc);
+	res = seq_find(L"bef|defl]aft", L"|?<{a-c}>?<{d-f}>]", &loc);
 	axcheck(res, ax_log(res));
 
 	io_str(loc.beg);

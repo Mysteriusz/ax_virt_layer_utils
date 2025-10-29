@@ -341,15 +341,15 @@ axres seq_locate(
 
 /*
  	Known issues:
+ 	Solved issues:
 		- seq: L"|?<{a-c}>?|<{d-f}>]"
-		- text: L"|?<{a-c}>?|<{d-f}>]"
+		- text: L"bef|def]aft"
 		Result is AX_NOT_FND.
 		Cause and possible fix:
 			Current setup prohibits usage of 2 or more capture group one after another.
 			That makes the next search when not found the `physical sequence` return AX_NOT_FND
 			since there is no seq_end for the capture set to invalidate the range.
 			Could be fixed by not only iterating text for next but also iterating all next`s to find the seq_end.
- 	Solved issues:
 		- seq: L"[<{a-z}>|<{.}>]:"
 		- text: L"l[section|other_text||a|b]:"
 		Result is AX_NOT_FND.
