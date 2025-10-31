@@ -236,6 +236,7 @@ axres seq_condition_match(
 // ====================== VARIABLE ======================
 
 enum var_type{
+	type_unk = 0,
 	type_u8 = 1,
 	type_u16 = 2,
 	type_u32 = 4,
@@ -243,8 +244,8 @@ enum var_type{
 };
 typedef struct _fmt_var{
 	const c16 *name;
-	u32 length;
 	enum var_type type;
+	u32 length;
 	u8 span;
 } fmt_var;
 

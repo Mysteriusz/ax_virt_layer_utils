@@ -27,8 +27,8 @@ int main(
 	axcheck(res, ax_log(res));
 
 	io_str(loc.beg);*/
-	//io_i64(seq_label_to_var_inv(u"n:key"));
-	_seq_label_to_var(u"n:key");
+	io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
+	//_seq_label_to_var(u"n:key;t:u32d");
 
 	io_str(u"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);
