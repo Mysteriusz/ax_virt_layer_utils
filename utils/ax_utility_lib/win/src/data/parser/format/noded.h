@@ -2,6 +2,7 @@
 #define AX_PARSER_NODED_INT
 
 #include "ax_parser.h"
+#include "ax_parser_seq.h"
 
 /*
  
@@ -64,7 +65,7 @@
 
 */
 
-#define NODED_EXT		L"noded"
+#define NODED_EXT		u"noded"
 
 typedef struct _noded_doc noded_doc;
 typedef struct _noded_sect noded_sect;
@@ -118,10 +119,10 @@ axres noded_doc_unload(
 */
 
 // Sequence format for noded_sect
-#define NODED_SECT_FMT		L"(!:\".\")" /* Not in between " characters (string literal) */ \
-				L"(!:\'.\')" /* Not in between " characters (string literal) */ \
-				L"^[<" CAPTURE_FMT_ASCII L"-{[}-{]}" L">]:" /* Main section block sequence */ \
-				L"<" CAPTURE_FMT_NL L">$" /* New line capture group */
+#define NODED_SECT_FMT		u"(!:\".\")" /* Not in between " characters (string literal) */ \
+				u"(!:\'.\')" /* Not in between " characters (string literal) */ \
+				u"^[<" CAPTURE_FMT_ASCII u"-{[}-{]}" u">]:" /* Main section block sequence */ \
+				u"<" CAPTURE_FMT_NL u">$" /* New line capture group */
 
 // Load section and it`s nodes
 axres noded_sect_load(
@@ -137,8 +138,8 @@ axres noded_sect_unload(
 */
 
 // Sequence format for noded_kvp
-#define NODED_KVP_FMT		L"?[" CAPTURE_FMT_ASCII L"?]" /* Main name block sequence */ \
-				L"<" CAPTURE_FMT_NL L">$" /* New line capture group */
+#define NODED_KVP_FMT		u"?[" CAPTURE_FMT_ASCII u"?]" /* Main name block sequence */ \
+				u"<" CAPTURE_FMT_NL u">$" /* New line capture group */
 
 // Load kvp
 axres noded_kvp_load(

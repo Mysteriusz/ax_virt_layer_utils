@@ -2,12 +2,12 @@
  	Sequence finder capture set interface
 */
 
-#include "ax_parser.h"
+#include "ax_parser_seq.h"
 
 enum set_mode{
-	add = L'+', // Mathematical Union (U)
-	collide = L'&', // Mathematical Intersect (∩)
-	difference = L'-', // Mathematical Remove (\) 
+	add = u'+', // Mathematical Union (U)
+	collide = u'&', // Mathematical Intersect (∩)
+	difference = u'-', // Mathematical Remove (\) 
 };
 _free c16 *_rng_to_set(
 	const c16 a,
@@ -42,30 +42,29 @@ bool seq_cap_to_charset_inv(
 		return true;
 	}
 
-	u64 cap_len = _c16len(cap);
+	u32 cap_len = _c16len(cap);
 	const c16 *cap_char = cap;
 
-	if (cap[0] != L'{'){
+	if (cap[0] != u'{'){
 		return true;
 	}
-	if (cap[cap_len - 1] != L'}'){
+	if (cap[cap_len - 1] != u'}'){
 		return true;
 	}
 
 	const c16 *set_char = nullptr;
 	const c16 *rng_char = nullptr;
-	unref(rng_char);
 
 	bool in_set = false;
 	while(in_c16_s(cap, cap_char, cap_len)){
 		switch(*cap_char){
-		case L'{':
+		case u'{':
 			if (in_set == false){
 				set_char = cap_char;
 			}
 			in_set = true;
 			break;
-		case L'}':
+		case u'}':
 			// Default set_char if exiting set
 			if (in_set == true){
 				set_char = nullptr;
@@ -98,7 +97,7 @@ bool seq_cap_to_charset_inv(
 
 			switch(*rng_char){
 			// Expect range: {a-z}
-			case L'-':
+			case u'-':
 				set_char = rng_char + 1; 
 				if (in_c16_s(cap, set_char, cap_len) == false){
 					goto error_jump;
@@ -106,14 +105,14 @@ bool seq_cap_to_charset_inv(
 
 				break;
 			// Expect one character: {a}
-			case L'}':
+			case u'}':
 				break;
 			default:
 				goto error_jump;
 			}
 			cap_char = set_char;
 
-			if (*(cap_char + 1) != L'}'){
+			if (*(cap_char + 1) != u'}'){
 				goto error_jump;
 			}
 		}
@@ -123,7 +122,7 @@ bool seq_cap_to_charset_inv(
 	
 error_jump:
 	// Not fully checked
-	if (*cap_char != L'\0'){
+	if (*cap_char != u'\0'){
 		return true;
 	}
 	
@@ -137,7 +136,7 @@ _free const c16 *_seq_cap_to_charset(
 		return nullptr;
 	}
 
-	u64 cap_len = _c16len(cap);
+	u32 cap_len = _c16len(cap);
 	const c16 *cap_char = cap;
 	const c16 *not_char = nullptr;
 
@@ -158,18 +157,18 @@ _free const c16 *_seq_cap_to_charset(
 		 	Get the wrkset for operation.
 			Index read is safe since the cap is validated by seq_cap_to_charset_inv.
 
-			not_char[0] == L'{'
+			not_char[0] == u'{'
 			not_char[1] == (from_range_char OR single_char)
-			not_char[2] == (range_char OR L'}')
+			not_char[2] == (range_char OR u'}')
 			not_char[3] == (to_range_char OR out_of_range)
-			not_char[4] == (L'}' OR out_of_range)
+			not_char[4] == (u'}' OR out_of_range)
 		*/
 		
 		// Single char
-		if (not_char[2] == L'}'){
+		if (not_char[2] == u'}'){
 			c16 set_val = not_char[1];
-			if (set_val == L'.'){
-				set_val = *CHARSET_ANY;
+			if (set_val == u'.'){
+				set_val = UTF16_ANY;
 			}
 
 			wrkset = _rng_to_set(set_val, set_val);
@@ -193,7 +192,7 @@ _free const c16 *_seq_cap_to_charset(
 		}
 
 		c16 *temp_set = nullptr;
-		u64 temp_size = 0;
+		u32 temp_size = 0;
 		
 		// Perform operation
 		switch(mode){
@@ -218,7 +217,7 @@ _free const c16 *_seq_cap_to_charset(
 		charset = temp_set;
 
 		// Reset for next set
-		mode = L'\0';
+		mode = u'\0';
 		axfree((void*)wrkset);
 	}
 
@@ -237,26 +236,26 @@ axres seq_group_cap_end(
 		return AX_INV_BUF;
 	}
 
-	u64 fmt_len = _c16len(fmt);
+	u32 fmt_len = _c16len(fmt);
 	const c16 *spec_char = fmt_char;
 
 	bool in_set = false;
 
 	while(in_c16_s(fmt, spec_char, fmt_len)){
 		switch(*spec_char){
-		case L'{':
+		case u'{':
 			if (in_set == false
 			&& !_is_esc(fmt, spec_char)){
 				in_set = true;
 			}
 			break;
-		case L'}':
+		case u'}':
 			if (in_set == true
 			&& !_is_esc(fmt, spec_char)){
 				in_set = false;
 			}
 			break;
-		case L'>':
+		case u'>':
 			if (in_set == false
 			&& !_is_esc(fmt, spec_char)){
 				goto exit_jump;
@@ -267,7 +266,7 @@ axres seq_group_cap_end(
 	}
 exit_jump:
 
-	if (*spec_char != L'>'){
+	if (*spec_char != u'>'){
 		return AX_NOT_FND;
 	}
 
@@ -293,7 +292,7 @@ axres seq_group_cap(
 
 	const c16 *spec_char = nullptr;
 
-	u64 spec_len = 0;
+	u32 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
 	// Skip initial 
@@ -356,7 +355,7 @@ axres seq_charset_match(
 
 	axres res = AX_SUCC;
 
-	u64 inv_set_s = 0;
+	u32 inv_set_size = 0;
 	c16 *inv_beg = nullptr;
 
 	if (seq_end == nullptr){
@@ -364,16 +363,16 @@ axres seq_charset_match(
 		axcheck(res);
 	}
 
-	u64 from = dif_c16(text, seq_beg);
-	u64 to = dif_c16(text, seq_end);
+	u32 from = dif_c16(text, seq_beg);
+	u32 to = dif_c16(text, seq_end);
 
 	// Read range
-	res = read_range(text, from, to, &inv_set_s, nullptr);
+	res = read_range(text, from, to, &inv_set_size, nullptr);
 	axcheck(res);
 
-	inv_beg = axmalloc(inv_set_s * sizeof(c16));
+	inv_beg = axmalloc(inv_set_size * sizeof(c16));
 
-	res = read_range(text, from, to, &inv_set_s, inv_beg);
+	res = read_range(text, from, to, &inv_set_size, inv_beg);
 	axcheck(res, axfree(inv_beg));
 
 	// Try to skip entire inv_begwith capture group

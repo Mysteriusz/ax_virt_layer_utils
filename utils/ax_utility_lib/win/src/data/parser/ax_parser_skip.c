@@ -14,7 +14,7 @@ axres skip_until(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	bool found = false;
@@ -29,8 +29,10 @@ axres skip_until(
 		}
 	}
 
-	if (found == true){
+	if (found == true
+	|| contains(charset, UTF16_EOT) == AX_SUCC){
 		*loc = text_char;
+		found = true;
 	}
 
 	return (found == true)
@@ -52,7 +54,7 @@ axres skip_until_n(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	u32 occ_n = 0;
@@ -93,7 +95,7 @@ axres skip_until_r(
 		return AX_INV_BUF;
 	}
 	
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = &text[text_len - 1];
 
 	bool found = false;
@@ -130,8 +132,8 @@ axres skip_word(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
-	u64 word_len = _c16len(word);
+	u32 text_len = _c16len(text);
+	u32 word_len = _c16len(word);
 	const c16 *text_char = text;
 	const c16 *word_char = word;
 
@@ -143,7 +145,7 @@ axres skip_word(
 		word_char++;
 	}
 
-	found = (*word_char == L'\0');
+	found = (*word_char == u'\0');
 	if (found){
 		*loc = text_char;
 	}
@@ -166,7 +168,7 @@ axres skip_while(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	while (in_c16_s(text, text_char, text_len)){
@@ -200,7 +202,7 @@ axres skip_line(
 	res = skip_until(text, CHARSET_NL, &temp);
 	axcheck(res);
 
-	// Skip depening on EOL encoding
+	// Skip depening on EOu encoding
 	if (is_crlf(temp)){
 		temp += 2;
 	}else if(is_lf(temp)){

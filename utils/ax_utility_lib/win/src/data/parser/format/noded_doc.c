@@ -38,7 +38,7 @@ axres noded_doc_load(
 		curr = index_as(seq_list, i, seq_loc*);
 		axcheck_b((curr == nullptr));
 
-		// Load sect into the doc
+		// uoad sect into the doc
 		res = noded_sect_load(doc, *curr);
 		axcheck_b(res);
 	}

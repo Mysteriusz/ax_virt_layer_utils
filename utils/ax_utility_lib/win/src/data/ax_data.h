@@ -110,9 +110,9 @@ bool data_handle_inv(
 	_in data_handle		*hdl
 );
 
-#define URI_REG 		L"reg://"
-#define URI_DIR 		L"dir://"
-#define URI_FILE 		L"file://"
+#define URI_REG 		u"reg://"
+#define URI_DIR 		u"dir://"
+#define URI_FILE 		u"file://"
 
 #define URI_RULE_ADM		0x0001 // Request full access (KEY_ALL_ACCESS for the (HKEY)hdl->con.data)
 

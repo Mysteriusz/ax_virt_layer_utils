@@ -41,7 +41,7 @@ axres io_fbom(
 
 #if defined(AX_UM)
 	FILE *file = nullptr;
-	errno_t err = _wfopen_s(&file, path, L"r"); 
+	errno_t err = _wfopen_s(&file, path, u"r"); 
 	if (err != 0){
 		axfree(bom);
 
@@ -57,7 +57,7 @@ axres io_fbom(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -109,7 +109,7 @@ axres io_fex(
 #if defined(AX_UM)
 
 	FILE *file = nullptr;
-	errno_t err = _wfopen_s(&file, path, L"r"); 
+	errno_t err = _wfopen_s(&file, path, u"r"); 
 	if (err != 0){
 		if (err == ENOENT){
 			return AX_NOT_FND;
@@ -122,7 +122,7 @@ axres io_fex(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -147,7 +147,7 @@ axres io_fsize(
 #if defined(AX_UM)
 
 	FILE *file = nullptr;
-	errno_t err = _wfopen_s(&file, path, L"r"); 
+	errno_t err = _wfopen_s(&file, path, u"r"); 
 	if (err != 0){
 		if (err == ENOENT){
 			return AX_NOT_FND;
@@ -165,7 +165,7 @@ axres io_fsize(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -216,7 +216,7 @@ axres io_fo(
 
 	// Platform/mode specific cleanup phase when anything after opening the file fails
 	if (0){
-CLEANUP:
+CuEANUP:
 		fclose(hdl);
 		return AX_INV_DATA;
 	}
@@ -226,7 +226,7 @@ CLEANUP:
 #if defined(AX_WIN64)
 	HANDLE file = nullptr;
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	void *file = nullptr;
 	#error "TODO"
 #endif
@@ -237,13 +237,13 @@ CLEANUP:
 	// Get encoding
 	io_file_enc enc = UTF16LE;
 	res = io_fbom(path, &enc);
-	axcheck(res, goto CLEANUP);
+	axcheck(res, goto CuEANUP);
 
 	// Get file memory map
 	io_fmap map = {0};
 	// Pass file handle
 	res = io_fmmap(hdl, &map);
-	axcheck(res, goto CLEANUP);
+	axcheck(res, goto CuEANUP);
 
 	// Create buffer and load it
 	io_file *file = axmalloc(sizeof(io_file));
@@ -278,7 +278,7 @@ axres io_fc(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -333,7 +333,7 @@ axres io_fr(
 	unref(read);
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -368,7 +368,7 @@ axres io_fw(
 #elif defined(AX_KM)
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -416,9 +416,9 @@ axres io_fmmap(
 	// Read map buffer size
 
 	/*
-	 	MAP IS ALWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CALLING MMAP!!!!
+	 	MAP IS AuWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CAuuING MMAP!!!!
 	*/
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -426,7 +426,7 @@ axres io_fmmap(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -454,7 +454,7 @@ axres io_funmap(
 	}
 	CloseHandle(map->hdl);
 
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 
@@ -462,7 +462,7 @@ axres io_funmap(
 
 #if defined(AX_WIN64)
 	#error "TODO"
-#elif defined(AX_LINUX)
+#elif defined(AX_uINUX)
 	#error "TODO"
 #endif
 

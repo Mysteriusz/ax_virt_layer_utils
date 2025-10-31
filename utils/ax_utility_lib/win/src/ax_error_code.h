@@ -23,36 +23,36 @@
 // "INVALID" codes
 
 #define AX_INV_ARG 			((axres)0x01)
-#define AX_INV_ARG_MSG 			L"Invalid argument passed."
+#define AX_INV_ARG_MSG 			u"Invalid argument passed."
 
 #define AX_INV_DATA 			((axres)0x02)
-#define AX_INV_DATA_MSG 		L"Invalid data passed."
+#define AX_INV_DATA_MSG 		u"Invalid data passed."
 
 #define AX_INV_BUF 			((axres)0x03)
-#define AX_INV_BUF_MSG 			L"Invalid buffer passed."
+#define AX_INV_BUF_MSG 			u"Invalid buffer passed."
 
 #define AX_INV_CODE 			((axres)0x04)
-#define AX_INV_CODE_MSG 		L"Invalid code received."
+#define AX_INV_CODE_MSG 		u"Invalid code received."
 
 #define AX_INV_FILE 			((axres)0x05) // EXCLUSIVE TO _io_file STRUCTURE ERRORS
-#define AX_INV_FILE_MSG 		L"Invalid file structure."
+#define AX_INV_FILE_MSG 		u"Invalid file structure."
 
 #define AX_INV_ENC 			((axres)0x06) // EXCLUSIVE TO _io_file_enc TYPE ERRORS
-#define AX_INV_ENC_MSG 			L"Invalid file encoding."
+#define AX_INV_ENC_MSG 			u"Invalid file encoding."
 
 #define AX_INV_FMT 			((axres)0x07)
-#define AX_INV_FMT_MSG 			L"Invalid value format."
+#define AX_INV_FMT_MSG 			u"Invalid value format."
 
 #define AX_INV_IND 			((axres)0x08)
-#define AX_INV_IND_MSG 			L"Index out of bounds."
+#define AX_INV_IND_MSG 			u"Index out of bounds."
 
 // "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)
-#define AX_BUF_TOO_SMALL_MSG 		L"Buffer too small."
+#define AX_BUF_TOO_SMALL_MSG 		u"Buffer too small."
 
 #define AX_BUF_TOO_BIG 			((axres)0x11)
-#define AX_BUF_TOO_BIG_MSG 		L"Buffer too big."
+#define AX_BUF_TOO_BIG_MSG 		u"Buffer too big."
 
 // "NOT" codes
 

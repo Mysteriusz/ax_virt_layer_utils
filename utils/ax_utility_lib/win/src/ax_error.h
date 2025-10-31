@@ -38,8 +38,8 @@
 	if(AX_ERR(r)){__VA_ARGS__; break;}  \
 })
 
-#define AX_LOG_HEAD 			L"--------AX_LOG--------"
-#define AX_LOG_META 			L"--------METADATA--------"
+#define AX_LOG_HEAD 			u"--------AX_LOG--------"
+#define AX_LOG_META 			u"--------METADATA--------"
 
 #include "ax_log.h"
 
@@ -56,7 +56,7 @@ static void ax_log_lstat(
 	axres 			stat
 ){
 	ax_log(stat);
-	io_str(L"--------LSTATUS--------");
+	io_str(u"--------LSTATUS--------");
 }
 
 #endif // defined(AX_WIN64)
@@ -66,7 +66,7 @@ static void ax_log_msg(
 	const c16		*msg
 ){
 	ax_log(res);
-	io_str(L"Message buffer:");
+	io_str(u"Message buffer:");
 	io_str(msg);
 }
 

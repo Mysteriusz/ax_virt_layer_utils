@@ -3,7 +3,7 @@
 axres read_until(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_in_out u64		*size,
+	_in_out u32		*size,
 	_in_out _eval c16	*buf
 ){
 	if (text == nullptr
@@ -24,7 +24,7 @@ axres read_until(
 	const c16 *start = text;
 	const c16 *end = nullptr;
 
-	// Read to end WHEN charset == L""
+	// Read to end WHEN charset == u""
 	if (_c16len(charset) == 0){
 		end = &start[_c16len(start)];
 	}else{
@@ -32,36 +32,33 @@ axres read_until(
 		axcheck(res);
 	}
 	 
-	u64 buf_size = dif_c16(start, end); 
-	// Adjust size for null-terminator
-	buf_size++;
-
+	u64 buf_len_n = dif_c16(start, end) + 1;
 	if (ret_size){
-		*size = buf_size;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
 	// Validate provided buffer size
-	axcheck(_ax_buf_err(buf_size, *size));
+	axcheck(_ax_buf_err(*size, buf_len_n));
 
 	// Adjust size to copy without null-terminator
-	memcpy(buf, start, (buf_size - 1) * sizeof(c16));
+	memcpy(buf, start, (buf_len_n - 1) * sizeof(c16));
 
 	return AX_SUCC;
 }
 
 axres read_range(
 	_in const c16 		*text,
-	_in u64			from,
-	_in u64			to,	
-	_in_out u64		*size, // _in for buffer size safety
+	_in u32			from,
+	_in u32			to,	
+	_in_out u32		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (text == nullptr){ 
 		return AX_INV_ARG;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	if (to <= from
 	|| text_len < from // from index check
 	|| text_len < to){ // to index check
@@ -76,34 +73,31 @@ axres read_range(
 		}
 	}
 	
-	u64 buf_size = to - from;
-	// Adjust for null-terminator
-	buf_size++;
-
+	u64 buf_len_n = (to - from) + 1;
 	if (ret_size){
-		*size = buf_size;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
 	// Validate provided buffer size
-	axcheck(_ax_buf_err(buf_size, *size));
+	axcheck(_ax_buf_err(*size, buf_len_n));
 
 	// Adjust size to copy without null-terminator
-	memcpy(buf, &text[from], (buf_size - 1) * sizeof(c16));
+	memcpy(buf, &text[from], (buf_len_n - 1) * sizeof(c16));
 
 	return AX_SUCC;
 }
 
 axres read_line(
 	_in const c16 		*text,
-	_in_out u64		*size,
+	_in_out u32		*size,
 	_in_out _eval c16	*buf
 ){
 	return read_until(text, CHARSET_NL, size, buf);
 }
 axres read_word(
 	_in const c16 		*text,
-	_in_out u64		*size,
+	_in_out u32		*size,
 	_in_out _eval c16	*buf
 ){
 	return read_until(text, CHARSET_WS, size, buf);
@@ -112,7 +106,7 @@ axres read_word(
 #include <stdarg.h>
 axres join_with(
 	_in _eval c16		*buf,
-	_in_out u64		*size,
+	_in_out u32		*size,
 	_in u32 		n,
 	...
 ){
@@ -127,15 +121,17 @@ axres join_with(
 	va_list args;
 	va_start(args, n);
 
+	// TODO: INVAuIDATION OF THE *size
+
 	c16 *arg = nullptr;
-	u32 buf_size = 0;
+	u32 buf_len_n = 1;
 	u32 buf_offset = 0;
 	for (u32 i = 0; i < n; i++){
 		arg = va_arg(args, c16*);
-		buf_size += _c16len(arg);
+		buf_len_n += _c16len(arg);
 
 		if (!ret_size
-		&& *size <= buf_size){
+		&& *size <= buf_len_n){
 			return AX_BUF_TOO_SMALL;
 		}
 
@@ -147,13 +143,11 @@ axres join_with(
 
 	va_end(args);
 	
-	// Add null-terminator
-	buf_size++;
 	if (ret_size){
-		*size = buf_size;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
-	buf[buf_size - 1] = '\0';
+	buf[buf_len_n - 1] = '\0';
 
 	return AX_SUCC;
 }
@@ -161,7 +155,7 @@ axres join_with(
 axres split_by(
 	_in const c16		*text,
 	_in const c16		*charset,
-	_out u64		*size, // Evaluate by using (size * sizeof(c16*))
+	_out u32		*size, // Evaluate by using (size * sizeof(c16*))
 	_in_out c16		**buf
 ){
 	// All arguments that cannot be nullptr.
@@ -184,7 +178,7 @@ axres split_by(
 	const c16 *end = nullptr;
 	const c16 *last = nullptr;
 	
-	u32 buf_size = 0;
+	u32 buf_len_n = 1;
 	u32 buf_ind = 0;
 	bool fin = false;
 
@@ -193,13 +187,13 @@ axres split_by(
 		u64 dif_size = dif_c16(start, end);
 
 		if (res == AX_SUCC){
-			buf_size = (dif_size > 0)
-				? buf_size + 1
-				: buf_size;
+			buf_len_n = (dif_size > 0)
+				? buf_len_n + 1
+				: buf_len_n;
 			end++;
 			last = end;
 		} else if(last != nullptr){
-			buf_size++;
+			buf_len_n++;
 			if (ret_size){
 				break;
 			}
@@ -213,7 +207,7 @@ axres split_by(
 		&& !ret_size){
 			c16 *t = axmalloc((dif_size + 1) * sizeof(c16));
 			memcpy(t, start, dif_size * sizeof(c16)); 
-			t[dif_size] = L'\0';
+			t[dif_size] = u'\0';
 
 			buf[buf_ind++] = t;
 			
@@ -226,7 +220,7 @@ axres split_by(
 	}
 
 	if (ret_size){
-		*size = buf_size; // Add one to compensate for the last skip.
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
@@ -234,7 +228,7 @@ axres split_by(
 }
 axres split_by_c(
 	_in c16			**buf,
-	_in u64			size
+	_in u32			size
 ){
 	if (buf == nullptr){
 		return AX_INV_ARG;

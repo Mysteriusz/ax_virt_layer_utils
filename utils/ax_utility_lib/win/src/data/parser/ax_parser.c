@@ -13,8 +13,8 @@ axres starts_with(
 	const c16 *text_char = text;
 	const c16 *str_char = str;
 
-	u64 text_len = _c16len(text);
-	u64 str_len = _c16len(str);
+	u32 text_len = _c16len(text);
+	u32 str_len = _c16len(str);
 
 	while(in_c16_s(text, text_char, text_len)
 	&& in_c16_s(str, str_char, str_len)){
@@ -26,8 +26,8 @@ axres starts_with(
 		str_char++;
 	}
 
-	bool full_found = (*str_char == L'\0');
-	bool part_found = !full_found && (*text_char == L'\0');
+	bool full_found = (*str_char == u'\0');
+	bool part_found = !full_found && (*text_char == u'\0');
 
 	bool found = full_found;
 
@@ -52,9 +52,9 @@ axres contains(
 	}
 
 	const c16 *text_char = text;
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 
-	if (text[0] == UNICODE_ANY[0]){
+	if (text[0] == UTF16_ANY){
 		return AX_SUCC;
 	}
 
@@ -72,8 +72,8 @@ axres contains(
 
 axres contains_r(
 	_in const c16 		*text,
-	_in u64 		a,
-	_in u64 		b,
+	_in u32 		a,
+	_in u32 		b,
 	_in const c16		value	
 ){
 	if (text == nullptr){
@@ -81,13 +81,13 @@ axres contains_r(
 	}
 
 	const c16 *text_char = &text[a];
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 
-	if (text[0] == UNICODE_ANY[0]){
+	if (text[0] == UTF16_ANY){
 		return true;
 	}
 
-	u64 i = a;
+	u32 i = a;
 	while(in_c16_s(text, text_char, text_len)
 	&& i < b){
 		if (*text_char == value){
@@ -110,8 +110,8 @@ axres compare(
 		return AX_INV_ARG;
 	}
 
-	while(*a != L'\0'
-	&& *b != L'\0'
+	while(*a != u'\0'
+	&& *b != u'\0'
 	&& *a == *b){
 		a++;
 		b++;
@@ -124,7 +124,7 @@ axres compare(
 axres charset_count(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u64		*count
+	_out u32		*count
 ){
 	if (text == nullptr
 	|| charset == nullptr){
@@ -134,10 +134,10 @@ axres charset_count(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
-	u64 occ = 0; 
+	u32 occ = 0; 
 	while(in_c16_s(text, text_char, text_len)){
 		if (contains(charset, *text_char) == AX_SUCC){
 			occ++;
@@ -151,7 +151,7 @@ axres charset_count(
 }
 axres line_count(
 	_in const c16 		*text,
-	_out u64		*count
+	_out u32		*count
 ){
 	if (text == nullptr){
 		return AX_INV_ARG;
@@ -161,7 +161,7 @@ axres line_count(
 	}
 
 	const c16 *text_char = text;
-	u64 occ = 0;
+	u32 occ = 0;
 
 	while(skip_line(text_char, &text_char) == AX_SUCC){
 		occ++;
@@ -182,12 +182,12 @@ axres reverse(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	memcpy(rev, text, text_len * sizeof(c16));
 
 	c16 *text_end = &rev[text_len - 1];
 	c16 *text_set = rev;
-	c16 swap = L'\0';
+	c16 swap = u'\0';
 
 	while(text_end != text_set){
 		swap = *text_set;  
@@ -205,7 +205,7 @@ axres reverse(
 axres c16_cat(
 	_in const c16 		*a,
 	_in const c16 		*b,
-	_out u64		*size,
+	_out u32		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (a == nullptr
@@ -221,25 +221,25 @@ axres c16_cat(
 		}
 	}
 
-	u64 a_len = _c16len(a);
-	u64 b_len = _c16len(b);
+	u32 a_len = _c16len(a);
+	u32 b_len = _c16len(b);
 
-	u64 buf_len = a_len + b_len + 1;
+	u32 buf_size = a_len + b_len + 1;
 	if (ret_size){
-		*size = buf_len;
+		*size = buf_size;
 		return AX_SUCC;
 	}
 
 	memcpy(buf, a, a_len * sizeof(c16)); 
 	memcpy(buf + a_len, b, b_len * sizeof(c16)); 
-	buf[buf_len - 1] = L'\0';
+	buf[(a_len + b_len) - 1] = u'\0';
 
 	return AX_SUCC;
 }
 axres c16_union(
 	_in const c16 		*a,
 	_in const c16		*b,
-	_in_out u64 		*size, // _in for buffer size safety
+	_in_out u32 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (a == nullptr
@@ -255,38 +255,36 @@ axres c16_union(
 		}
 	}
 
-	u64 a_len = _c16len(a);
+	u32 a_len = _c16len(a);
 	const c16 *a_char = a;
 	
-	u64 b_len = _c16len(b);
+	u32 b_len = _c16len(b);
 	const c16 *b_char = b;
 
-	u64 buf_len = a_len + b_len;
+	u32 buf_size = (a_len + b_len) + 1;
 	while(in_c16_s(b, b_char, b_len)){
 		// If exist once remove it
 		if (contains(a, *b_char) == AX_SUCC){
-			buf_len--;
+			buf_size--;
 		}
 
 		b_char++;
 	}
 
-	// Null-terminator
-	buf_len++;
 	if (ret_size){
-		*size = buf_len;
+		*size = buf_size;
 		return AX_SUCC;
 	}
 
-	axcheck(_ax_buf_err(*size, buf_len));
+	axcheck(_ax_buf_err(*size, buf_size));
 
 	// Reset
 	a_char = a;
 	b_char = b;
 
-	u64 buf_i = 0;
+	u32 buf_i = 0;
 	// Write-back
-	while(buf_i < (buf_len - 1)){
+	while(buf_i < (a_len + b_len) - 1){
 		if (contains(buf, *a_char) != AX_SUCC){
 			buf[buf_i] = *a_char;
 			a_char++;
@@ -303,7 +301,7 @@ axres c16_union(
 axres c16_difference(
 	_in const c16 		*a,
 	_in const c16		*b,
-	_in_out u64 		*size, // _in for buffer size safety
+	_in_out u32 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (a == nullptr
@@ -319,38 +317,37 @@ axres c16_difference(
 		}
 	}
 
-	u64 a_len = _c16len(a);
+	u32 a_len = _c16len(a);
 	const c16 *a_char = a;
 	
-	u64 b_len = _c16len(b);
+	u32 b_len = _c16len(b);
 	const c16 *b_char = b;
 
-	u64 buf_len = a_len;
+	u32 buf_len_n = a_len + 1;
 	while(in_c16_s(b, b_char, b_len)){
 		// If exist once remove it
 		if (contains(a, *b_char) == AX_SUCC){
-			buf_len--;
+			buf_len_n--;
 		}
 
 		b_char++;
 	}
 
 	// Null-terminator
-	buf_len++;
 	if (ret_size){
-		*size = buf_len;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
-	axcheck(_ax_buf_err(*size, buf_len));
+	axcheck(_ax_buf_err(*size, buf_len_n));
 
 	// Reset
 	a_char = a;
 	b_char = b;
 
-	u64 buf_i = 0;
+	u32 buf_i = 0;
 	// Write-back
-	while(buf_i < (buf_len - 1)){
+	while(buf_i < (buf_len_n - 1)){
 		if (contains(b, *a_char) != AX_SUCC){
 			buf[buf_i] = *a_char;
 			buf_i++;
@@ -364,11 +361,11 @@ axres c16_difference(
 axres c16_remove(
 	_in const c16 		*a,
 	_in const c16		b,
-	_in_out u64 		*size, // _in for buffer size safety
+	_in_out u32 		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (a == nullptr
-	|| b == L'\0'){
+	|| b == u'\0'){
 		return AX_INV_ARG;
 	}
 	bool ret_size = ((size != nullptr) && (buf == nullptr));
@@ -379,10 +376,10 @@ axres c16_remove(
 		}
 	}
 
-	u64 a_len = _c16len(a);
+	u32 a_len = _c16len(a);
 	const c16 *a_char = a;
 
-	u64 diff = 0;
+	u32 diff = 0;
 
 	// Count buffer size difference
 	while(in_c16_s(a, a_char, a_len)){
@@ -393,19 +390,19 @@ axres c16_remove(
 	}
 
 	// Null-terminator
-	u64 buf_len = (a_len - diff) + 1;
+	u32 buf_len_n = (a_len - diff) + 1;
 	if (ret_size){
-		*size = buf_len;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
 	// Buffer size validation
-	axcheck(_ax_buf_err(*size, buf_len));
+	axcheck(_ax_buf_err(*size, buf_len_n));
 
 	// Reset
 	a_char = a;
 
-	u64 buf_i = 0;
+	u32 buf_i = 0;
 	while(in_c16_s(a, a_char, a_len)){
 		if (*a_char == b){
 			a_char++;
@@ -422,7 +419,7 @@ axres c16_remove(
 axres trim(
 	_in const c16 		*text,
 	_in const c16		*charset,
-	_out u64		*size,
+	_out u32		*size,
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
 	if (text == nullptr
@@ -438,9 +435,9 @@ axres trim(
 		}
 	}
 	
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 
-	u64 count = 0; // Trim count
+	u32 count = 0; // Trim count
 	u8 bal = 0; // Trim balance
 
 	const c16 *beg = text;
@@ -462,7 +459,7 @@ axres trim(
 		}
 	}
 
-	u64 buf_len = text_len - count;
+	u32 buf_len = text_len - count;
 	if (ret_size){
 		return buf_len;
 	}

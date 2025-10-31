@@ -15,13 +15,14 @@ axres push_data_dir(
 	axres res = AX_SUCC;
 	c16 *path = nullptr;
 
-	u64 size = 0;
+	u32 path_len_n = 0;
 
-	res = join_with(path, &size, 3, hdl->con.path, name, ext);
+	res = join_with(path, &path_len_n, 3, hdl->con.path, name, ext);
 	axcheck(res);
 
-	path = axmalloc(size * sizeof(c16));
-	res = join_with(path, &size, 3, hdl->con.path, name, ext);
+	path = axmalloc(path_len_n * sizeof(c16));
+
+	res = join_with(path, &path_len_n, 3, hdl->con.path, name, ext);
 	axcheck(res, axfree(path));
 
 	hdl->con.user_data = path;

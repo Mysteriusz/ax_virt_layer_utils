@@ -72,15 +72,15 @@ static inline const c16 *_io_file_conv(
 ){
 	switch(acc){
 	case IO_FILE_R:
-		return L"rb";
+		return u"rb";
 	case IO_FILE_W:
-		return L"ab";
+		return u"ab";
 	case IO_FILE_C:
-		return L"wb";
+		return u"wb";
 	case IO_FILE_RW:
-		return L"ab+";
+		return u"ab+";
 	case IO_FILE_RWC:
-		return L"wb+";
+		return u"wb+";
 	default:
 		return nullptr;
 	}

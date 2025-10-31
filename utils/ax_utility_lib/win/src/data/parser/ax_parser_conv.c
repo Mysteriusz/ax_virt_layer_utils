@@ -14,16 +14,16 @@ axres c16_to_int(
 	i64 i = 0;
 	i8 sign = 1;
 	
-	if (text[0] == L'-'){
+	if (text[0] == u'-'){
 		sign = -1;
 		text = &text[1];
 	}
 
 	for (u32 j = 0; j < _c16len(text); j++){
-		if ((L'0' <= text[j] && text[j] <= L'9') == false){
+		if ((u'0' <= text[j] && text[j] <= u'9') == false){
 			return AX_INV_DATA;
 		}
-		i = 10 * i + (c16)text[j] - (c16)L'0';
+		i = 10 * i + (c16)text[j] - (c16)u'0';
 	}
 	if (sign){
 		value->unsig_64 = sign * i;

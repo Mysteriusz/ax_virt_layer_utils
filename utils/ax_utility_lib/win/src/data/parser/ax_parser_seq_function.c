@@ -2,7 +2,7 @@
  	Sequence finder function interface
 */
 
-#include "ax_parser.h"
+#include "ax_parser_seq.h"
 
 bool seq_func_to_cond_inv(
 	_in const c16		*func // func for function
@@ -11,13 +11,13 @@ bool seq_func_to_cond_inv(
 		return true;
 	}
 
-	u64 func_len = _c16len(func);
+	u32 func_len = _c16len(func);
 	const c16 *func_char = func;
 
 	// Get function return mode
 	switch(*func_char){
-	case L'!': // Not true mode
-	case L'+': // True mode
+	case u'!': // Not true mode
+	case u'+': // True mode
 		break;
 	default: // Unknown mode value
 		return true;
@@ -25,7 +25,7 @@ bool seq_func_to_cond_inv(
 	func_char++;
 
 	if (in_c16_s(func, func_char, func_len) == false
-	|| *func_char != L':'){
+	|| *func_char != u':'){
 		return true;
 	}
 
@@ -35,7 +35,7 @@ bool seq_func_to_cond_inv(
 	}
 
 	// Count any characters
-	u64 c = 0;
+	u32 c = 0;
 	charset_count(func_char, SEQ_COND_CHARSET, &c);
 	if (c == 0){
 		return true;
@@ -52,19 +52,19 @@ _free fmt_cond *_seq_func_to_cond(
 
 	axres res = AX_SUCC;
 
-	u64 func_len = _c16len(func);
+	u32 func_len = _c16len(func);
 	const c16 *func_char = func;
 
 	fmt_cond *cond = axmalloc(sizeof(fmt_cond));
 
 	c16 *bef_buf = nullptr;
-	u64 bef_len = 0;
+	u32 bef_len = 0;
 
 	c16 *aft_buf = nullptr;
-	u64 aft_len = 0;
+	u32 aft_len = 0;
 
 	// Read return type
-	bool ret = (*func_char == L'!') 
+	bool ret = (*func_char == u'!') 
 		? false
 		: true;
 
@@ -139,11 +139,11 @@ axres seq_group_cond_end(
 	}
 
 	const c16 *spec_char = fmt_char;
-	u64 fmt_len = _c16len(fmt);
+	u32 fmt_len = _c16len(fmt);
 
 	while(in_c16_s(fmt, spec_char, fmt_len)){
 		switch(*spec_char){
-		case L')':
+		case u')':
 			if (!_is_esc(fmt, spec_char)){
 				goto exit_jump;
 			}
@@ -155,7 +155,7 @@ axres seq_group_cond_end(
 	}
 exit_jump:
 
-	if (*spec_char != L')'){
+	if (*spec_char != u')'){
 		return AX_NOT_FND;
 	}
 
@@ -181,7 +181,7 @@ axres seq_group_cond(
 
 	const c16 *spec_char = nullptr;
 
-	u64 spec_len = 0;
+	u32 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
 	// Skip initial 

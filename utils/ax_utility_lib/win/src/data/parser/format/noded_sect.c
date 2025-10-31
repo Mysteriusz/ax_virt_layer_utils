@@ -13,9 +13,9 @@ axres noded_sect_load(
 	noded_sect sect = {0};
 
 	// Allocated
-	u64 name_len = 0;
+	u32 name_len = 0;
 	c16 *name_buf = nullptr;
-	u64 rng_len = 0;
+	u32 rng_len = 0;
 	c16 *rng_buf = nullptr;
 
 	const c16 *sect_char = sect_loc.beg;

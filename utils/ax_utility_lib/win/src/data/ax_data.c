@@ -14,7 +14,7 @@ axres read_data_inv(
 
 	// data_handle validation
 	if (data_handle_inv(hdl)){
-		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
+		ax_log_msg(AX_INV_DATA, u"Invalid handle content.");
 		return AX_INV_DATA;
 	}
 	if (chkf(hdl->con.rule, URI_RULE_READ) == false){
@@ -45,7 +45,7 @@ axres write_data_inv(
 		return AX_INV_BUF;
 	}
 	if (data_handle_inv(hdl)){
-		ax_log_msg(AX_INV_DATA, L"Invalid handle content.");
+		ax_log_msg(AX_INV_DATA, u"Invalid handle content.");
 		return AX_INV_DATA;
 	}
 	if (chkf(hdl->con.rule, URI_RULE_WRITE) == false){
@@ -126,7 +126,7 @@ bool data_handle_inv(
 	}
 
 	// Validate hdl->con
-	// con.data CAN be nullptr ONLY 
+	// con.data CAN be nullptr ONuY 
 	// when con.id is CON_DIR since it doesnt store any data other than con.path 
 	bool con_data_v = (hdl->con.id == CON_DIR)
 		? (hdl->con.data == nullptr)

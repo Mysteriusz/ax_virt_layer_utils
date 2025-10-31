@@ -9,7 +9,7 @@ axres find_char(
 		return AX_INV_ARG;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	while(in_c16_s(text, text_char, text_len)
@@ -36,14 +36,14 @@ axres find_substr(
 		return AX_INV_BUF;
 	}
 
-	if (substr[0] == CHARSET_ANY[0]){
+	if (substr[0] == UTF16_ANY){
 		return AX_SUCC;
 	}
 
 	const c16 *loc_start = text;
 
-	u64 text_len = _c16len(text);
-	u64 sub_len = _c16len(substr);
+	u32 text_len = _c16len(text);
+	u32 sub_len = _c16len(substr);
 	const c16 *text_char = text;
 	const c16 *sub_char = substr;
 
@@ -55,7 +55,7 @@ axres find_substr(
 			}
 			sub_char++;
 
-			if (*sub_char == L'\0'){
+			if (*sub_char == u'\0'){
 				break;
 			}
 		}else{
@@ -67,8 +67,8 @@ axres find_substr(
 		text_char++;
 	}
 
-	bool full_find = (*sub_char == L'\0');
-	bool part_find = ((sub_char > substr) && (*text_char == L'\0')); 
+	bool full_find = (*sub_char == u'\0');
+	bool part_find = ((sub_char > substr) && (*text_char == u'\0')); 
 	bool find = full_find;
 
 	if (sub_loc != nullptr
@@ -87,8 +87,8 @@ axres find_substr(
 axres find_substr_range(
 	_in const c16 		*text,
 	_in const c16 		*substr,
-	_in u64			from,
-	_in u64			to,
+	_in u32			from,
+	_in u32			to,
 	_out const c16		**loc // text substr start location
 ){
 	if (text == nullptr
@@ -99,15 +99,15 @@ axres find_substr_range(
 		return AX_INV_BUF;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	if (to <= from
 	|| text_len < from // from index check
 	|| text_len < to){ // to index check
 		return AX_INV_IND;
 	}
 
-	u64 sub_len = _c16len(substr);
-	u64 rng_len = dif_c16(&text[from], &text[to]) + 1;
+	u32 sub_len = _c16len(substr);
+	u32 rng_len = dif_c16(&text[from], &text[to]) + 1;
 
 	const c16 *text_char = &text[from];
 	bool found = false;
@@ -133,14 +133,14 @@ axres find_substr_range(
 }
 
 c16 parens_map[256] = {
-	[L'('] = L')',
-	[L'['] = L']',
-	[L'{'] = L'}',
-	[L'<'] = L'>',
-	[L'"'] = L'"',
-	[L'`'] = L'`',
-	[L'\\'] = L'\\',
-	[L'\''] = L'\'',
+	[u'('] = u')',
+	[u'['] = u']',
+	[u'{'] = u'}',
+	[u'<'] = u'>',
+	[u'"'] = u'"',
+	[u'`'] = u'`',
+	[u'\\'] = u'\\',
+	[u'\''] = u'\'',
 };
 axres find_parentheses(
 	_in const c16 		*text,
@@ -159,7 +159,7 @@ axres find_parentheses(
 		return AX_INV_DATA;
 	}
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	bool found = false;

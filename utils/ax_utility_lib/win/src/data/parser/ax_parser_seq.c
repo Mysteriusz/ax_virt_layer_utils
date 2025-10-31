@@ -1,4 +1,4 @@
-#include "ax_parser.h"
+#include "ax_parser_seq.h"
 
 // fmt_spec list cleanup iterator
 iter_code fmt_spec_iter(
@@ -23,7 +23,7 @@ iter_code fmt_cond_iter(
 _free c16 *_seq_read_range(
 	_in const c16 		*fmt,
 	_in const c16 		*fmt_char,
-	_out u64		*skip
+	_out u32		*skip
 ){
 	if (fmt == nullptr
 	|| fmt_char == nullptr){
@@ -35,13 +35,13 @@ _free c16 *_seq_read_range(
 
 	axres res = AX_SUCC;
 
-	u64 fmt_len = _c16len(fmt);
+	u32 fmt_len = _c16len(fmt);
 
 	c16 *prev_buf = nullptr;
-	u64 prev_len = 0;
+	u32 prev_len = 0;
 
 	c16 *rng_buf = nullptr;
-	u64 rng_len = 0;
+	u32 rng_len = 0;
 
 	// Check if next character is a functional character which is marked as escaped
 	const c16 *beg_char = fmt_char;
@@ -58,7 +58,7 @@ _free c16 *_seq_read_range(
 			break;
 		}
 
-		// Copy everything before escape character (L'\\')
+		// Copy everything before escape character (u'\\')
 		prev_buf = rng_buf;
 		prev_len = _c16len(prev_buf);
 
@@ -68,7 +68,7 @@ _free c16 *_seq_read_range(
 		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
 		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, spec_char) * sizeof(c16));
 
-		// If escaped then load it as a character without L'\\'
+		// If escaped then load it as a character without u'\\'
 		if (_is_esc(fmt, spec_char)){
 			rng_buf[rng_len - 1] = *spec_char;
 		}else{
@@ -111,13 +111,13 @@ axres seq_read_group(
 
 	axres res = AX_SUCC;
 
-	u64 fmt_len = _c16len(fmt);
+	u32 fmt_len = _c16len(fmt);
 	const c16 *fmt_char = fmt;
 	const c16 *fmt_beg = nullptr;
 
 	// Sequence identifying characters
 	c16 *rng = nullptr;
-	u64 rng_len = 0;
+	u32 rng_len = 0;
 
 	fmt_spec spec = {0};
 	bool spec_add = false;
@@ -125,36 +125,42 @@ axres seq_read_group(
 /* 
 	Iterate group 
 	Example:
- 		- L"[^<{a-z}+{[-]}>$]"
+ 		- u"[^<{a-z}+{[-]}>$]"
 */
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
 		fmt_beg = fmt_char;
 
 		switch(*fmt_char){
-		case L'^': // seq_loc start indicator
-		case L'$': // seq_loc end indicator
-			// Load character to fmt_spec as control
+		case u'^': // seq_loc start indicator
+		case u'$': // seq_loc end indicator
+			// uoad character to fmt_spec as control
 			c16 *buf = axmalloc(sizeof(c16));
 			*buf = *fmt_char;
 
 			spec.value = buf;
-			spec.type = (*fmt_char == L'^' ? spec_control_beg : spec_control_end);
+			spec.type = (*fmt_char == u'^' ? spec_control_beg : spec_control_end);
 
 			fmt_char++;
 
 			spec_add = true;
 			break;
-		case L'<': // Capture set
+		case u'<': // Capture set
 			res = seq_group_cap(fmt, fmt_char, &fmt_char, &spec);
 			axcheck_b(res);
 
 			spec_add = true;
 			break;
-		case L'(':
+		/*case u'[': // Variable
+			res = seq_group_var(fmt, fmt_char, &fmt_char, &spec);
+			axcheck_b(res);
+
+			spec_add = true;
+			break;*/
+		case u'(': // Function
 			res = seq_group_cond(fmt, fmt_char, grp->cond_list, &fmt_char);
 			axcheck_b(res);
 			break;
-		case L'?':
+		case u'?':
 			fmt_char++;
 			break;
 		default:
@@ -275,22 +281,22 @@ axres seq_locate_action(
 	 	Continous block skipping with respect for next->value
 		
 		Example:
-			L"[[[secta]]]]" 
-			WITH curr->value == L"[" 
+			u"[[[secta]]]]" 
+			WITH curr->value == u"[" 
 			AND curr->type == spec_capture_set
 			AND next == nullptr
 
-			For block of L'[' it will skip all of its characters resulting in:
-			L"secta]]]]"
+			For block of u'[' it will skip all of its characters resulting in:
+			u"secta]]]]"
 
-			L"[[[secta]]]]" 
-			WITH curr->value == L"[" 
+			u"[[[secta]]]]" 
+			WITH curr->value == u"[" 
 			AND curr->type == spec_capture_set
 			AND next != nullptr
-			AND next->value == L"["
+			AND next->value == u"["
 
 			The result would be:
-			L"[secta]]]]"
+			u"[secta]]]]"
 			which considers next expected spec_sequence
 	*/
 	if (next != nullptr
@@ -374,7 +380,7 @@ axres seq_locate(
 
 	axres res = AX_SUCC;
 
-	u64 text_len = _c16len(text);
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 
 	const c16 *root_char = text;
@@ -492,7 +498,7 @@ axres seq_find_all(
 	res = seq_split_fmt(fmt, &grp);
 	axcheck(res);
 
-	u64 text_len = _c16len(text); 
+	u32 text_len = _c16len(text); 
 	const c16 *text_char = text; 
 	seq_loc buf = {0};
 
@@ -516,4 +522,53 @@ axres seq_find_all(
 
 	return AX_SUCC;
 }
+axres seq_find_f(
+	_in io_file		*file,
+	_in const c16 		*fmt
+){
+	if (io_finv(file, UTF16)){
+		return AX_INV_FILE;
+	}
+	if (fmt == nullptr){
+		return AX_INV_ARG;
+	}
 
+	axres res = AX_SUCC;
+
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root + file->offset;
+	// uocation of substr in fmap
+	seq_loc buf = {0};
+
+	res = seq_find(fmap_off, fmt, &buf);
+	axcheck(res);
+
+	file->offset = (u64)buf.beg;
+	io_str((const c16*)file->offset);
+
+	return AX_SUCC;
+}
+axres seq_find_all_f(
+	_in io_file		*file,
+	_in const c16 		*fmt,
+	_in_out ax_list		*locs
+){
+	if (io_finv(file, UTF16)){
+		return AX_INV_FILE;
+	}
+	if (fmt == nullptr){
+		return AX_INV_ARG;
+	}
+	if (locs == nullptr){
+		return AX_INV_BUF;
+	}
+
+	axres res = AX_SUCC;
+
+	// fmap with file offset
+	const c16 *fmap_off = file->map.root;
+	res = seq_find_all(fmap_off, fmt, locs);
+	axcheck(res);
+
+	return AX_SUCC;
+}

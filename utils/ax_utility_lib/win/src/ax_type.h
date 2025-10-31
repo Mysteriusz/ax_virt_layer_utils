@@ -163,10 +163,10 @@ typedef union{
 
 #if defined(AX_WIN64)
 typedef unsigned char c8; // ansi
-typedef unsigned short c16; // unicode
+typedef unsigned short c16; // utf-16
 #elif defined(AX_LINUX) 
 typedef signed char c8; // ansi
-typedef signed short c16; // unicode
+typedef signed short c16; // utf-16
 #endif
 
 typedef u64 axres;

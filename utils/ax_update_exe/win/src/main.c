@@ -4,23 +4,33 @@
 int main(
 	void
 ){
-	io_str(L"ax_update.exe v0.00");
+	io_str(u"ax_update.exe v0.00");
 
 	axres res = AX_SUCC;
 	unref(res);
 
 	/*noded_doc *doc = nullptr;
-	res = noded_doc_load(L"D:\\share\\ax_info.noded", &doc);
+	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
 	noded_doc_unload(doc);*/
 
-	seq_loc loc = {0};
-	res = seq_find(L"bef|defl]aft", L"|?<{a-c}>?<{d-f}>]", &loc);
+	/*u32 l = 0;
+	c16 *b = nullptr;
+	read_until(u"some_text;dfhsklh", u";", &l, b);
+	b = axmalloc(l * sizeof(c16));
+	read_until(u"some_text;dfhsklh", u";", &l, b);
+
+	io_str(b);*/
+	
+	/*seq_loc loc = {0};
+	res = seq_find(u"key=value", u"[n:key]<{a-z}>=[n:value]<{a-z}>", &loc);
 	axcheck(res, ax_log(res));
 
-	io_str(loc.beg);
+	io_str(loc.beg);*/
+	//io_i64(seq_label_to_var_inv(u"n:key"));
+	_seq_label_to_var(u"n:key");
 
-	io_str(L"Active memory in bytes:");
+	io_str(u"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);
 
 	axcheck(res, ax_log(res));

@@ -14,7 +14,7 @@ axres noded_kvp_load(
 	axres res = AX_SUCC;
 
 	// Read line into an internal buffer
-	u64 kvp_len = 0;
+	u32 kvp_len = 0;
 	c16 *kvp_buf = nullptr;
 
 	res = read_line(kvp_loc, &kvp_len, kvp_buf);
