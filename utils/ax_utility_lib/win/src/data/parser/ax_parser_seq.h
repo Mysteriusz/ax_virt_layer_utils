@@ -4,9 +4,10 @@
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			u"<($^?"
+#define CHARSET_SEQ 			u"<($^?["
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
+	ax_list *var_list; // List of _fmt_var
 	ax_list *cond_list; // List of _fmt_cond
 } fmt_group;
 
@@ -20,6 +21,9 @@ enum spec_mode{
 	spec_none = 0,
 	spec_optional = 1
 };
+/*
+ 	Unstructured linear sequence data holder.
+*/
 typedef struct _fmt_spec{
 	const c16 *value;
 	enum spec_type type;
@@ -182,11 +186,14 @@ enum cond_state{
 	outside = 0,
 	inside = 1,
 };
+/*
+ 	Condition definition sequence structure.
+*/
 typedef struct _fmt_cond{
 	bool ret;
 	enum cond_state state;
-	const c16 *bef; // Before $ string
-	const c16 *aft; // After $ string
+	const c16 *bef; // Before . character
+	const c16 *aft; // After . character
 } fmt_cond;
 
 #define SEQ_COND_CHARSET u"."
@@ -194,7 +201,7 @@ typedef struct _fmt_cond{
 /* 
 	Function has to consist of at least one control character.
 	Recognized characters:
-		$ - Any character
+		. - Any character
 */
 bool seq_func_to_cond_inv(
 	_in const c16		*func // func for function
@@ -242,6 +249,9 @@ enum var_type{
 	type_u32 = 4,
 	type_u64 = 8,
 };
+/*
+ 	Variable definition sequence structure.
+*/
 typedef struct _fmt_var{
 	const c16 *name;
 	enum var_type type;
@@ -295,8 +305,8 @@ axres seq_group_var_end(
 axres seq_group_var(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
-	_out const c16		**loc,
-	_out fmt_spec		*buf
+	_in ax_list 		*var_list,
+	_out const c16		**loc
 );
 
 #endif

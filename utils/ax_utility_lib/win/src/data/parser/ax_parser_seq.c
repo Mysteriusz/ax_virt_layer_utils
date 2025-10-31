@@ -19,6 +19,16 @@ iter_code fmt_cond_iter(
 
 	return ITER_NONE;
 }
+// fmt_var list cleanup iterator
+iter_code fmt_var_iter(
+	ax_list_iter_stack 	stack _prepass
+){
+	fmt_var *var = (fmt_var*)stack->node->value;
+	axfree((void*)var->name);
+
+	return ITER_NONE;
+}
+
 
 _free c16 *_seq_read_range(
 	_in const c16 		*fmt,
@@ -105,7 +115,8 @@ axres seq_read_group(
 	}
 	if (grp == nullptr
 	|| grp->cond_list == nullptr
-	|| grp->spec_list == nullptr){
+	|| grp->spec_list == nullptr
+	|| grp->var_list == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -125,7 +136,7 @@ axres seq_read_group(
 /* 
 	Iterate group 
 	Example:
- 		- u"[^<{a-z}+{[-]}>$]"
+ 		- u"(!:\".\")\\[^<{a-z}+{[-]}>$]"
 */
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
 		fmt_beg = fmt_char;
@@ -150,12 +161,10 @@ axres seq_read_group(
 
 			spec_add = true;
 			break;
-		/*case u'[': // Variable
-			res = seq_group_var(fmt, fmt_char, &fmt_char, &spec);
+		case u'[': // Variable
+			res = seq_group_var(fmt, fmt_char, grp->var_list, &fmt_char);
 			axcheck_b(res);
-
-			spec_add = true;
-			break;*/
+			break;
 		case u'(': // Function
 			res = seq_group_cond(fmt, fmt_char, grp->cond_list, &fmt_char);
 			axcheck_b(res);
@@ -188,7 +197,6 @@ axres seq_read_group(
 				sizeof(fmt_spec)
 			);
 			spec_add = false;
-		io_i64(spec.mode);
 		}
 	}
 
@@ -211,6 +219,10 @@ void grp_cleanup(
 		grp->cond_list->iter(grp->cond_list, (ax_iter_act)fmt_cond_iter, nullptr, nullptr);
 		grp->cond_list->delete(grp->cond_list);
 	}
+	if (grp->var_list != nullptr){
+		grp->var_list->iter(grp->var_list, (ax_iter_act)fmt_var_iter, nullptr, nullptr);
+		grp->var_list->delete(grp->var_list);
+	}
 }
 axres seq_split_fmt(
 	_in const c16 		*fmt,
@@ -228,17 +240,23 @@ axres seq_split_fmt(
 
 	// Initialize group lists
 	res = ax_list_init(&grp.spec_list);
-	axcheck(res);
+	axcheck_g(res, error_jump);
 	res = ax_list_init(&grp.cond_list);
-	axcheck(res, grp_cleanup(&grp));
+	axcheck_g(res, error_jump);
+	res = ax_list_init(&grp.var_list);
+	axcheck_g(res, error_jump);
 
 	// Parse group
 	res = seq_read_group(fmt, &grp);
-	axcheck(res, grp_cleanup(&grp));
+	axcheck_g(res, error_jump);
 
 	*buf = grp;
 
 	return AX_SUCC;
+
+error_jump:
+	grp_cleanup(&grp);
+	return res;
 }
 
 axres seq_locate_action(

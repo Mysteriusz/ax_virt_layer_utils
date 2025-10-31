@@ -287,6 +287,9 @@ axres seq_group_cap(
 	|| buf == nullptr){
 		return AX_INV_BUF;
 	}
+	if (*fmt_char != u'<'){
+		return AX_INV_DATA;
+	}
 
 	axres res = AX_SUCC;
 
@@ -295,7 +298,7 @@ axres seq_group_cap(
 	u32 spec_len = 0;
 	c16 *spec_buf = nullptr;
 
-	// Skip initial 
+	// Skip initial u'<'
 	fmt_char++;
 
 	// Find ending of the capture set
@@ -324,16 +327,16 @@ axres seq_group_cap(
 	axcheck(res, axfree(spec_buf));
 
 	const c16 *cap_set = _seq_cap_to_charset(spec_buf);
-	axcheck_r((cap_set == nullptr), AX_INV_FMT, axfree(spec_buf));
-
-	// Cleanup
 	axfree(spec_buf);
+
+	axcheck_r((cap_set == nullptr), AX_INV_FMT);
 
 	// Write-back
 	buf->value = cap_set;
 	buf->type = spec_capture_set;
 
-	fmt_char += spec_len;
+	// Move to end + 1 since we want to skip last u')' character too
+	fmt_char = spec_char + 1;
 
 	// Write-back
 	*loc = fmt_char;
@@ -355,8 +358,8 @@ axres seq_charset_match(
 
 	axres res = AX_SUCC;
 
-	u32 inv_set_size = 0;
-	c16 *inv_beg = nullptr;
+	u32 set_len_n = 0;
+	c16 *set_buf = nullptr;
 
 	if (seq_end == nullptr){
 		res = skip_until(text, cap, &seq_end);
@@ -367,22 +370,22 @@ axres seq_charset_match(
 	u32 to = dif_c16(text, seq_end);
 
 	// Read range
-	res = read_range(text, from, to, &inv_set_size, nullptr);
+	res = read_range(text, from, to, &set_len_n, set_buf);
 	axcheck(res);
 
-	inv_beg = axmalloc(inv_set_size * sizeof(c16));
+	set_buf = axmalloc(set_len_n * sizeof(c16));
 
-	res = read_range(text, from, to, &inv_set_size, inv_beg);
-	axcheck(res, axfree(inv_beg));
+	res = read_range(text, from, to, &set_len_n, set_buf);
+	axcheck(res, axfree(set_buf));
 
 	// Try to skip entire inv_begwith capture group
-	const c16 *inv_set_loc = nullptr;
-	res = skip_while(inv_beg, cap, &inv_set_loc);
-	axcheck(res, axfree(inv_beg));
+	const c16 *set_char = nullptr;
+	res = skip_while(set_buf, cap, &set_char);
+	axcheck(res, axfree(set_buf));
 
-	axfree(inv_beg);
+	axfree(set_buf);
 	// Check if skip count was as seq_end expects
-	if (dif_c16(inv_beg, inv_set_loc) != dif_c16(seq_beg, seq_end)){
+	if (dif_c16(set_buf, set_char) != dif_c16(seq_beg, seq_end)){
 		return AX_NOT_FND;
 	}
 

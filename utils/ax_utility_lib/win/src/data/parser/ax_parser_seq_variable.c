@@ -52,6 +52,11 @@ enum var_type _seq_var_field_t(
 	_in const c16 		*label_char,
 	_out const c16		**loc
 ){
+	if (label_char == nullptr
+	|| loc == nullptr){
+		return type_unk;
+	}
+
 	enum var_type type = type_unk;
 
 	axres res = AX_SUCC;
@@ -92,6 +97,10 @@ enum var_type _seq_var_field_t(
 bool seq_label_to_var_inv(
 	_in const c16		*label
 ){
+	if (label == nullptr){
+		return true;
+	}
+
 	u32 label_len = _c16len(label);
 	const c16 *label_char = label;
 
@@ -203,14 +212,12 @@ _free fmt_var *_seq_label_to_var(
 
 		label_char++;
 	}
-	axcheck_r(res, nullptr, axfree(var));
+	axcheck_g(res, error_jump);
 
 	var->name = name;
 	var->type = type;
 	var->length = length;
 	var->span = span;
-	io_str(var->name);
-	io_i64(var->type);
 
 	return var;
 	
@@ -220,4 +227,115 @@ error_jump:
 	ax_log(res);
 
 	return nullptr;
+}
+axres seq_group_var_end(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out const c16		**loc
+){
+	if (fmt == nullptr
+	|| fmt_char == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	const c16 *spec_char = fmt_char;
+	u32 fmt_len = _c16len(fmt);
+
+	while(in_c16_s(fmt, spec_char, fmt_len)){
+		switch(*spec_char){
+		case u']':
+			if (!_is_esc(fmt, spec_char)){
+				goto exit_jump;
+			}
+			break;
+		default:
+			break;
+		}
+		spec_char++;
+	}
+exit_jump:
+
+	if (*spec_char != u']'){
+		return AX_NOT_FND;
+	}
+
+	*loc = spec_char;
+
+	return AX_SUCC;
+}
+axres seq_group_var(
+	_in const c16		*fmt,
+	_in const c16		*fmt_char,
+	_in ax_list 		*var_list,
+	_out const c16		**loc
+){
+	if (fmt == nullptr
+	|| fmt_char == nullptr
+	|| var_list == nullptr){
+		return AX_INV_ARG;
+	}
+	if (loc == nullptr){
+		return AX_INV_BUF;
+	}
+	if (*fmt_char != u'['){
+		return AX_INV_DATA;
+	}
+
+	axres res = AX_SUCC;
+
+	const c16 *spec_char = nullptr;
+
+	u32 spec_len_n = 0;
+	c16 *spec_buf = nullptr;
+
+	// Skip initial u'['
+	fmt_char++;
+
+	// Find ending of the variable label
+	res = seq_group_var_end(fmt, fmt_char, &spec_char);
+	axcheck(res);
+
+	// Read inside of the variable label
+	res = read_range(
+		fmt,
+		dif_c16(fmt, fmt_char),
+		dif_c16(fmt, spec_char),
+		&spec_len_n,
+		spec_buf
+	);
+	axcheck(res);
+	
+	spec_buf = axmalloc(spec_len_n * sizeof(c16));
+
+	res = read_range(
+		fmt,
+		dif_c16(fmt, fmt_char),
+		dif_c16(fmt, spec_char),
+		&spec_len_n,
+		spec_buf
+	);
+	axcheck(res, axfree(spec_buf));
+
+	fmt_var *var = _seq_label_to_var(spec_buf);
+	axfree(spec_buf);
+
+	axcheck_r((var == nullptr), AX_INV_FMT);
+
+	// Add to list
+	var_list->add(
+		var_list, 
+		var,
+		sizeof(fmt_var)
+	);
+	// Move to end + 1 since we want to skip last u']' character too
+	fmt_char = spec_char + 1;
+
+	*loc = fmt_char;
+
+	axfree(var);
+
+	return AX_SUCC;
 }

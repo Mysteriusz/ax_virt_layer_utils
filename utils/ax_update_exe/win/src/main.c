@@ -22,13 +22,13 @@ int main(
 
 	io_str(b);*/
 	
-	/*seq_loc loc = {0};
+	seq_loc loc = {0};
 	res = seq_find(u"key=value", u"[n:key]<{a-z}>=[n:value]<{a-z}>", &loc);
 	axcheck(res, ax_log(res));
+	io_str(loc.beg);
 
-	io_str(loc.beg);*/
-	io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
-	//_seq_label_to_var(u"n:key;t:u32d");
+	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
+	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
 
 	io_str(u"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);

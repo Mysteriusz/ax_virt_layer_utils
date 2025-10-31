@@ -176,15 +176,18 @@ axres seq_group_cond(
 	if (loc == nullptr){
 		return AX_INV_BUF;
 	}
+	if (*fmt_char != u'('){
+		return AX_INV_DATA;
+	}
 
 	axres res = AX_SUCC;
 
 	const c16 *spec_char = nullptr;
 
-	u32 spec_len = 0;
+	u32 spec_len_n = 0;
 	c16 *spec_buf = nullptr;
 
-	// Skip initial 
+	// Skip initial u'('
 	fmt_char++;
 
 	// Find ending of the function
@@ -196,35 +199,39 @@ axres seq_group_cond(
 		fmt,
 		dif_c16(fmt, fmt_char),
 		dif_c16(fmt, spec_char),
-		&spec_len,
+		&spec_len_n,
 		spec_buf
 	);
 	axcheck(res);
 	
-	spec_buf = axmalloc(spec_len * sizeof(c16));
+	spec_buf = axmalloc(spec_len_n * sizeof(c16));
 
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
 		dif_c16(fmt, spec_char),
-		&spec_len,
+		&spec_len_n,
 		spec_buf
 	);
 	axcheck(res, axfree(spec_buf));
 
+	// Parse condition with read block
 	fmt_cond *cond = _seq_func_to_cond(spec_buf);
-	axcheck_r((cond == nullptr), AX_INV_FMT, axfree(spec_buf));
+	axfree(spec_buf);
 
+	axcheck_r((cond == nullptr), AX_INV_FMT);
+
+	// Add to list
 	cond_list->add(
 		cond_list, 
 		cond,
 		sizeof(fmt_cond)
 	);
-	fmt_char += spec_len;
+	// Move to end + 1 since we want to skip last u')' character too
+	fmt_char = spec_char + 1;
 
 	*loc = fmt_char;
 
-	axfree(spec_buf);
 	axfree(cond);
 
 	return AX_SUCC;
