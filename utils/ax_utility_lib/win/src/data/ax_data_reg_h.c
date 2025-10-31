@@ -12,8 +12,8 @@
 
 #define HIVE_CU			u"HKEY_CURRENT_USER"
 #define HIVE_U			u"HKEY_USERS"
-#define HIVE_uM			u"HKEY_uOCAu_MACHINE"
-#define HIVE_CR			u"HKEY_CuASSES_ROOT"
+#define HIVE_LM			u"HKEY_LOCAL_MACHINE"
+#define HIVE_CR			u"HKEY_CLASSES_ROOT"
 #define HIVE_CC			u"HKEY_CURRENT_CONFIG"
 
 void *res_hive(
@@ -27,7 +27,7 @@ void *res_hive(
 		return HKEY_CURRENT_USER;
 	}else if (compare(value, HIVE_U) == AX_SUCC){
 		return HKEY_USERS;
-	}else if (compare(value, HIVE_uM) == AX_SUCC){
+	}else if (compare(value, HIVE_LM) == AX_SUCC){
 		return HKEY_LOCAL_MACHINE;
 	}else if (compare(value, HIVE_CR) == AX_SUCC){
 		return HKEY_CLASSES_ROOT;
@@ -50,19 +50,19 @@ void *res_path(
 	HANDLE *buf = nullptr; 
 
 #if defined(AX_UM)
-	u32 path_size = 0;
+	u32 path_len_n = 0;
 	c16 **path_d = nullptr; 
 
 	// Split path into keys to follow 
-	res = split_by(hdl->con.path, u"\\/", &path_size, path_d);  
+	res = split_by(hdl->con.path, u"\\/", &path_len_n, path_d);
 	if (AX_ERR(res)){
 		ax_log(res);
 		return nullptr;
 	}
 
-	path_d = axmalloc(path_size * sizeof(c16*));
+	path_d = axmalloc(path_len_n * sizeof(c16*));
 
-	res = split_by(hdl->con.path, u"\\/", &path_size, path_d);  
+	res = split_by(hdl->con.path, u"\\/", &path_len_n, path_d);
 	if (AX_ERR(res)){
 		ax_log(res);
 		return nullptr;
@@ -73,7 +73,7 @@ void *res_path(
 	LSTATUS stat = ERROR_SUCCESS;
 
 	u32 dwSamDesired = RULE_TO_SAM(hdl->con.rule);
-	for (u32 i = 1; i < path_size - 1; i++){
+	for (u32 i = 1; i < path_len_n - 1; i++){
 		if (chkf(hdl->con.rule, URI_RULE_CREATE)){
 			stat = RegCreateKeyExW(
 				(HKEY)buf,
