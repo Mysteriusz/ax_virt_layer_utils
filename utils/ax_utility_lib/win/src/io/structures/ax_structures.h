@@ -116,8 +116,8 @@ void *ax_list_at_v(
 );
 
 typedef struct _ax_list_iter_stack{
-	 const ax_list 		*list;
-	 const ax_list_node	*node;
+	const ax_list 			*list;
+	const ax_list_node		*node;
 	void 				*data;
 } ax_list_iter_stack;
 axres ax_list_iter(

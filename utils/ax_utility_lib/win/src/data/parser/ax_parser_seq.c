@@ -29,7 +29,6 @@ iter_code fmt_var_iter(
 	return ITER_NONE;
 }
 
-
 _free c16 *_seq_read_range(
 	_in const c16 		*fmt,
 	_in const c16 		*fmt_char,
@@ -126,6 +125,7 @@ axres seq_read_group(
 	u32 spec_occ = 0;
 	u32 var_occ = 0;
 	u32 cond_occ = 0;
+	unref(var_occ); unref(cond_occ);
 
 /* 
 	Iterate group 
@@ -226,6 +226,23 @@ void grp_cleanup(
 		grp->var_list->delete(grp->var_list);
 	}
 }
+
+// Optional specifier count iterator
+iter_code spec_opt_count_iter(
+	ax_list_iter_stack 	stack _prepass
+){
+	fmt_spec *spec = (fmt_spec*)stack->node->value;
+	u32 *count = (u32*)stack->data;
+
+	if (count == nullptr){
+		return ITER_STOP;
+	}
+	if (spec->mode == spec_optional){
+		(*count)++;
+	}
+
+	return ITER_NONE;
+}
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_in_out fmt_group 	*buf
@@ -251,6 +268,13 @@ axres seq_split_fmt(
 	// Parse group
 	res = seq_read_group(fmt, &grp);
 	axcheck_g(res, error_jump);
+
+	grp.spec_list->iter(
+		grp.spec_list,
+		(ax_iter_act)spec_opt_count_iter,
+		&grp.spec_opts,
+		nullptr
+	);
 
 	*buf = grp;
 
@@ -408,9 +432,12 @@ axres seq_locate(
 	const c16 *end_char = text; // Indicated by $ character
 
 	u32 seq_i = 0;
+	u32 spec_non_opts = 0; // Count of non-optional spec_list specifiers
 
 	while(in_c16_s(text, text_char, text_len)
 	&& seq_i < grp->spec_list->count){
+		fmt_spec *curr = index_as(grp->spec_list, seq_i, fmt_spec*);
+
 		// First check
 		if (seq_i == 0){
 			root_char = text_char;
@@ -441,6 +468,13 @@ axres seq_locate(
 			&end_char
 		);
 		axcheck_g(res, skip_occ);
+
+		if (curr->type == spec_capture_set
+		|| curr->type == spec_sequence){
+			spec_non_opts = (curr->mode != spec_optional)
+				? spec_non_opts + 1
+				: spec_non_opts;
+		}
 		
 		seq_i++;
 		if (seq_i == grp->spec_list->count
@@ -452,6 +486,7 @@ skip_occ:
 		// Reset search
 		if(AX_ERR(res)){
 			text_char = root_char + 1;
+			spec_non_opts = 0;
 			seq_i = 0;
 			beg_char = nullptr;
 			end_char = nullptr;
@@ -459,7 +494,8 @@ skip_occ:
 		}
 	}
 
-	if (seq_i < grp->spec_list->count){
+	if (seq_i < grp->spec_list->count
+	&& spec_non_opts < (grp->spec_list->count - grp->spec_opts)){
 		return AX_NOT_FND;
 	}
 	else axcheck(res);

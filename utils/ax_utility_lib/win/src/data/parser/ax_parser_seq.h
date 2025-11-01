@@ -9,6 +9,14 @@ typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *var_list; // List of _fmt_var
 	ax_list *cond_list; // List of _fmt_cond
+	/*
+	 	Exclusive to edge case in which all last seq_i are
+		optional AND seq_locate loop was exited due to in_c16_s fail
+		Example:
+			text = u"key="
+			fmt = u"<{a-z}>=?<{a-z}>"
+	*/
+	u32 spec_opts; // Optional specifier count
 } fmt_group;
 
 enum spec_type{
