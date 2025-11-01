@@ -71,7 +71,7 @@ axres ax_list_contains(
 	ax_list_node *curr = list->root;
 	while(curr != nullptr){
 		// Found 
-		if (sfmemcmp(curr->value, value, curr->size, size) == 0){
+		if (_sfmemcmp(curr->value, value, curr->size, size) == 0){
 			break;
 		}
 
@@ -96,7 +96,7 @@ axres ax_list_remove(
 	ax_list_node *curr = list->root;
 	while(curr != nullptr){
 		// Found 
-		if (sfmemcmp(curr->value, value, curr->size, size) == 0){
+		if (_sfmemcmp(curr->value, value, curr->size, size) == 0){
 			break;
 		}
 

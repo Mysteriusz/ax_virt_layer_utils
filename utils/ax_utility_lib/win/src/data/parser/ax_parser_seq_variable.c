@@ -32,12 +32,12 @@ _free c16 *_seq_var_field_n(
 	c16 *name_buf = nullptr;
 
 	// Read range until either u';' or to the end
-	res = read_until(label_char, JOIN_C16(u';', UTF16_EOT), &name_len_n, name_buf);
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &name_len_n, name_buf);
 	axcheck_r(res, nullptr);
 
 	name_buf = axmalloc(name_len_n * sizeof(c16));
 
-	res = read_until(label_char, JOIN_C16(u';', UTF16_EOT), &name_len_n, name_buf);
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &name_len_n, name_buf);
 	axcheck_r(res, nullptr);
 
 	// Skip the text and write-back
@@ -65,12 +65,12 @@ enum var_type _seq_var_field_t(
 	c16 *type_buf = nullptr;
 	
 	// Read range until either u';' or to the end
-	res = read_until(label_char, JOIN_C16(u';', UTF16_EOT), &type_len_n, type_buf);
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &type_len_n, type_buf);
 	axcheck_r(res, type_unk);
 
 	type_buf = axmalloc(type_len_n * sizeof(c16));
 
-	res = read_until(label_char, JOIN_C16(u';', UTF16_EOT), &type_len_n, type_buf);
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &type_len_n, type_buf);
 	axcheck_r(res, type_unk, axfree(type_buf));
 
 	if (compare(type_buf, u"u8") == AX_SUCC){
@@ -161,7 +161,8 @@ bool seq_label_to_var_inv(
 }
 
 _free fmt_var *_seq_label_to_var(
-	_in const c16		*label
+	_in const c16		*label,
+	_in u32 		spec_i
 ){
 	if (seq_label_to_var_inv(label)){
 		return nullptr;
@@ -214,6 +215,7 @@ _free fmt_var *_seq_label_to_var(
 	}
 	axcheck_g(res, error_jump);
 
+	var->spec_i = spec_i;
 	var->name = name;
 	var->type = type;
 	var->length = length;
@@ -270,6 +272,7 @@ axres seq_group_var(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*var_list,
+	_in u32			spec_i,
 	_out const c16		**loc
 ){
 	if (fmt == nullptr
@@ -319,7 +322,7 @@ axres seq_group_var(
 	);
 	axcheck(res, axfree(spec_buf));
 
-	fmt_var *var = _seq_label_to_var(spec_buf);
+	fmt_var *var = _seq_label_to_var(spec_buf, spec_i);
 	axfree(spec_buf);
 
 	axcheck_r((var == nullptr), AX_INV_FMT);

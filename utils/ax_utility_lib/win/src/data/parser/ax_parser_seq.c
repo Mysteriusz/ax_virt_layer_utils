@@ -59,8 +59,8 @@ _free c16 *_seq_read_range(
 	while(in_c16_s(fmt, beg_char, fmt_len)){
 		axfree(prev_buf);
 
-		// Skip to first possible charset character occurence
-		res = skip_until(beg_char, CHARSET_SEQ, &spec_char);
+		// Skip to first possible charset character occurence OR end of text
+		res = skip_until(beg_char, CHARSET_SEQ UTF16_EOT_STR, &spec_char);
 		axcheck_b(res);
 
 		// No space in between last escape and next CHARSET_SEQ
@@ -72,35 +72,24 @@ _free c16 *_seq_read_range(
 		prev_buf = rng_buf;
 		prev_len = _c16len(prev_buf);
 
+		// Get needed length for the new buffer and allocate
 		rng_len = dif_c16(beg_char, spec_char) + prev_len;
 		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
 
+		// Copy memory from prev_buf and then from beg_char
+		// With range of size from beg_char to next CHARSET_SEQ occurence character
 		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
 		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, spec_char) * sizeof(c16));
 
-		// If escaped then load it as a character without u'\\'
+		// If next CHARSET_SEQ occurence is escaped then load it into the rng_buf as last and continue
 		if (_is_esc(fmt, spec_char)){
 			rng_buf[rng_len - 1] = *spec_char;
-		}else{
+		}else{ // If not then break the loop and return output
 			break;
 		}
 
 		beg_char = spec_char + 1;
 	}
-	// Read to end
-	if (res == AX_NOT_FND){
-		prev_buf = rng_buf;
-		prev_len = _c16len(prev_buf);
-
-		rng_len = dif_c16(beg_char, &fmt[fmt_len]) + prev_len;
-		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
-
-		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
-		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, &fmt[fmt_len]) * sizeof(c16));
-
-		spec_char = &fmt[fmt_len];
-		axfree(prev_buf);
-	}else axcheck_r(res, nullptr, axfree(rng_buf));
 
 	*skip = dif_c16(fmt_char, spec_char);
 
@@ -133,6 +122,11 @@ axres seq_read_group(
 	fmt_spec spec = {0};
 	bool spec_add = false;
 
+ 	// Current processed count
+	u32 spec_occ = 0;
+	u32 var_occ = 0;
+	u32 cond_occ = 0;
+
 /* 
 	Iterate group 
 	Example:
@@ -141,6 +135,10 @@ axres seq_read_group(
 	while(in_c16_s(fmt, fmt_char, fmt_len)){
 		fmt_beg = fmt_char;
 
+		/*
+			IMPORTANT!:
+		 	Any case in this block will a stall if not handled and returned to the fmt_char.
+		*/
 		switch(*fmt_char){
 		case u'^': // seq_loc start indicator
 		case u'$': // seq_loc end indicator
@@ -162,12 +160,14 @@ axres seq_read_group(
 			spec_add = true;
 			break;
 		case u'[': // Variable
-			res = seq_group_var(fmt, fmt_char, grp->var_list, &fmt_char);
+			res = seq_group_var(fmt, fmt_char, grp->var_list, spec_occ, &fmt_char);
 			axcheck_b(res);
+			var_occ++;
 			break;
 		case u'(': // Function
 			res = seq_group_cond(fmt, fmt_char, grp->cond_list, &fmt_char);
 			axcheck_b(res);
+			cond_occ++;
 			break;
 		case u'?':
 			fmt_char++;
@@ -190,6 +190,8 @@ axres seq_read_group(
 
 		spec.mode = (_is_opt(fmt, fmt_beg) == true ? spec_optional : spec_none);
 		if (spec_add){
+			spec_occ++;
+
 			// Add buffer specifier
 			grp->spec_list->add(
 				grp->spec_list,

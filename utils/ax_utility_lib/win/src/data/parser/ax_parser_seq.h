@@ -251,12 +251,17 @@ enum var_type{
 };
 /*
  	Variable definition sequence structure.
+
+	When processing string variable occurences only capture output of following specifiers:
+		- spec_sequence
+		- spec_capture_set
 */
 typedef struct _fmt_var{
 	const c16 *name;
 	enum var_type type;
 	u32 length;
 	u8 span;
+	u32 spec_i;
 } fmt_var;
 
 /* 
@@ -294,7 +299,8 @@ bool seq_label_to_var_inv(
 	Returns HEAP ALLOCATED variable meta structure
 */
 _free fmt_var *_seq_label_to_var(
-	_in const c16		*label
+	_in const c16		*label,
+	_in u32 		spec_i
 );
 
 axres seq_group_var_end(
@@ -306,6 +312,7 @@ axres seq_group_var(
 	_in const c16		*fmt,
 	_in const c16		*fmt_char,
 	_in ax_list 		*var_list,
+	_in u32			spec_i,
 	_out const c16		**loc
 );
 

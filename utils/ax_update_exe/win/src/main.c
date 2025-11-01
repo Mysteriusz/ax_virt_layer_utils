@@ -23,7 +23,7 @@ int main(
 	io_str(b);*/
 	
 	seq_loc loc = {0};
-	res = seq_find(u"key=value", u"[n:key]<{a-z}>=[n:value]<{a-z}>", &loc);
+	res = seq_find(u"key=value", u"[n:key]<{a-z}>=[n:value;t:u32]<{a-z}>fdhj", &loc);
 	axcheck(res, ax_log(res));
 	io_str(loc.beg);
 

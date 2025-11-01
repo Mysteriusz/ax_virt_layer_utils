@@ -72,14 +72,17 @@ static inline bool _is_opt(
 
 #define dif_b(s,e)		((u8*)(e) - (u8*)(s))
 
-#define JOIN_C16(a,b)		((c16[]){a, b, u'\x0'})
+#define TO_STR1(chr)		#chr
+#define TO_STR(chr)		TO_STR1(chr)	
+
+// Join 2 typeof(c16) characters
+#define JOIN_C16_C16(chr1,chr2)	((c16[3]){chr1, chr2, u'\x0'})
 
 /*
  
-   	If AX_NOT_FND is returned, every _out parameter
-	will be written to ONLY when there was no error.
-	(c16* -> *0)
-	(c16** -> nullptr)
+	Write-back of any function occurs ONLY when:
+		- return of type axres == AX_SUCC
+		- return of any pointer != nullptr
 
 */
 
@@ -189,7 +192,10 @@ axres trim(
 #define AX_PARSER_SKIP_INT
 
 #define UTF16_EOT		u'\u0003'
+#define UTF16_EOT_STR		u"\u0003"
+
 #define UTF16_ANY		u'\uFFFD'
+#define UTF16_ANY_STR		u"\uFFFD"
 
 #define CHARSET_NL 		u"\x0a\x0d"
 #define CHARSET_WS 		u"\x20\t"
