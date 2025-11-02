@@ -342,3 +342,8 @@ axres seq_group_var(
 
 	return AX_SUCC;
 }
+axres seq_var_process(
+	_in const c16		*text
+){
+	return AX_SUCC;
+}

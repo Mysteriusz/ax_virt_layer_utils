@@ -344,7 +344,7 @@ axres seq_group_cap(
 	return AX_SUCC;
 }
 
-axres seq_charset_match(
+axres seq_cap_match(
 	_in const c16		*text,
 	_in const c16		*cap,
 	_in const c16 		*seq_beg,

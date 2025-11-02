@@ -357,11 +357,11 @@ axres seq_locate_action(
 		}else{
 			// Find the ending position or move to next if optional
 			res = find_substr(spec_beg, next->value, &spec_end, nullptr);
-			axcheck_g(res, error_jump);
+			axcheck_g(res, skip_jump);
 		}
 	}else if(curr->type == spec_capture_set){
 		res = skip_while(spec_beg, curr->value, &spec_end);
-		axcheck_g(res, error_jump);
+		axcheck_g(res, skip_jump);
 	}
 
 	// Skip with respect to next
@@ -382,7 +382,7 @@ axres seq_locate_action(
 			res = AX_NOT_FND;
 			break;
 		}
-		res = seq_charset_match(
+		res = seq_cap_match(
 			text,
 			curr->value,
 			spec_beg,
@@ -391,20 +391,51 @@ axres seq_locate_action(
 		break;
 	case spec_control_beg:
 		*beg_char = text;
-		break;
+		goto out_jump;
 	case spec_control_end:
 		*end_char = text;
-		break;
+		goto out_jump;
 	default:
 		break;
 	}
 	
-error_jump:
+skip_jump: // Skip to the function pre-write-back
 	if (res == AX_NOT_FND 
 	&& curr->mode == spec_optional){
 		spec_end = spec_beg;
-	}else axcheck(res);
+		goto out_jump; 
+	}else{
+		axcheck(res);
+	}
 
+	/*
+	 	By this moment spec_beg and spec_end are valid and wont cause AX_INV_IND
+	*/
+	
+	// Read the action processed range
+	c16 *act_buf = nullptr;
+	u32 act_len_n = 0;
+	res = read_range(
+		text,
+		dif_c16(text, spec_beg),
+		dif_c16(text, spec_end),
+		&act_len_n,
+		act_buf
+	);
+	axcheck(res);
+
+	act_buf = axmalloc(act_len_n * sizeof(c16));
+
+	res = read_range(
+		text,
+		dif_c16(text, spec_beg),
+		dif_c16(text, spec_end),
+		&act_len_n,
+		act_buf
+	);
+	axcheck(res, axfree(act_buf));
+
+out_jump: // Skip to the function write-back
 	*loc = spec_end;
 
 	return AX_SUCC;
@@ -469,6 +500,7 @@ axres seq_locate(
 		);
 		axcheck_g(res, skip_occ);
 
+		// Increment spec_non_opts if current move without error is not optional
 		if (curr->type == spec_capture_set
 		|| curr->type == spec_sequence){
 			spec_non_opts = (curr->mode != spec_optional)
@@ -477,6 +509,8 @@ axres seq_locate(
 		}
 		
 		seq_i++;
+
+		// Last iteration end_char write-back if not specified
 		if (seq_i == grp->spec_list->count
 		&& end_char == nullptr){
 			end_char = text_char;
@@ -494,6 +528,7 @@ skip_occ:
 		}
 	}
 
+	// Validate against seq_i and count of non-optional processed
 	if (seq_i < grp->spec_list->count
 	&& spec_non_opts < (grp->spec_list->count - grp->spec_opts)){
 		return AX_NOT_FND;
@@ -600,7 +635,7 @@ axres seq_find_f(
 	axcheck(res);
 
 	file->offset = (u64)buf.beg;
-	io_str((const c16*)file->offset);
+	//io_str((const c16*)file->offset);
 
 	return AX_SUCC;
 }

@@ -181,11 +181,11 @@ axres seq_group_cap(
 	Output:
 		AX_SUCC if matches. 
 */
-axres seq_charset_match(
+axres seq_cap_match(
 	_in const c16		*text,
-	_in const c16 		*seq_set,
-	_in const c16 		*seq_end,
-	_in const c16		*cap
+	_in const c16		*cap,
+	_in const c16 		*seq_beg,
+	_in_opt const c16 	*seq_end
 );
 
 // ====================== FUNCTION ======================
