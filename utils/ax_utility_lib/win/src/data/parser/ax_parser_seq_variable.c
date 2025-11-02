@@ -179,7 +179,7 @@ _free fmt_var *_seq_label_to_var(
 	c16 *name = nullptr;
 	enum var_type type = type_unk;
 	u32 length = 0;
-	u8 span = 0;
+	u8 span = 1;
 
 	/*
 	 	Process one field per loop.
@@ -343,7 +343,66 @@ axres seq_group_var(
 	return AX_SUCC;
 }
 axres seq_var_process(
-	_in const c16		*text
+	_in ax_list		*var_list,
+	_in u32			match_i,
+	_in c16			*match_res // Allocated result of the specifier at index spec_i
 ){
+	if (var_list == nullptr
+	|| match_res == nullptr){
+		return AX_INV_ARG;
+	}
+
+	// TODO: Save structure state for errors
+
+	u32 cat_len_n = 0;
+	c16 *cat_buf = nullptr;
+
+	fmt_var *curr = nullptr;
+	for (u32 i = 0; i < var_list->count; i++){
+		curr = index_as(var_list, i, fmt_var*);
+		asrt(curr != nullptr);
+
+		/*
+		 	Collection switches
+		*/
+		if (curr->spec_i == match_i){
+			curr->collect = true;
+		}
+		if (match_i == (curr->spec_i + curr->span)){
+			curr->collect = false;
+		}
+
+		if (!curr->collect){
+			continue;
+		}
+
+		// Create a buffer if doesnt exist
+		if (curr->value == nullptr){
+			curr->value = axmalloc(sizeof(c16));
+			curr->value[0] = u'\0';
+		}
+
+		/*
+			Concat curr->value with match_res
+		*/
+		c16_cat(
+			curr->value,
+			match_res,
+			&cat_len_n,
+			cat_buf
+		);
+		cat_buf = axmalloc(cat_len_n * sizeof(c16));
+		c16_cat(
+			curr->value,
+			match_res,
+			&cat_len_n,
+			cat_buf
+		);
+
+		// Write-back
+		axfree(curr->value);
+		curr->value = cat_buf;
+	}
+
 	return AX_SUCC;
 }

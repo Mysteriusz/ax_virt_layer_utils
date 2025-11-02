@@ -142,12 +142,13 @@ axres seq_read_group(
 		switch(*fmt_char){
 		case u'^': // seq_loc start indicator
 		case u'$': // seq_loc end indicator
-			// uoad character to fmt_spec as control
 			c16 *buf = axmalloc(sizeof(c16));
 			*buf = *fmt_char;
 
 			spec.value = buf;
-			spec.type = (*fmt_char == u'^' ? spec_control_beg : spec_control_end);
+			spec.type = (*fmt_char == u'^')
+				? spec_control_beg
+				: spec_control_end;
 
 			fmt_char++;
 
@@ -188,7 +189,10 @@ axres seq_read_group(
 		// If AX_ERR(res) then spec->value is expected to not be allocated
 		axcheck(res);
 
-		spec.mode = (_is_opt(fmt, fmt_beg) == true ? spec_optional : spec_none);
+		// Set mode based on the first character of the sequnece (fmt_beg)
+		spec.mode = (_is_opt(fmt, fmt_beg) == true)
+			? spec_optional
+			: spec_none;
 		if (spec_add){
 			spec_occ++;
 
@@ -227,22 +231,6 @@ void grp_cleanup(
 	}
 }
 
-// Optional specifier count iterator
-iter_code spec_opt_count_iter(
-	ax_list_iter_stack 	stack _prepass
-){
-	fmt_spec *spec = (fmt_spec*)stack->node->value;
-	u32 *count = (u32*)stack->data;
-
-	if (count == nullptr){
-		return ITER_STOP;
-	}
-	if (spec->mode == spec_optional){
-		(*count)++;
-	}
-
-	return ITER_NONE;
-}
 axres seq_split_fmt(
 	_in const c16 		*fmt,
 	_in_out fmt_group 	*buf
@@ -269,13 +257,6 @@ axres seq_split_fmt(
 	res = seq_read_group(fmt, &grp);
 	axcheck_g(res, error_jump);
 
-	grp.spec_list->iter(
-		grp.spec_list,
-		(ax_iter_act)spec_opt_count_iter,
-		&grp.spec_opts,
-		nullptr
-	);
-
 	*buf = grp;
 
 	return AX_SUCC;
@@ -285,13 +266,14 @@ error_jump:
 	return res;
 }
 
-axres seq_locate_action(
+axres seq_locate_nodet(
 	_in const c16		*text,
 	_in u32 		curr_i,
 	_in ax_list		*spec_list,
 	_out const c16		**loc,
 	_out const c16		**beg_char, // Returned only in case of control_beg
-	_out const c16		**end_char // Returned only in case of control_end
+	_out const c16		**end_char, // Returned only in case of control_end
+	_out _free c16		**match_res
 ){
 	if (text == nullptr
 	|| spec_list == nullptr){
@@ -299,7 +281,8 @@ axres seq_locate_action(
 	}
 	if (loc == nullptr
 	|| beg_char == nullptr
-	|| end_char == nullptr){
+	|| end_char == nullptr
+	|| match_res == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -435,6 +418,8 @@ skip_jump: // Skip to the function pre-write-back
 	);
 	axcheck(res, axfree(act_buf));
 
+	*match_res = act_buf;
+
 out_jump: // Skip to the function write-back
 	*loc = spec_end;
 
@@ -463,12 +448,11 @@ axres seq_locate(
 	const c16 *end_char = text; // Indicated by $ character
 
 	u32 seq_i = 0;
-	u32 spec_non_opts = 0; // Count of non-optional spec_list specifiers
+	u32 match_i = 0;
+	c16 *match_res = nullptr; // Buffer with result of seq_locate_action range
 
 	while(in_c16_s(text, text_char, text_len)
 	&& seq_i < grp->spec_list->count){
-		fmt_spec *curr = index_as(grp->spec_list, seq_i, fmt_spec*);
-
 		// First check
 		if (seq_i == 0){
 			root_char = text_char;
@@ -489,39 +473,58 @@ axres seq_locate(
 			axcheck_g(res, skip_occ);
 		}
 
-		// Move text_char based on the curr and next
-		res = seq_locate_action(
+redo_act:
+		// Nondeterministic state branch
+		res = seq_locate_nodet(
 			text_char, 
 			seq_i, 
 			grp->spec_list, 
 			&text_char,
 			&beg_char,
-			&end_char
+			&end_char,
+			&match_res
 		);
 		axcheck_g(res, skip_occ);
 
-		// Increment spec_non_opts if current move without error is not optional
-		if (curr->type == spec_capture_set
-		|| curr->type == spec_sequence){
-			spec_non_opts = (curr->mode != spec_optional)
-				? spec_non_opts + 1
-				: spec_non_opts;
+		/*
+		 	Everything in between redo_act AND skip_occ goto statements 
+			is done after successfull state branch.
+		*/
+
+		// Process all active variables based on the match result range
+		seq_var_process(
+			grp->var_list,
+			match_i,
+			match_res
+		);
+
+		// Match buffer cleanup
+		if (match_res != nullptr){
+			axfree(match_res);
+			match_res = nullptr;
+			match_i++;
 		}
-		
+
 		seq_i++;
+
+		// Ensure all specifiers will be processed to end even when text_char reached null-terminator
+		if (seq_i < grp->spec_list->count
+		&& in_c16_s(text, text_char, text_len) == false){
+			goto redo_act;
+		}
 
 		// Last iteration end_char write-back if not specified
 		if (seq_i == grp->spec_list->count
 		&& end_char == nullptr){
 			end_char = text_char;
 		}
-
+		
 skip_occ:
 		// Reset search
 		if(AX_ERR(res)){
 			text_char = root_char + 1;
-			spec_non_opts = 0;
 			seq_i = 0;
+			match_i = 0;
 			beg_char = nullptr;
 			end_char = nullptr;
 			root_char = nullptr;
@@ -529,8 +532,7 @@ skip_occ:
 	}
 
 	// Validate against seq_i and count of non-optional processed
-	if (seq_i < grp->spec_list->count
-	&& spec_non_opts < (grp->spec_list->count - grp->spec_opts)){
+	if (seq_i < grp->spec_list->count){
 		return AX_NOT_FND;
 	}
 	else axcheck(res);

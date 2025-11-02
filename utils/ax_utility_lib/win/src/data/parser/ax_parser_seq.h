@@ -9,14 +9,6 @@ typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *var_list; // List of _fmt_var
 	ax_list *cond_list; // List of _fmt_cond
-	/*
-	 	Exclusive to edge case in which all last seq_i are
-		optional AND seq_locate loop was exited due to in_c16_s fail
-		Example:
-			text = u"key="
-			fmt = u"<{a-z}>=?<{a-z}>"
-	*/
-	u32 spec_opts; // Optional specifier count
 } fmt_group;
 
 enum spec_type{
@@ -265,11 +257,20 @@ enum var_type{
 		- spec_capture_set
 */
 typedef struct _fmt_var{
+	/*
+	 	Fields influenced by syntax.
+	*/
 	const c16 *name;
 	enum var_type type;
 	u32 length;
 	u8 span;
-	u32 spec_i;
+
+	/*
+	 	Fields used internally.
+	*/
+	bool collect; // Collecting values into value buffer
+	u32 spec_i; // Initial index where output gather begins
+	c16 *value; // Value inside of the searched processed text
 } fmt_var;
 
 /* 
@@ -322,6 +323,11 @@ axres seq_group_var(
 	_in ax_list 		*var_list,
 	_in u32			spec_i,
 	_out const c16		**loc
+);
+axres seq_var_process(
+	_in ax_list		*var_list,
+	_in u32			match_i,
+	_in c16			*match_res // Allocated result of the specifier at index spec_i
 );
 
 #endif

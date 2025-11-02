@@ -224,15 +224,15 @@ axres c16_cat(
 	u32 a_len = _c16len(a);
 	u32 b_len = _c16len(b);
 
-	u32 buf_size = a_len + b_len + 1;
+	u32 buf_len_n = a_len + b_len + 1;
 	if (ret_size){
-		*size = buf_size;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
 	memcpy(buf, a, a_len * sizeof(c16)); 
 	memcpy(buf + a_len, b, b_len * sizeof(c16)); 
-	buf[(a_len + b_len) - 1] = u'\0';
+	buf[a_len + b_len] = u'\0';
 
 	return AX_SUCC;
 }
@@ -261,22 +261,22 @@ axres c16_union(
 	u32 b_len = _c16len(b);
 	const c16 *b_char = b;
 
-	u32 buf_size = (a_len + b_len) + 1;
+	u32 buf_len_n = (a_len + b_len) + 1;
 	while(in_c16_s(b, b_char, b_len)){
-		// If exist once remove it
+		// If exist once decrement size
 		if (contains(a, *b_char) == AX_SUCC){
-			buf_size--;
+			buf_len_n--;
 		}
 
 		b_char++;
 	}
 
 	if (ret_size){
-		*size = buf_size;
+		*size = buf_len_n;
 		return AX_SUCC;
 	}
 
-	axcheck(_ax_buf_err(*size, buf_size));
+	axcheck(_ax_buf_err(*size, buf_len_n));
 
 	// Reset
 	a_char = a;
@@ -284,7 +284,7 @@ axres c16_union(
 
 	u32 buf_i = 0;
 	// Write-back
-	while(buf_i < (a_len + b_len) - 1){
+	while(buf_i < (buf_len_n - 1)){
 		if (contains(buf, *a_char) != AX_SUCC){
 			buf[buf_i] = *a_char;
 			a_char++;

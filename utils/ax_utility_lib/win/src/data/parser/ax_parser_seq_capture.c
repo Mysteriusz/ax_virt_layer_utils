@@ -192,19 +192,21 @@ _free const c16 *_seq_cap_to_charset(
 		}
 
 		c16 *temp_set = nullptr;
-		u32 temp_size = 0;
+		u32 temp_len_n = 0;
 		
-		// Perform operation
+		/*
+		 	Perform operation
+		*/
 		switch(mode){
 		case add:
-			c16_union(charset, wrkset, &temp_size, temp_set);
-			temp_set = axmalloc(temp_size * sizeof(c16));
-			c16_union(charset, wrkset, &temp_size, temp_set);
+			c16_union(charset, wrkset, &temp_len_n, temp_set);
+			temp_set = axmalloc(temp_len_n * sizeof(c16));
+			c16_union(charset, wrkset, &temp_len_n, temp_set);
 			break;
 		case difference:
-			c16_difference(charset, wrkset, &temp_size, temp_set);
-			temp_set = axmalloc(temp_size * sizeof(c16));
-			c16_difference(charset, wrkset, &temp_size, temp_set);
+			c16_difference(charset, wrkset, &temp_len_n, temp_set);
+			temp_set = axmalloc(temp_len_n * sizeof(c16));
+			c16_difference(charset, wrkset, &temp_len_n, temp_set);
 			break;
 		default:
 			break;
@@ -305,7 +307,9 @@ axres seq_group_cap(
 	res = seq_group_cap_end(fmt, fmt_char, &spec_char);
 	axcheck(res);
 
-	// Read inside of the capture set
+	/* 
+		Read range for the capture set
+	*/
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
