@@ -75,8 +75,10 @@ _free c16 *_seq_read_range(
 		rng_len = dif_c16(beg_char, spec_char) + prev_len;
 		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
 
-		// Copy memory from prev_buf and then from beg_char
-		// With range of size from beg_char to next CHARSET_SEQ occurence character
+		/*
+		 	Copy memory from prev_buf and then from beg_char
+			With range of size from beg_char to next CHARSET_SEQ occurence character
+		*/
 		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
 		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, spec_char) * sizeof(c16));
 
@@ -194,7 +196,10 @@ axres seq_read_group(
 			? spec_optional
 			: spec_none;
 		if (spec_add){
-			spec_occ++;
+			if (spec.type == spec_sequence
+			|| spec.type == spec_capture_set){
+				spec_occ++;
+			}
 
 			// Add buffer specifier
 			grp->spec_list->add(
@@ -273,7 +278,8 @@ axres seq_locate_nodet(
 	_out const c16		**loc,
 	_out const c16		**beg_char, // Returned only in case of control_beg
 	_out const c16		**end_char, // Returned only in case of control_end
-	_out _free c16		**match_res
+	_out _free c16		**match_res,
+	_out u32		*match_i
 ){
 	if (text == nullptr
 	|| spec_list == nullptr){
@@ -282,7 +288,8 @@ axres seq_locate_nodet(
 	if (loc == nullptr
 	|| beg_char == nullptr
 	|| end_char == nullptr
-	|| match_res == nullptr){
+	|| match_res == nullptr
+	|| match_i == nullptr){
 		return AX_INV_BUF;
 	}
 
@@ -423,6 +430,12 @@ skip_jump: // Skip to the function pre-write-back
 out_jump: // Skip to the function write-back
 	*loc = spec_end;
 
+	// Update match index
+	if (curr->type == spec_capture_set
+	|| curr->type == spec_sequence){
+		(*match_i)++;
+	}
+
 	return AX_SUCC;
 }
 axres seq_locate(
@@ -482,7 +495,8 @@ redo_act:
 			&text_char,
 			&beg_char,
 			&end_char,
-			&match_res
+			&match_res,
+			&match_i
 		);
 		axcheck_g(res, skip_occ);
 
@@ -494,16 +508,13 @@ redo_act:
 		// Process all active variables based on the match result range
 		seq_var_process(
 			grp->var_list,
-			match_i,
+			match_i - 1,
 			match_res
 		);
 
 		// Match buffer cleanup
-		if (match_res != nullptr){
-			axfree(match_res);
-			match_res = nullptr;
-			match_i++;
-		}
+		axfree(match_res);
+		match_res = nullptr;
 
 		seq_i++;
 

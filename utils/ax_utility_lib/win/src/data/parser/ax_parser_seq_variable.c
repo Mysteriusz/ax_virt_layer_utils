@@ -347,9 +347,15 @@ axres seq_var_process(
 	_in u32			match_i,
 	_in c16			*match_res // Allocated result of the specifier at index spec_i
 ){
-	if (var_list == nullptr
-	|| match_res == nullptr){
+	if (var_list == nullptr){
 		return AX_INV_ARG;
+	}
+	/*
+	 	To ensure state validity accept this case
+		as match_res is not guaranteed not to be nullptr from seq_action_nodet
+	*/
+	if (match_res == nullptr){
+		return AX_SUCC;
 	}
 
 	// TODO: Save structure state for errors
@@ -361,6 +367,7 @@ axres seq_var_process(
 	for (u32 i = 0; i < var_list->count; i++){
 		curr = index_as(var_list, i, fmt_var*);
 		asrt(curr != nullptr);
+		io_i64(curr->spec_i);
 
 		/*
 		 	Collection switches
@@ -402,6 +409,7 @@ axres seq_var_process(
 		// Write-back
 		axfree(curr->value);
 		curr->value = cat_buf;
+		io_str(curr->value);
 	}
 
 	return AX_SUCC;
