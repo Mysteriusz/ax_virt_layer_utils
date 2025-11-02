@@ -1,5 +1,5 @@
 *.sh linguist-language=Bash
-*.ps1 linguist-language=Bash
+*.ps1 linguist-language=Powershell
 *.c linguist-language=C
 *.h linguist-language=C
 
