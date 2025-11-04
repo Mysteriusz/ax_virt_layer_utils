@@ -126,8 +126,13 @@
 #define chkf(v,f)	(((v) & (f)) != 0) 
 // Cast value (v) to type (t)
 #define astp(t,v)	*((t*)((void*)&(v))) 
+// Count digit count in an intiger (i)
+#define cntd(i)		((u32)log_b((i), 10) + 1)
+// Set (n)-th bit to 1
+#define bit(n)		(1 << (n))
 
 #include <stdbool.h>
+#include "ext_math.h"
 
 #if defined(AX_UM)
 #include <stdio.h>

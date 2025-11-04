@@ -4,7 +4,7 @@
 	if (in_field == false){ \
 		/* If has already occured */ \
 		if ((v) == true){ \
-		return true; \
+			return true; \
 		} \
 		(v) = true; \
 		label_char++; \
@@ -64,7 +64,9 @@ enum var_type _seq_var_field_t(
 	u32 type_len_n = 0;
 	c16 *type_buf = nullptr;
 	
-	// Read range until either u';' or to the end
+	/*
+	 	Read range until either u';' or EOT
+	*/
 	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &type_len_n, type_buf);
 	axcheck_r(res, type_unk);
 
@@ -74,26 +76,61 @@ enum var_type _seq_var_field_t(
 	axcheck_r(res, type_unk, axfree(type_buf));
 
 	if (compare(type_buf, u"u8") == AX_SUCC){
-		label_char += _c16len(u"u8");
 		type = type_u8;	
 	}else if (compare(type_buf, u"u16") == AX_SUCC){
-		label_char += _c16len(u"u16");
 		type = type_u16;	
 	}else if (compare(type_buf, u"u32") == AX_SUCC){
-		label_char += _c16len(u"u32");
 		type = type_u32;
 	}else if (compare(type_buf, u"u64") == AX_SUCC){
-		label_char += _c16len(u"u64");
 		type = type_u64;
 	}
+
 	axfree(type_buf);
+	if (type == type_unk){
+		return type_unk;
+	}
 
 	// Skip the text and write-back
-	*loc = label_char;
+	*loc = label_char + type_len_n;
 
 	return type;
 }
+u8 _seq_var_field_s(
+	_in const c16 		*label_char,
+	_out const c16		**loc
+){
+	if (label_char == nullptr
+	|| loc == nullptr){
+		return type_unk;
+	}
 
+	axres res = AX_SUCC;
+
+	c16 *span_buf = nullptr;
+	u32 span_len_n = 0;
+
+	/*
+	 	Read range until either u';' or EOT
+	*/
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &span_len_n, span_buf); 
+	axcheck_r(res, 0);
+
+	span_buf = axmalloc(span_len_n * sizeof(c16));
+
+	res = read_until(label_char, JOIN_C16_C16(u';', UTF16_EOT), &span_len_n, span_buf); 
+	axcheck_r(res, 0, axfree(span_buf));
+
+	iu64 span = {0};
+	res = c16_to_int(span_buf, &span);
+
+	axfree(span_buf);
+	axcheck_r(res || span.unsig_64 > S_FIELD_MAX, 0);
+
+	// Skip the text and write-back
+	*loc = label_char + span_len_n;
+
+	return span.unsig_8;
+}
 bool seq_label_to_var_inv(
 	_in const c16		*label
 ){
@@ -107,6 +144,7 @@ bool seq_label_to_var_inv(
 	bool in_field = false; 
 	bool n_field = false; // n_field occurence
 	bool t_field = false; // t_field occurence
+	bool s_field = false; // s_field occurence
 
 	while(in_c16_s(label, label_char, label_len)){
 		switch(*label_char){
@@ -114,8 +152,7 @@ bool seq_label_to_var_inv(
 		 	Field characters
 			TODO: accept other fields
 		*/
-		/*case u's':
-		case u'l':*/
+		//case u'l':
 		case u't':
 			field_check(t_field);
 			// Try to parse the field to validate value
@@ -125,6 +162,13 @@ bool seq_label_to_var_inv(
 			break;
 		case u'n':
 			field_check(n_field);
+			break;
+		case u's':
+			field_check(s_field);
+			// Try to parse the field to validate value
+			if (_seq_var_field_s((label_char + 1), &label_char) == 0){
+				return true;
+			}
 			break;
 		/*
 			Misc.
@@ -202,6 +246,15 @@ _free fmt_var *_seq_label_to_var(
 
 			type = _seq_var_field_t(label_char, &label_char);
 			axcheck_g((type == type_unk), error_jump);
+
+			break;
+		case u's':
+			// Skip the field head. u"s:"
+			label_char++;
+			label_char++;
+
+			span = _seq_var_field_s(label_char, &label_char);
+			axcheck_g((span == 0), error_jump);
 
 			break;
 		/*
@@ -301,7 +354,9 @@ axres seq_group_var(
 	res = seq_group_var_end(fmt, fmt_char, &spec_char);
 	axcheck(res);
 
-	// Read inside of the variable label
+	/*
+	 	Read inside of the variable label
+	*/
 	res = read_range(
 		fmt,
 		dif_c16(fmt, fmt_char),
@@ -327,7 +382,7 @@ axres seq_group_var(
 
 	axcheck_r((var == nullptr), AX_INV_FMT);
 
-	// Add to list
+	// Add result to list
 	var_list->add(
 		var_list, 
 		var,
@@ -367,7 +422,7 @@ axres seq_var_process(
 	for (u32 i = 0; i < var_list->count; i++){
 		curr = index_as(var_list, i, fmt_var*);
 		asrt(curr != nullptr);
-		io_i64(curr->spec_i);
+		//io_i64(curr->spec_i);
 
 		/*
 		 	Collection switches

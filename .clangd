@@ -12,6 +12,7 @@ CompileFlags:
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data/parser"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/data/parser/format"
+    - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/ext"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/io"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/io/memory"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/win/src/io/structures"

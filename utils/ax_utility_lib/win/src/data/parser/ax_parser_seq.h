@@ -281,16 +281,15 @@ typedef struct _fmt_var{
 		TODO
 		l: -> value length in characters
 		
-		TODO
-		IMPORTANT!!!
+	IMPORTANT!!!
  		(This will influence l: field if not defined to type_size * sizeof(c16))
 		(If l: field is bigger than the type error will occur)
 		t: -> type name (u8, u16, u32, u64, str)
 
-		TODO
 		(By default span is always equal to 1)
 		s: -> span over n-count of capture group match values (MAX == 255)
 */
+#define S_FIELD_MAX 			0xff
 bool seq_label_to_var_inv(
 	_in const c16		*label
 );

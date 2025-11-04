@@ -23,10 +23,10 @@ int main(
 	io_str(b);*/
 	
 	seq_loc loc = {0};
-	res = seq_find(u"df=other_text-", u"^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
+	res = seq_find(u"df=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
 	axcheck(res, ax_log(res));
-	io_str(loc.beg);
-	io_str(loc.end);
+	/*io_str(loc.beg);
+	io_str(loc.end);*/
 
 	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
 	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
