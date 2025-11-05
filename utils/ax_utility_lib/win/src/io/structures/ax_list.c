@@ -1,4 +1,4 @@
-#include "ax_structures.h"
+#include "ax_list.h"
 
 axres ax_list_init(
 	_out ax_list			**buf
@@ -8,6 +8,7 @@ axres ax_list_init(
 	}
 
 	ax_list *list = axmalloc(sizeof(ax_list));
+	list->type = structure_seq;
 	list->root = nullptr;
 	list->count = 0;
 
@@ -15,7 +16,7 @@ axres ax_list_init(
 	list->contains = (ax_structures_contains)ax_list_contains;
 	list->remove = (ax_structures_remove)ax_list_remove;
 	list->at = (ax_structures_at)ax_list_at;
-	list->at_v = (ax_structures_at_v)ax_list_at_v;
+	list->query_at = (ax_structures_query_at)ax_list_query_at;
 	list->iter = (ax_structures_iter)ax_list_iter;
 	list->clear = (ax_structures_clear)ax_list_clear;
 	list->delete = (ax_structures_delete)ax_list_delete;
@@ -25,9 +26,9 @@ axres ax_list_init(
 	return AX_SUCC;
 }
 axres ax_list_add(
-	_in ax_list *list,
-	_in void *value,
-	_in u64 size
+	_in ax_list 			*list,
+	_in void 			*value,
+	_in u64 			size
 ){
 	if (list == nullptr
 	|| value == nullptr){
@@ -153,7 +154,7 @@ axres ax_list_at(
 
 	return AX_SUCC;
 }
-void *ax_list_at_v(
+void *ax_list_query_at(
 	_in const ax_list 		*list,
 	_in u32 			index
 ){

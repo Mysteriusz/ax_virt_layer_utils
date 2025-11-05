@@ -1,8 +1,20 @@
-#if !defined(AX_IO_STRUCTURES_INT)
-#define AX_IO_STRUCTURES_INT
+#if !defined(AX_STRUCTURES_INT)
+#define AX_STRUCTURES_INT
 
 #include "ax_error.h"
 #include "ax_memory.h"
+
+enum ax_structure_type{
+	structure_seq = 1,
+	structure_asc = 2
+};
+#define index_as(s, v_i, v_t) ((v_t)s->query_at(s, v_i))
+
+/*
+
+ 	Sequential data structures interface
+
+*/
 
 typedef axres (*ax_structures_add)(
 	_in void 			*structure,
@@ -27,13 +39,10 @@ typedef axres (*ax_structures_at)(
 	_in u32 			index,
 	_out const void 		**structure_node
 );
-
-// Unsafe at-index value call
-typedef void* (*ax_structures_at_v)(
+typedef void *(*ax_structures_query_at)(
 	_in const void 			*structure,
 	_in u32 			index
 );
-#define index_as(s, v_i, v_t) ((v_t)(s->at_v(s, v_i)))
 
 typedef axres (*ax_structures_clear)(
 	_in void 			*structure
@@ -61,79 +70,35 @@ typedef iter_code (*ax_structures_iter)(
 	_out const void			**structure_node
 );
 
-// Anonymous commnad structure
-#define AX_STRUCTURE_CMD \
+// Command set for linear (sequential) data structures
+#define AX_STRUCTURE_CMD_SEQ \
 	ax_structures_add add; \
 	ax_structures_remove remove; \
 	ax_structures_contains contains; \
 	ax_structures_at at; \
-	ax_structures_at_v at_v; \
+	ax_structures_query_at query_at; \
 	ax_structures_clear clear; \
 	ax_structures_delete delete; \
-	ax_structures_iter iter; \
+	ax_structures_iter iter;
 
-#if !defined(AX_IO_STRUCTURES_LIST_INT)
-#define AX_IO_STRUCTURES_LIST_INT
+/*
 
-typedef struct _ax_list_node ax_list_node;
-typedef struct _ax_list_node{
-	void *value;
-	u64 size;
-	ax_list_node *next;
-} ax_list_node;
-typedef struct _ax_list{
-	ax_list_node *root;
-	u32 count;
-	struct { AX_STRUCTURE_CMD };
-} ax_list;
+ 	Associative data structures interface
 
-axres ax_list_init(
-	_out ax_list		**buf
-);
-axres ax_list_add(
-	_in ax_list 			*list,
+*/
+
+typedef axres (*ax_structures_add_kv)(
+	_in void 			*structure,
 	_in void 			*value,
-	_in u64 			size
-);
-axres ax_list_contains(
-	_in ax_list 			*list,
-	_in void 			*value,
-	_in u64 			size
-);
-axres ax_list_remove(
-	_in ax_list 			*list,
-	_in void 			*value,
-	_in u64 			size
-);
-axres ax_list_at(
-	_in const ax_list 		*list,
-	_in u32 			index,
-	_out const ax_list_node 	**buf
-);
-void *ax_list_at_v(
-	_in const ax_list 		*list,
-	_in u32 			index
+	_in u64 			value_size,
+	_in void 			*key,
+	_in u64 			key_size
 );
 
-typedef struct _ax_list_iter_stack{
-	const ax_list 			*list;
-	const ax_list_node		*node;
-	void 				*data;
-} ax_list_iter_stack;
-axres ax_list_iter(
-	_in const ax_list 		*list,
-	_in ax_iter_act			action,
-	_in void 			*data,
-	_out_opt const ax_list_node	**buf
-);
-axres ax_list_clear(
-	_in ax_list 			*list
-);
-axres ax_list_delete(
-	_in ax_list 			*list
-);
+// Command set for associative (key-value pair) data structures
+#define AX_STRUCTURE_CMD_ASC \
+	ax_structures_add_kv add; \
 
-#endif // !defined(AX_IO_STRUCTURES_LIST_INT)
 
-#endif // !defined(AX_IO_STRUCTURES_INT)
+#endif
 

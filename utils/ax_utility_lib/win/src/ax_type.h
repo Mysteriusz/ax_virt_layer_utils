@@ -109,8 +109,13 @@
 */
 #define _free
 
+// MSVC compiler
 #if defined(_MSC_VER)
 #define __builtin_trap() __debugbreak()
+#define _inline_force __forceinline
+// GCC/Clang compiler
+#elif
+#define _inline_force __attribute__((always_inline))
 #endif
 
 #define null 		(0)
@@ -121,7 +126,7 @@
 // Address of the value (v)
 #define addr(v)		(&(long long[]){v})
 // Multi-platform assertion (expr)
-#define asrt(expr)	((expr == false) ? (void)__builtin_trap() : (void)null) 
+#define asrt(expr)	(((expr) == false) ? (void)__builtin_trap() : (void)null) 
 // Check bit flag (f) in the value (v)
 #define chkf(v,f)	(((v) & (f)) != 0) 
 // Cast value (v) to type (t)
@@ -130,6 +135,10 @@
 #define cntd(i)		((u32)log_b((i), 10) + 1)
 // Set (n)-th bit to 1
 #define bit(n)		(1 << (n))
+// Offset of field (f) in the structure (s)
+#define offo(f,s)	((u32)&(((s*)nullptr)->f))
+// Offset of field (f) in the structure (s) computed directly
+#define offo_n(f,s)	((u32)&((s)->f) - (u64)(s))
 
 #include <stdbool.h>
 #include "ext_math.h"

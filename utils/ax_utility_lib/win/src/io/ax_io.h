@@ -8,7 +8,8 @@
 #include "ax_log.h"
 #include "ax_memory.h"
 #include "ax_file.h"
-#include "ax_structures.h"
+#include "ax_list.h"
+#include "ax_dict.h"
 
 #endif // !defined(AX_IO_INT)
 

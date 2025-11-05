@@ -1,5 +1,6 @@
 #include "ax_utility.h"
 #include "noded.h"
+#include "murmur.h"
 
 int main(
 	void
@@ -21,15 +22,25 @@ int main(
 	read_until(u"some_text;dfhsklh", u";", &l, b);
 
 	io_str(b);*/
-	
-	seq_loc loc = {0};
+	//index_as(list, 0, c16*);
+	//index_as(list, 0, c16*);
+
+	/*seq_loc loc = {0};
 	res = seq_find(u"df=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
-	axcheck(res, ax_log(res));
+	axcheck(res, ax_log(res));*/
+
+	ax_dict *dict;
+	ax_dict_init(100, &dict);
+
+	//dict->add(dict, u"my_key", sizeof(u"my_key"), u"my_value", sizeof(u"my_value"));
+
 	/*io_str(loc.beg);
 	io_str(loc.end);*/
 
 	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
 	//io_i64(seq_label_to_var_inv(u"n:key;t:u32"));
+
+	//io_i64(murmur_x64_128((const u8*)"abc", 4, 0));
 
 	io_str(u"Active memory in bytes:");
 	io_i64(_MEM_ACTIVE);
