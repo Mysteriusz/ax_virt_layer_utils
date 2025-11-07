@@ -35,12 +35,12 @@ axres ax_list_remove(
 	_in u64 			size
 );
 axres ax_list_at(
-	_in const ax_list 		*list,
+	_in ax_list 			*list,
 	_in u32 			index,
 	_out const ax_list_node 	**buf
 );
-void *ax_list_query_at(
-	_in const ax_list		*structure,
+const void *ax_list_query_at(
+	_in ax_list			*structure,
 	_in u32 			index
 );
 
@@ -50,7 +50,7 @@ typedef struct _ax_list_iter_stack{
 	void 				*data;
 } ax_list_iter_stack;
 axres ax_list_iter(
-	_in const ax_list 		*list,
+	_in ax_list 			*list,
 	_in ax_iter_act			action,
 	_in void 			*data,
 	_out_opt const ax_list_node	**buf

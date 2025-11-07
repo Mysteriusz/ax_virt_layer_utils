@@ -6,13 +6,21 @@
 typedef struct _ax_dict_node ax_dict_node;
 typedef struct _ax_dict_node{
 	void *key;
-	u64 size;
+	u64 key_size;
+	void *value;
+	u64 value_size;
+	ax_dict_node *next; // Next node in node chain
 } ax_dict_node;
+
+typedef struct _ax_dict_chain{
+	ax_dict_node *head;
+} ax_dict_chain;
+
 typedef struct _ax_dict{
 	enum ax_structure_type type;
-	ax_dict_node *root;
+	ax_dict_chain *root;
 	u32 count;
-	u32 bucket_count; // Count of bucket entries from root
+	u32 chain_count; // Count of chain entries from root
 	struct { AX_STRUCTURE_CMD_ASC };
 } ax_dict;
 
@@ -26,6 +34,33 @@ axres ax_dict_add(
 	_in u64 			key_size,
 	_in void 			*value,
 	_in u64 			value_size
+);
+axres ax_dict_contains_key(
+	_in ax_dict 			*dict,
+	_in void 			*key,
+	_in u64 			key_size
+);
+axres ax_dict_remove(
+	_in ax_dict 			*dict,
+	_in void 			*key,
+	_in u64 			key_size
+);
+axres ax_dict_at(
+	_in ax_dict 			*dict,
+	_in void 			*key,
+	_in u64 			key_size,
+	_out const ax_dict_node		**buf	
+);
+const void *ax_dict_query_at(
+	_in ax_dict 			*dict,
+	_in void 			*key,
+	_in u64 			key_size
+);
+axres ax_dict_clear(
+	_in ax_dict 			*dict
+);
+axres ax_dict_delete(
+	_in ax_dict 			*dict
 );
 
 #endif // !defined(AX_STRUCTURES_DICT_INT)

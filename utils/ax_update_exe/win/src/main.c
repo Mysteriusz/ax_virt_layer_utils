@@ -25,14 +25,14 @@ int main(
 	//index_as(list, 0, c16*);
 	//index_as(list, 0, c16*);
 
-	/*seq_loc loc = {0};
-	res = seq_find(u"df=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
-	axcheck(res, ax_log(res));*/
-
 	ax_dict *dict;
-	ax_dict_init(100, &dict);
+	ax_dict_init(2, &dict);
 
-	//dict->add(dict, u"my_key", sizeof(u"my_key"), u"my_value", sizeof(u"my_value"));
+	seq_loc loc = {0};
+	res = seq_find(u"df=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc, dict);
+	axcheck(res, ax_log(res));
+
+	io_str(index_as(dict, c16*, u"name", sizeof(u"name")));
 
 	/*io_str(loc.beg);
 	io_str(loc.end);*/

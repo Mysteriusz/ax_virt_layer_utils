@@ -5,10 +5,10 @@
 #include "ax_memory.h"
 
 enum ax_structure_type{
-	structure_seq = 1,
-	structure_asc = 2
+	structure_seq = 1, // Sequential structure type
+	structure_asc = 2 // Associative structure type
 };
-#define index_as(s, v_i, v_t) ((v_t)s->query_at(s, v_i))
+#define index_as(s, v_t, ...) ((v_t)s->query_at(s, __VA_ARGS__))
 
 /*
 
@@ -35,12 +35,12 @@ typedef axres (*ax_structures_contains)(
 );
 
 typedef axres (*ax_structures_at)(
-	_in const void 			*structure,
+	_in void 			*structure,
 	_in u32 			index,
 	_out const void 		**structure_node
 );
-typedef void *(*ax_structures_query_at)(
-	_in const void 			*structure,
+typedef const void *(*ax_structures_query_at)(
+	_in void 			*structure,
 	_in u32 			index
 );
 
@@ -64,7 +64,7 @@ typedef iter_code (*ax_iter_act)(
 	const u8 			stack _prepass
 );
 typedef iter_code (*ax_structures_iter)(
-	_in const void 			*structure,
+	_in void 			*structure,
 	_in ax_iter_act			action,
 	_in_opt void 			*data,
 	_out const void			**structure_node
@@ -89,8 +89,29 @@ typedef iter_code (*ax_structures_iter)(
 
 typedef axres (*ax_structures_add_kv)(
 	_in void 			*structure,
+	_in void 			*key,
+	_in u64 			key_size,
 	_in void 			*value,
-	_in u64 			value_size,
+	_in u64 			value_size
+);
+typedef axres (*ax_structures_contains_k)(
+	_in void 			*structure,
+	_in void 			*key,
+	_in u64 			key_size
+);
+typedef axres (*ax_structures_remove_kv)(
+	_in void 			*structure,
+	_in void 			*value,
+	_in u64 			value_size
+);
+typedef axres (*ax_structures_at_k)(
+	_in void 			*structure,
+	_in void			*key,
+	_in u64 			key_size,
+	_out const void 		**structure_node
+);
+typedef const void *(*ax_structures_query_at_k)(
+	_in void 			*structure,
 	_in void 			*key,
 	_in u64 			key_size
 );
@@ -98,7 +119,12 @@ typedef axres (*ax_structures_add_kv)(
 // Command set for associative (key-value pair) data structures
 #define AX_STRUCTURE_CMD_ASC \
 	ax_structures_add_kv add; \
-
+	ax_structures_remove_kv remove; \
+	ax_structures_contains_k contains_key; \
+	ax_structures_at_k at; \
+	ax_structures_query_at_k query_at; \
+	ax_structures_clear clear; \
+	ax_structures_delete delete;
 
 #endif
 

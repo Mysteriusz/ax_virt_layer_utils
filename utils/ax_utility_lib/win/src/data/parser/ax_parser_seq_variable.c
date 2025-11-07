@@ -420,7 +420,7 @@ axres seq_var_process(
 
 	fmt_var *curr = nullptr;
 	for (u32 i = 0; i < var_list->count; i++){
-		curr = index_as(var_list, i, fmt_var*);
+		curr = index_as(var_list, fmt_var*, i);
 		asrt(curr != nullptr);
 		//io_i64(curr->spec_i);
 
@@ -464,7 +464,7 @@ axres seq_var_process(
 		// Write-back
 		axfree(curr->value);
 		curr->value = cat_buf;
-		io_str(curr->value);
+		//io_str(curr->value);
 	}
 
 	return AX_SUCC;

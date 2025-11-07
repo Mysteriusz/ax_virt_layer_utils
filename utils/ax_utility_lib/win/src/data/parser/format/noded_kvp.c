@@ -13,7 +13,9 @@ axres noded_kvp_load(
 	
 	axres res = AX_SUCC;
 
-	// Read line into an internal buffer
+	/*
+	 	Read line into an internal buffer
+	*/
 	u32 kvp_len = 0;
 	c16 *kvp_buf = nullptr;
 
@@ -26,7 +28,7 @@ axres noded_kvp_load(
 	axcheck(res);
 	
 	seq_loc inv_loc = {0};
-	seq_find(kvp_buf, NODED_KVP_FMT, &inv_loc);
+	seq_find(kvp_buf, NODED_KVP_FMT, &inv_loc, nullptr);
 
 	return AX_SUCC;
 

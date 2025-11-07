@@ -35,7 +35,7 @@ axres noded_sect_load(
 
 	// Skip to next section location
 	seq_loc next_loc = {0};
-	res = seq_find(sect_char, NODED_SECT_FMT, &next_loc);
+	res = seq_find(sect_char, NODED_SECT_FMT, &next_loc, nullptr);
 	if (res == AX_NOT_FND){
 		// If none found skip to doc->file->map.root end
 		next_loc.beg = sect_char + _c16len(sect_char);

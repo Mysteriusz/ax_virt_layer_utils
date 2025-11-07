@@ -35,6 +35,9 @@ axres ax_list_add(
 		return AX_INV_ARG;
 	}
 
+	/*
+	 	Find last
+	*/
 	ax_list_node *prev = nullptr;
 	ax_list_node *curr = list->root;
 	while(curr != nullptr){
@@ -44,12 +47,14 @@ axres ax_list_add(
 
 	curr = axmalloc(sizeof(ax_list_node));
 
-	// Copy to internal buffer
+	/*
+	 	Copy to internal buffer
+	*/
 	curr->value = axmalloc(size);
 	memcpy(curr->value, value, size);
 	curr->size = size;
 
-	// Write to list
+	// List node insertion
 	if (prev == nullptr){
 		list->root = curr;
 	}else{
@@ -104,7 +109,7 @@ axres ax_list_remove(
 		prev = curr;
 		curr = curr->next;
 	}
-
+	// No value occurence in the list
 	if (curr == nullptr){
 		return AX_NOT_FND;
 	}
@@ -117,13 +122,17 @@ axres ax_list_remove(
 	}
 
 	list->count--;
+
+	/*
+	 	Allocated cleanup
+	*/
 	axfree(curr->value);
 	axfree(curr);
 
 	return AX_SUCC;
 }
 axres ax_list_at(
-	_in const ax_list 		*list,
+	_in ax_list 			*list,
 	_in u32 			index,
 	_out const ax_list_node 	**buf
 ){
@@ -154,8 +163,8 @@ axres ax_list_at(
 
 	return AX_SUCC;
 }
-void *ax_list_query_at(
-	_in const ax_list 		*list,
+const void *ax_list_query_at(
+	_in ax_list 			*list,
 	_in u32 			index
 ){
 	if (list == nullptr){
@@ -165,14 +174,12 @@ void *ax_list_query_at(
 	const ax_list_node *node = nullptr;
 	list->at(list, index, (const void**)&node);
 
-	if (node == nullptr){
-		return nullptr;
-	}
-
-	return node->value;
+	return (node != nullptr)
+		? node->value
+		: nullptr;
 }
 axres ax_list_iter(
-	_in const ax_list 		*list,
+	_in ax_list 			*list,
 	_in ax_iter_act			action,
 	_in_opt void 			*data,
 	_out_opt const ax_list_node	**buf

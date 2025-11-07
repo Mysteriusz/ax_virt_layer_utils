@@ -82,22 +82,26 @@ axres seq_locate(
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out seq_loc		*loc
+	_out seq_loc		*loc,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 );
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs // Access by index_as(locs, 0, seq_loc*)
+	_in_out ax_list		*locs, // Access by index_as(locs, 0, seq_loc*)
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 );
 #if defined(AX_PARSER_FILE_INT)
 axres seq_find_f(
 	_in io_file		*file,
-	_in const c16 		*fmt
+	_in const c16 		*fmt,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 );
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs // Access by index_as(locs, 0, seq_loc*)
+	_in_out ax_list		*locs, // Access by index_as(locs, 0, seq_loc*)
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 );
 #endif // defined(AX_PARSER_FILE_INT)
 

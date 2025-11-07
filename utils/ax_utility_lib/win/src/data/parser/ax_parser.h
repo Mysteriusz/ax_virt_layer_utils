@@ -5,6 +5,7 @@
 #include "ax_error.h"
 #include "ax_io.h"
 
+// UTF-16 string length in characters
 static inline u32 _c16len(
 	_in const c16 		*text
 ){
@@ -20,6 +21,7 @@ static inline u32 _c16len(
 
 	return len;
 }
+// UTF-16 string length in bytes
 static inline u32 _c16len_b(
 	_in const c16 		*text
 ){

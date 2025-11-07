@@ -214,6 +214,30 @@ axres seq_read_group(
 	return AX_SUCC;
 }
 
+// Load variables from _fmt_group->var_list into dictionary
+void grp_load_vars(
+	_in fmt_group 		*grp,
+	_in ax_dict 		*dict
+){
+	if(grp == nullptr
+	|| dict == nullptr){
+		return;
+	}
+
+	fmt_var *var = nullptr;
+	for (u32 i = 0; i < grp->var_list->count; i++){
+		var = index_as(grp->var_list, fmt_var*, i);
+
+		// Load variable name and value into the dictionary
+		dict->add(
+			dict,
+			(void*)var->name,
+			_c16len_b(var->name) + sizeof(c16),
+			(void*)var->value,
+			_c16len_b(var->value) + sizeof(c16)
+		);
+	}
+}
 // Cleanup _fmt_group
 void grp_cleanup(
 	_in fmt_group 		*grp
@@ -298,7 +322,7 @@ axres seq_locate_nodet(
 	const c16 *spec_beg = text;
 	const c16 *spec_end = text;
 
-	fmt_spec *curr = index_as(spec_list, curr_i, fmt_spec*);
+	fmt_spec *curr = index_as(spec_list, fmt_spec*, curr_i);
 
 	// Find next 'physical' sequence thats valid
 	u64 next_i = curr_i + 1;
@@ -308,7 +332,7 @@ axres seq_locate_nodet(
 		if (next->type == spec_sequence){
 			break;
 		}
-		next = index_as(spec_list, next_i++, fmt_spec*);
+		next = index_as(spec_list, fmt_spec*, next_i++);
 	}
 
 	/*
@@ -480,7 +504,7 @@ axres seq_locate(
 			res = seq_condition_match(
 				text,
 				text_char,
-				index_as(grp->cond_list, i, fmt_cond*),
+				index_as(grp->cond_list, fmt_cond*, i),
 				&text_char
 			);
 			axcheck_g(res, skip_occ);
@@ -557,7 +581,8 @@ skip_occ:
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out seq_loc 		*loc
+	_out seq_loc 		*loc,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 ){
 	if (text == nullptr
 	|| fmt == nullptr){
@@ -575,6 +600,11 @@ axres seq_find(
 
 	seq_loc buf = {0};
 	res = seq_locate(text, &grp, &buf);
+
+	if (vars != nullptr){
+		grp_load_vars(&grp, vars);
+	}
+
 	grp_cleanup(&grp);
 
 	axcheck(res);
@@ -586,7 +616,8 @@ axres seq_find(
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs
+	_in_out ax_list		*locs,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 ){
 	if (text == nullptr
 	|| fmt == nullptr){
@@ -628,7 +659,8 @@ axres seq_find_all(
 }
 axres seq_find_f(
 	_in io_file		*file,
-	_in const c16 		*fmt
+	_in const c16 		*fmt,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 ){
 	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
@@ -644,7 +676,7 @@ axres seq_find_f(
 	// uocation of substr in fmap
 	seq_loc buf = {0};
 
-	res = seq_find(fmap_off, fmt, &buf);
+	res = seq_find(fmap_off, fmt, &buf, nullptr);
 	axcheck(res);
 
 	file->offset = (u64)buf.beg;
@@ -655,7 +687,8 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs
+	_in_out ax_list		*locs,
+	_in_out_opt ax_dict	*vars // Variable result dictionary
 ){
 	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
@@ -671,7 +704,7 @@ axres seq_find_all_f(
 
 	// fmap with file offset
 	const c16 *fmap_off = file->map.root;
-	res = seq_find_all(fmap_off, fmt, locs);
+	res = seq_find_all(fmap_off, fmt, locs, nullptr);
 	axcheck(res);
 
 	return AX_SUCC;
