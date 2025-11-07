@@ -72,6 +72,8 @@
 #define EXPAND(a,b) a##b
 #define CAT(a,b) EXPAND(a,b)
 
+#define _opt
+
 #define _in
 #define _in_opt
 

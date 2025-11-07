@@ -33,6 +33,7 @@ typedef struct _fmt_spec{
 typedef struct _seq_loc{
 	const c16 *beg;
 	const c16 *end;
+	_opt ax_dict *seq_vars; 
 } seq_loc;
 
 // Format group character 
@@ -82,31 +83,28 @@ axres seq_locate(
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out seq_loc		*loc,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_out seq_loc		*loc
 );
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs, // Access by index_as(locs, 0, seq_loc*)
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_in_out ax_list		*locs // Access by index_as(locs, seq_loc*, i)
 );
 #if defined(AX_PARSER_FILE_INT)
 axres seq_find_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_out seq_loc 		*loc
 );
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs, // Access by index_as(locs, 0, seq_loc*)
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_in_out ax_list		*locs // Access by index_as(locs, seq_loc*, i)
 );
 #endif // defined(AX_PARSER_FILE_INT)
 
 
-#define CAPTURE_FMT_ASCII	u"{\x20-\x7f}"
+#define CAPTURE_FMT_ASCII	u"{\x20-\x7e}"
 
 /*
  	SEQUENCE INTERNAL UTILITIES
@@ -332,6 +330,10 @@ axres seq_var_process(
 	_in u32			match_i,
 	_in c16			*match_res // Allocated result of the specifier at index spec_i
 );
-
+_free c16 *_seq_read_range(
+	_in const c16 		*fmt,
+	_in const c16 		*fmt_char,
+	_out u32		*skip
+);
 #endif
 

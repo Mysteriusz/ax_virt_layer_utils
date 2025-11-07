@@ -101,7 +101,7 @@ u8 _seq_var_field_s(
 ){
 	if (label_char == nullptr
 	|| loc == nullptr){
-		return type_unk;
+		return 0;
 	}
 
 	axres res = AX_SUCC;
@@ -151,21 +151,26 @@ bool seq_label_to_var_inv(
 		/*
 		 	Field characters
 			TODO: accept other fields
+
+			Try to parse the field to validate value
 		*/
-		//case u'l':
 		case u't':
 			field_check(t_field);
-			// Try to parse the field to validate value
 			if (_seq_var_field_t((label_char + 1), &label_char) == type_unk){
 				return true;
 			}
 			break;
-		case u'n':
+		case u'n':{
 			field_check(n_field);
+			c16 *n_buf = _seq_var_field_n((label_char + 1), &label_char);
+			if (n_buf == nullptr){
+				return true;
+			}
+			axfree(n_buf);
 			break;
+		}
 		case u's':
 			field_check(s_field);
-			// Try to parse the field to validate value
 			if (_seq_var_field_s((label_char + 1), &label_char) == 0){
 				return true;
 			}
@@ -180,6 +185,7 @@ bool seq_label_to_var_inv(
 			if(!_is_esc(label, label_char)){
 				in_field = false;
 			}
+			label_char++;
 			break;
 		default:
 			if (in_field == false){
@@ -187,7 +193,6 @@ bool seq_label_to_var_inv(
 			}
 			break;
 		}
-		label_char++;
 	}
 
 	/* 
@@ -422,7 +427,6 @@ axres seq_var_process(
 	for (u32 i = 0; i < var_list->count; i++){
 		curr = index_as(var_list, fmt_var*, i);
 		asrt(curr != nullptr);
-		//io_i64(curr->spec_i);
 
 		/*
 		 	Collection switches
@@ -464,7 +468,6 @@ axres seq_var_process(
 		// Write-back
 		axfree(curr->value);
 		curr->value = cat_buf;
-		//io_str(curr->value);
 	}
 
 	return AX_SUCC;

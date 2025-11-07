@@ -46,6 +46,9 @@
 #define AX_INV_IND 			((axres)0x08)
 #define AX_INV_IND_MSG 			u"Index out of bounds."
 
+#define AX_INV_MEM 			((axres)0x09)
+#define AX_INV_MEM_MSG 			u"Memory corruption."
+
 // "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)

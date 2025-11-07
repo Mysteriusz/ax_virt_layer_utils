@@ -25,6 +25,7 @@ iter_code fmt_var_iter(
 ){
 	fmt_var *var = (fmt_var*)stack->node->value;
 	axfree((void*)var->name);
+	axfree((void*)var->value);
 
 	return ITER_NONE;
 }
@@ -35,16 +36,15 @@ _free c16 *_seq_read_range(
 	_out u32		*skip
 ){
 	if (fmt == nullptr
-	|| fmt_char == nullptr){
-		return nullptr;
-	}
-	if (skip == nullptr){
+	|| fmt_char == nullptr
+	|| skip == nullptr){
 		return nullptr;
 	}
 
 	axres res = AX_SUCC;
 
 	u32 fmt_len = _c16len(fmt);
+	u32 skip_count = 0;
 
 	c16 *prev_buf = nullptr;
 	u32 prev_len = 0;
@@ -56,8 +56,6 @@ _free c16 *_seq_read_range(
 	const c16 *beg_char = fmt_char;
 	const c16 *spec_char = nullptr;
 	while(in_c16_s(fmt, beg_char, fmt_len)){
-		axfree(prev_buf);
-
 		// Skip to first possible charset character occurence OR end of text
 		res = skip_until(beg_char, CHARSET_SEQ UTF16_EOT_STR, &spec_char);
 		axcheck_b(res);
@@ -67,32 +65,35 @@ _free c16 *_seq_read_range(
 			break;
 		}
 
-		// Copy everything before escape character (u'\\')
-		prev_buf = rng_buf;
-		prev_len = _c16len(prev_buf);
-
 		// Get needed length for the new buffer and allocate
-		rng_len = dif_c16(beg_char, spec_char) + prev_len;
-		rng_buf = axmalloc((rng_len + 1) * sizeof(c16));
+		rng_len = prev_len + dif_c16(beg_char, spec_char);
+		rng_buf = axmalloc(rng_len * sizeof(c16));
 
 		/*
 		 	Copy memory from prev_buf and then from beg_char
 			With range of size from beg_char to next CHARSET_SEQ occurence character
 		*/
-		memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
+		if (prev_buf != nullptr){
+			memcpy(rng_buf, prev_buf, prev_len * sizeof(c16));
+			axfree(prev_buf);
+		}
 		memcpy(rng_buf + prev_len, beg_char, dif_c16(beg_char, spec_char) * sizeof(c16));
 
 		// If next CHARSET_SEQ occurence is escaped then load it into the rng_buf as last and continue
 		if (_is_esc(fmt, spec_char)){
 			rng_buf[rng_len - 1] = *spec_char;
+			skip_count++;
 		}else{ // If not then break the loop and return output
 			break;
 		}
 
+		prev_buf = rng_buf;
+		prev_len = rng_len;
+
 		beg_char = spec_char + 1;
 	}
 
-	*skip = dif_c16(fmt_char, spec_char);
+	*skip = skip_count + rng_len;
 
 	return rng_buf;
 }
@@ -159,7 +160,6 @@ axres seq_read_group(
 		case u'<': // Capture set
 			res = seq_group_cap(fmt, fmt_char, &fmt_char, &spec);
 			axcheck_b(res);
-
 			spec_add = true;
 			break;
 		case u'[': // Variable
@@ -189,7 +189,7 @@ axres seq_read_group(
 		}
 
 		// If AX_ERR(res) then spec->value is expected to not be allocated
-		axcheck(res);
+		axcheck(res, io_i64(spec.type));
 
 		// Set mode based on the first character of the sequnece (fmt_beg)
 		spec.mode = (_is_opt(fmt, fmt_beg) == true)
@@ -227,6 +227,7 @@ void grp_load_vars(
 	fmt_var *var = nullptr;
 	for (u32 i = 0; i < grp->var_list->count; i++){
 		var = index_as(grp->var_list, fmt_var*, i);
+		asrt(var != nullptr);
 
 		// Load variable name and value into the dictionary
 		dict->add(
@@ -323,6 +324,9 @@ axres seq_locate_nodet(
 	const c16 *spec_end = text;
 
 	fmt_spec *curr = index_as(spec_list, fmt_spec*, curr_i);
+	if (curr == nullptr){
+		return AX_INV_MEM;
+	}
 
 	// Find next 'physical' sequence thats valid
 	u64 next_i = curr_i + 1;
@@ -581,8 +585,7 @@ skip_occ:
 axres seq_find(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_out seq_loc 		*loc,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_out seq_loc 		*loc
 ){
 	if (text == nullptr
 	|| fmt == nullptr){
@@ -601,12 +604,7 @@ axres seq_find(
 	seq_loc buf = {0};
 	res = seq_locate(text, &grp, &buf);
 
-	if (vars != nullptr){
-		grp_load_vars(&grp, vars);
-	}
-
 	grp_cleanup(&grp);
-
 	axcheck(res);
 
 	*loc = buf;
@@ -616,8 +614,7 @@ axres seq_find(
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_in_out ax_list		*locs
 ){
 	if (text == nullptr
 	|| fmt == nullptr){
@@ -660,7 +657,7 @@ axres seq_find_all(
 axres seq_find_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_out seq_loc 		*loc
 ){
 	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
@@ -676,7 +673,7 @@ axres seq_find_f(
 	// uocation of substr in fmap
 	seq_loc buf = {0};
 
-	res = seq_find(fmap_off, fmt, &buf, nullptr);
+	res = seq_find(fmap_off, fmt, &buf);
 	axcheck(res);
 
 	file->offset = (u64)buf.beg;
@@ -687,8 +684,7 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
-	_in_out ax_list		*locs,
-	_in_out_opt ax_dict	*vars // Variable result dictionary
+	_in_out ax_list		*locs
 ){
 	if (io_finv(file, UTF16)){
 		return AX_INV_FILE;
@@ -704,7 +700,7 @@ axres seq_find_all_f(
 
 	// fmap with file offset
 	const c16 *fmap_off = file->map.root;
-	res = seq_find_all(fmap_off, fmt, locs, nullptr);
+	res = seq_find_all(fmap_off, fmt, locs);
 	axcheck(res);
 
 	return AX_SUCC;

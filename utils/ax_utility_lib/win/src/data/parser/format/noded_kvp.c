@@ -28,7 +28,7 @@ axres noded_kvp_load(
 	axcheck(res);
 	
 	seq_loc inv_loc = {0};
-	seq_find(kvp_buf, NODED_KVP_FMT, &inv_loc, nullptr);
+	seq_find(kvp_buf, NODED_KVP_FMT, &inv_loc);
 
 	return AX_SUCC;
 

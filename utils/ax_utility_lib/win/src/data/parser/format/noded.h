@@ -119,15 +119,18 @@ axres noded_doc_unload(
 */
 
 // Sequence format for noded_sect
-#define NODED_SECT_FMT		u"(!:\".\")" /* Not in between " characters (string literal) */ \
-				u"(!:\'.\')" /* Not in between " characters (string literal) */ \
-				u"^[<" CAPTURE_FMT_ASCII u"-{[}-{]}" u">]:" /* Main section block sequence */ \
+#define NODED_SECT_FMT		u"(!:\".\")(!:\'.\')" /* Not in between " characters (string literal) */ \
+				u"^\\[" \
+				u"[n:sect_name;s:1]" \
+				u"<" CAPTURE_FMT_ASCII u"-{[}-{]}" u">" /* Main section block sequence */ \
+				u"]:" \
 				u"<" CAPTURE_FMT_NL u">$" /* New line capture group */
 
 // Load section and it`s nodes
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in seq_loc		sect_loc
+	_in seq_loc		sect_loc,
+	_in ax_dict 		*sect_vars
 );
 axres noded_sect_unload(
 	_in noded_sect		*sect

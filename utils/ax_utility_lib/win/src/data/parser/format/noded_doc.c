@@ -24,7 +24,7 @@ axres noded_doc_load(
 	ax_list_init(&seq_list);
 
 	// Capture all section sequences
-	res = seq_find_all_f(doc->file, NODED_SECT_FMT, seq_list, nullptr);
+	res = seq_find_all_f(doc->file, NODED_SECT_FMT, seq_list);
 	axcheck(res,
 		seq_list->delete(seq_list),
 		noded_doc_unload(doc) // doc core loaded by now
@@ -32,14 +32,13 @@ axres noded_doc_load(
 
 	seq_loc *curr = nullptr; 
 
-	//io_i64(seq_list->count);
 	// Iterate all occurences and load them into doc->sect_list
 	for (u32 i = 0; i < seq_list->count; i++){
 		curr = index_as(seq_list, seq_loc*, i);
 		axcheck_b((curr == nullptr));
 
-		// uoad sect into the doc
-		res = noded_sect_load(doc, *curr);
+		// Load sect into the doc
+		res = noded_sect_load(doc, *curr, nullptr);
 		axcheck_b(res);
 	}
 

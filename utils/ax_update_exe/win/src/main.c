@@ -25,14 +25,29 @@ int main(
 	//index_as(list, 0, c16*);
 	//index_as(list, 0, c16*);
 
-	ax_dict *dict;
-	ax_dict_init(2, &dict);
-
 	seq_loc loc = {0};
-	res = seq_find(u"df=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc, dict);
+	res = seq_find(u"=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
 	axcheck(res, ax_log(res));
 
-	io_str(index_as(dict, c16*, u"name", sizeof(u"name")));
+	io_str(loc.beg);
+	io_str(loc.end);
+
+	/*const c16 *fmt =  u"\\[sh\\(abc\\(def$";
+	u32 s = 0;
+	io_str(_seq_read_range(fmt, fmt, &s));*/
+
+	/*seq_loc loc = {0};
+
+	res = seq_find(u"[sh(abcdsdfsjdsf-", u"^\\[sh\\(abc$", &loc);
+	axcheck(res, ax_log(res));
+
+	io_str(loc.beg);
+	io_str(loc.end);*/
+	/*const c16 *fmt = u"sdkalj\\[sh";
+	u32 s = 0;
+	io_str(_seq_read_range(fmt, fmt, &s));*/
+
+	//io_str(index_as(dict, c16*, u"name", sizeof(u"name")));
 
 	/*io_str(loc.beg);
 	io_str(loc.end);*/

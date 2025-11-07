@@ -2,32 +2,28 @@
 
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in seq_loc		sect_loc
+	_in seq_loc		sect_loc,
+	_in ax_dict 		*sect_vars
 ){
 	if (noded_doc_inv(doc)){
 		return AX_INV_DATA;
+	}
+	if (sect_vars == nullptr){
+		return AX_INV_ARG;
 	}
 
 	axres res = AX_SUCC;
 
 	noded_sect sect = {0};
 
-	// Allocated
-	u32 name_len = 0;
-	c16 *name_buf = nullptr;
 	u32 rng_len = 0;
 	c16 *rng_buf = nullptr;
 
 	const c16 *sect_char = sect_loc.beg;
-
-	// Read name of the section
-	res = read_line(sect_loc.beg, &name_len, name_buf);
-	axcheck_g(res, error_jump);
-	
-	name_buf = axmalloc(name_len * sizeof(c16));
-
-	res = read_line(sect_loc.beg, &name_len, name_buf);
-	axcheck_g(res, error_jump);
+	const c16 *name = index_as(sect_vars, c16*, u"sect_name", sizeof(u"sect_name"));
+	if (name == nullptr){
+		return AX_INV_DATA;
+	}
 
 	// Skip to section range
 	res = skip_line(sect_char, &sect_char);
@@ -35,13 +31,15 @@ axres noded_sect_load(
 
 	// Skip to next section location
 	seq_loc next_loc = {0};
-	res = seq_find(sect_char, NODED_SECT_FMT, &next_loc, nullptr);
+	res = seq_find(sect_char, NODED_SECT_FMT, &next_loc);
 	if (res == AX_NOT_FND){
 		// If none found skip to doc->file->map.root end
 		next_loc.beg = sect_char + _c16len(sect_char);
 	}else axcheck_g(res, error_jump);
 
-	// Read section KVP range
+	/*
+	   	Read section KVP range
+	*/
 	res = read_range(
 		sect_char,
 		0,
@@ -75,7 +73,7 @@ axres noded_sect_load(
 	axcheck_g(res, error_jump);
 	axfree(rng_buf);
 
-	sect.name = name_buf;
+	sect.name = _c16dup(name);
 	sect.doc = doc;
 	sect.beg = sect_char;
 	sect.end = next_loc.beg;
@@ -90,7 +88,6 @@ axres noded_sect_load(
 
 error_jump:
 	axfree(rng_buf);
-	axfree(name_buf);
 	noded_sect_unload(&sect);
 
 	return res;

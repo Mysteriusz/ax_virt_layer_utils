@@ -20,7 +20,7 @@ axres skip_until(
 	bool found = false;
 
 	while(in_c16_s(text, text_char, text_len)){
-		found = (contains(charset,*text_char) == AX_SUCC && !_is_esc(text, text_char));
+		found = (contains(charset,*text_char) == AX_SUCC);
 
 		if (found == true){
 			break;
