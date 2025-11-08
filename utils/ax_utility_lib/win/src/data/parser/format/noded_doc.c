@@ -24,7 +24,7 @@ axres noded_doc_load(
 	ax_list_init(&seq_list);
 
 	// Capture all section sequences
-	res = seq_find_all_f(doc->file, NODED_SECT_FMT, seq_list);
+	res = seq_find_all_f(doc->file, NODED_SECT_FMT, true, seq_list);
 	axcheck(res,
 		seq_list->delete(seq_list),
 		noded_doc_unload(doc) // doc core loaded by now

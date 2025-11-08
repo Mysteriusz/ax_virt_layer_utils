@@ -1,33 +1,30 @@
 #include "ax_parser_seq.h"
 
-// fmt_spec list cleanup iterator
-iter_code fmt_spec_iter(
-	ax_list_iter_stack 	stack _prepass
+// fmt_spec list cleanup override
+void fmt_spec_on_clean(
+	ax_list_node		node _prepass
 ){
-	fmt_spec *spec = (fmt_spec*)stack->node->value;
-	axfree((void*)spec->value);
-
-	return ITER_NONE;
+	fmt_spec *spec = (fmt_spec*)node->value;
+	axfree(spec->value);
+	axfree(spec);
 }
-// fmt_cond list cleanup iterator
-iter_code fmt_cond_iter(
-	ax_list_iter_stack 	stack _prepass
+// fmt_cond list cleanup override
+void fmt_cond_on_clean(
+	ax_list_node		node _prepass
 ){
-	fmt_cond *cond = (fmt_cond*)stack->node->value;
-	axfree((void*)cond->bef);
-	axfree((void*)cond->aft);
-
-	return ITER_NONE;
+	fmt_cond *cond = (fmt_cond*)node->value;
+	axfree(cond->bef);
+	axfree(cond->aft);
+	axfree(cond);
 }
-// fmt_var list cleanup iterator
-iter_code fmt_var_iter(
-	ax_list_iter_stack 	stack _prepass
+// fmt_var list cleanup override
+void fmt_var_on_clean(
+	ax_list_node		node _prepass
 ){
-	fmt_var *var = (fmt_var*)stack->node->value;
-	axfree((void*)var->name);
-	axfree((void*)var->value);
-
-	return ITER_NONE;
+	fmt_var *var = (fmt_var*)node->value;
+	axfree(var->name);
+	axfree(var->value);
+	axfree(var);
 }
 
 _free c16 *_seq_read_range(
@@ -214,6 +211,16 @@ axres seq_read_group(
 	return AX_SUCC;
 }
 
+void seq_list_on_clean(
+	_in ax_list_node	node _prepass
+){
+	seq_loc *loc = (seq_loc*)node->value;
+
+	if (loc->seq_vars != nullptr){
+		loc->seq_vars->delete(loc->seq_vars);
+	}
+	axfree(loc);
+}
 // Load variables from _fmt_group->var_list into dictionary
 void grp_load_vars(
 	_in fmt_group 		*grp,
@@ -237,8 +244,13 @@ void grp_load_vars(
 			(void*)var->value,
 			_c16len_b(var->value) + sizeof(c16)
 		);
+		
+		// Reset var->value for the grp after loading into dictionary
+		axfree(var->value);
+		var->value = nullptr;
 	}
 }
+
 // Cleanup _fmt_group
 void grp_cleanup(
 	_in fmt_group 		*grp
@@ -248,15 +260,12 @@ void grp_cleanup(
 	}
 
 	if (grp->spec_list != nullptr){
-		grp->spec_list->iter(grp->spec_list, (ax_iter_act)fmt_spec_iter, nullptr, nullptr);
 		grp->spec_list->delete(grp->spec_list);
 	}
 	if (grp->cond_list != nullptr){
-		grp->cond_list->iter(grp->cond_list, (ax_iter_act)fmt_cond_iter, nullptr, nullptr);
 		grp->cond_list->delete(grp->cond_list);
 	}
 	if (grp->var_list != nullptr){
-		grp->var_list->iter(grp->var_list, (ax_iter_act)fmt_var_iter, nullptr, nullptr);
 		grp->var_list->delete(grp->var_list);
 	}
 }
@@ -282,6 +291,11 @@ axres seq_split_fmt(
 	axcheck_g(res, error_jump);
 	res = ax_list_init(&grp.var_list);
 	axcheck_g(res, error_jump);
+
+	// Set cleanup overrides
+	grp.spec_list->overrides.on_clear = (ax_structure_override)fmt_spec_on_clean;
+	grp.cond_list->overrides.on_clear = (ax_structure_override)fmt_cond_on_clean;
+	grp.var_list->overrides.on_clear = (ax_structure_override)fmt_var_on_clean;
 
 	// Parse group
 	res = seq_read_group(fmt, &grp);
@@ -597,15 +611,24 @@ axres seq_find(
 
 	axres res = AX_SUCC;
 
+	// Parse fmt into fmt_group structure
 	fmt_group grp = {0};
 	res = seq_split_fmt(fmt, &grp);
 	axcheck(res);
 
+	// Prepare buffer and locate
 	seq_loc buf = {0};
+	buf.seq_vars = loc->seq_vars;
 	res = seq_locate(text, &grp, &buf);
 
+	// If caller collects seq_vars then load captured grp.var_list
+	if (buf.seq_vars != nullptr){
+		grp_load_vars(&grp, buf.seq_vars);
+	}
+
+	// Cleanup and unload var dictionary on error
 	grp_cleanup(&grp);
-	axcheck(res);
+	axcheck(res, buf.seq_vars->delete(buf.seq_vars));
 
 	*loc = buf;
 
@@ -614,14 +637,13 @@ axres seq_find(
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
+	_in bool		var_load,
 	_in_out ax_list		*locs
 ){
 	if (text == nullptr
-	|| fmt == nullptr){
+	|| fmt == nullptr
+	|| locs == nullptr){
 		return AX_INV_ARG;
-	}
-	if (locs == nullptr){
-		return AX_INV_BUF;
 	}
 
 	axres res = AX_SUCC;
@@ -632,13 +654,19 @@ axres seq_find_all(
 
 	u32 text_len = _c16len(text); 
 	const c16 *text_char = text; 
-	seq_loc buf = {0};
 
+	seq_loc buf = {0};
 	while(in_c16_s(text, text_char, text_len)){
 		res = seq_locate(text_char, &grp, &buf);
 		axcheck_b(res);
 
-		// Add the spec_sequence occurrence to the list
+		// If caller collects seq_vars then load captured grp.var_list
+		if (var_load){
+			ax_dict_init(2, &buf.seq_vars);
+			grp_load_vars(&grp, buf.seq_vars);
+		}
+
+		// Add found sequence to the list
 		locs->add(locs, &buf, sizeof(seq_loc));
 		text_char = buf.beg + 1;
 	}
@@ -648,6 +676,9 @@ axres seq_find_all(
 	&& res == AX_NOT_FND){
 		res = AX_SUCC;
 	}
+
+	// Override to cleanup all the variable dictionaries
+	locs->overrides.on_clear = (ax_structure_override)seq_list_on_clean;
 
 	grp_cleanup(&grp);
 	axcheck(res, locs->clear(locs));
@@ -684,6 +715,7 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
+	_in bool 		var_load,
 	_in_out ax_list		*locs
 ){
 	if (io_finv(file, UTF16)){
@@ -700,7 +732,7 @@ axres seq_find_all_f(
 
 	// fmap with file offset
 	const c16 *fmap_off = file->map.root;
-	res = seq_find_all(fmap_off, fmt, locs);
+	res = seq_find_all(fmap_off, fmt, var_load, locs);
 	axcheck(res);
 
 	return AX_SUCC;

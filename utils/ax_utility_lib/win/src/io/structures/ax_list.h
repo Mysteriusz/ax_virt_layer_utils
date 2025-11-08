@@ -14,6 +14,8 @@ typedef struct _ax_list{
 	u32 count;
 	ax_list_node *root;
 	struct { AX_STRUCTURE_CMD_SEQ };
+	struct { AX_STRUCTURE_OVR } overrides;
+
 } ax_list;
 
 axres ax_list_init(

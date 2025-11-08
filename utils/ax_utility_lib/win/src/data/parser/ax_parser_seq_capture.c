@@ -129,7 +129,7 @@ error_jump:
 	return false;
 }
 
-_free const c16 *_seq_cap_to_charset(
+_free c16 *_seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 ){
 	if (seq_cap_to_charset_inv(cap)){
@@ -141,9 +141,9 @@ _free const c16 *_seq_cap_to_charset(
 	const c16 *not_char = nullptr;
 
 	enum set_mode mode = 0;
-	const c16 *charset = nullptr;
+	c16 *charset = nullptr;
 	// Set containing temp data to be merged with charset based on mode
-	const c16 *wrkset = nullptr;
+	c16 *wrkset = nullptr;
 
 	// Capture set parse {a-z}-{c-m}+{l}
 	while(in_c16_s(cap, cap_char, cap_len)){
@@ -330,7 +330,7 @@ axres seq_group_cap(
 	);
 	axcheck(res, axfree(spec_buf));
 
-	const c16 *cap_set = _seq_cap_to_charset(spec_buf);
+	c16 *cap_set = _seq_cap_to_charset(spec_buf);
 	axfree(spec_buf);
 
 	axcheck_r((cap_set == nullptr), AX_INV_FMT);

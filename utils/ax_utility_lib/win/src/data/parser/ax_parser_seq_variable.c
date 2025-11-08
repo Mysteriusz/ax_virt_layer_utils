@@ -431,14 +431,11 @@ axres seq_var_process(
 		/*
 		 	Collection switches
 		*/
-		if (curr->spec_i == match_i){
-			curr->collect = true;
-		}
-		if (match_i == (curr->spec_i + curr->span)){
-			curr->collect = false;
-		}
+		curr->collect = (match_i >= curr->spec_i && (curr->spec_i + curr->span) > match_i)
+			? true
+			: false;
 
-		if (!curr->collect){
+		if (curr->collect == false){
 			continue;
 		}
 

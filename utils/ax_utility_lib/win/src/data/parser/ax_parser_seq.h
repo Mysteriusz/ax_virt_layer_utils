@@ -25,7 +25,7 @@ enum spec_mode{
  	Unstructured linear sequence data holder.
 */
 typedef struct _fmt_spec{
-	const c16 *value;
+	c16 *value;
 	enum spec_type type;
 	enum spec_mode mode;
 } fmt_spec;
@@ -88,6 +88,7 @@ axres seq_find(
 axres seq_find_all(
 	_in const c16		*text,
 	_in const c16 		*fmt,
+	_in bool		var_load,
 	_in_out ax_list		*locs // Access by index_as(locs, seq_loc*, i)
 );
 #if defined(AX_PARSER_FILE_INT)
@@ -99,10 +100,14 @@ axres seq_find_f(
 axres seq_find_all_f(
 	_in io_file		*file,
 	_in const c16 		*fmt,
+	_in bool 		var_load,
 	_in_out ax_list		*locs // Access by index_as(locs, seq_loc*, i)
 );
 #endif // defined(AX_PARSER_FILE_INT)
 
+void var_list_on_clean(
+	_in ax_dict_node	node _prepass
+);
 
 #define CAPTURE_FMT_ASCII	u"{\x20-\x7e}"
 
@@ -139,7 +144,7 @@ bool seq_cap_to_charset_inv(
 	
 	Returns HEAP ALLOCATED condition structure
 */
-_free const c16 *_seq_cap_to_charset(
+_free c16 *_seq_cap_to_charset(
 	_in const c16		*cap // cap FOR capture group
 );
 
@@ -194,8 +199,8 @@ enum cond_state{
 typedef struct _fmt_cond{
 	bool ret;
 	enum cond_state state;
-	const c16 *bef; // Before . character
-	const c16 *aft; // After . character
+	c16 *bef; // Before . character
+	c16 *aft; // After . character
 } fmt_cond;
 
 #define SEQ_COND_CHARSET u"."
@@ -262,7 +267,7 @@ typedef struct _fmt_var{
 	/*
 	 	Fields influenced by syntax.
 	*/
-	const c16 *name;
+	c16 *name;
 	enum var_type type;
 	u32 length;
 	u8 span;
@@ -330,10 +335,6 @@ axres seq_var_process(
 	_in u32			match_i,
 	_in c16			*match_res // Allocated result of the specifier at index spec_i
 );
-_free c16 *_seq_read_range(
-	_in const c16 		*fmt,
-	_in const c16 		*fmt_char,
-	_out u32		*skip
-);
+
 #endif
 

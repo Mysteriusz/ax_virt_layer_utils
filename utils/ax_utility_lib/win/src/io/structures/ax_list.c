@@ -236,7 +236,13 @@ axres ax_list_clear(
 	ax_list_node *next = nullptr;
 	while(node != nullptr){
 		next = node->next;
-		axfree(node->value);
+
+		if (list->overrides.on_clear != nullptr){
+			list->overrides.on_clear((const u8*)node);
+		}else{
+			axfree(node->value);
+		}
+
 		axfree(node);
 		node = next;
 	}

@@ -11,6 +11,19 @@ enum ax_structure_type{
 #define index_as(s, v_t, ...) ((v_t)s->query_at(s, __VA_ARGS__))
 
 /*
+	Overrides only override function value handling.
+	With calls like on_clear it`s important free the node_value in the calee function.
+
+	IMPORTANT:
+	The node itself SHOULD NOT be FREED!!!
+*/
+typedef void (*ax_structure_override)(
+	_in const u8			structure_node _prepass
+);
+#define AX_STRUCTURE_OVR \
+	ax_structure_override on_clear; \
+
+/*
 
  	Sequential data structures interface
 

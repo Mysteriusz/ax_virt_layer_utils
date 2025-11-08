@@ -15,26 +15,21 @@ int main(
 	axcheck(res, ax_log(res));
 	noded_doc_unload(doc);*/
 
-	/*u32 l = 0;
-	c16 *b = nullptr;
-	read_until(u"some_text;dfhsklh", u";", &l, b);
-	b = axmalloc(l * sizeof(c16));
-	read_until(u"some_text;dfhsklh", u";", &l, b);
+	ax_list *locs = nullptr;
+	ax_list_init(&locs);
 
-	io_str(b);*/
-	//index_as(list, 0, c16*);
-	//index_as(list, 0, c16*);
-
-	seq_loc loc = {0};
-	res = seq_find(u"=other_text-", u"[n:name;s:3]^?<{a-z}+{_}>=<{a-z}+{_}>$", &loc);
+	res = seq_find_all(u"[sect_1]:=other_t[sect_21]:ext-", u"\\[[n:name;s:1]<{a-z}+{_}+{0-9}>]:", true, locs);
 	axcheck(res, ax_log(res));
 
-	io_str(loc.beg);
-	io_str(loc.end);
+	seq_loc *loc = index_as(locs, seq_loc*, 1);
+	io_str(index_as(loc->seq_vars, c16*, u"name", sizeof(u"name")));
 
-	/*const c16 *fmt =  u"\\[sh\\(abc\\(def$";
-	u32 s = 0;
-	io_str(_seq_read_range(fmt, fmt, &s));*/
+	locs->delete(locs);
+
+	/*io_i64(loc.seq_vars->count);
+	io_str(index_as(loc.seq_vars, c16*, u"name", sizeof(u"name")));
+
+	loc.seq_vars->delete(loc.seq_vars);*/
 
 	/*seq_loc loc = {0};
 
