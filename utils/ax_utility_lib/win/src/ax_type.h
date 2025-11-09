@@ -51,6 +51,7 @@
 
 #if defined(AX_UM)
 #include <heapapi.h>
+#include <fileapi.h>
 #include <handleapi.h>
 #include <winreg.h>
 #include <winerror.h>

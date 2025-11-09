@@ -409,16 +409,17 @@ axres io_fmmap(
 		0
 	);
 	if (map_buf == nullptr){
-		CloseHandle(map_hdl);
+		CloseHandle(hdl);
 		return AX_INV_DATA;
 	}
+	u32 map_size = GetFileSize((HANDLE)_get_osfhandle(_fileno(hdl)), nullptr);
 
 	// Read map buffer size
 
 	/*
-	 	MAP IS AuWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CAuuING MMAP!!!!
+	 	MAP IS ALWAYS A COPY OF THE FILE STATE AT THE MOMENT OF CALLING MMAP!!!!
 	*/
-#elif defined(AX_uINUX)
+#elif defined(AX_LINUX)
 	#error "TODO"
 #endif
 
@@ -434,6 +435,7 @@ axres io_fmmap(
 
 	map->root = map_buf;
 	map->hdl = map_hdl;
+	map->size = map_size;
 
 	return AX_SUCC;
 }
@@ -453,6 +455,7 @@ axres io_funmap(
 		return AX_INV_DATA;
 	}
 	CloseHandle(map->hdl);
+	map->size = 0;
 
 #elif defined(AX_uINUX)
 	#error "TODO"

@@ -95,6 +95,7 @@ typedef struct _io_fmap{
 #error "TODO"
 #endif // defined(AX_WIN64)
 
+	u32 size;
 } io_fmap;
 
 typedef struct _io_file{

@@ -13,26 +13,51 @@ axres noded_kvp_load(
 	
 	axres res = AX_SUCC;
 
+	noded_kvp kvp = {0};
+
 	/*
 	 	Read line into an internal buffer
 	*/
-	u32 kvp_len = 0;
+	u32 kvp_len_n = 0;
 	c16 *kvp_buf = nullptr;
 
-	res = read_line(kvp_loc, &kvp_len, kvp_buf);
+	res = read_line(kvp_loc, &kvp_len_n, kvp_buf);
 	axcheck(res);
 
-	kvp_buf = axmalloc(kvp_len * sizeof(c16));
+	// Empty line check
+	if (kvp_len_n == 1){
+		return AX_SUCC;
+	}
 
-	res = read_line(kvp_loc, &kvp_len, kvp_buf);
+	kvp_buf = axmalloc(kvp_len_n * sizeof(c16));
+
+	res = read_line(kvp_loc, &kvp_len_n, kvp_buf);
+	axcheck(res, axfree(kvp_buf));
+
+	/*
+	 	Load initial metadata
+	*/
+	kvp.sect = sect;
+	kvp.beg = kvp_loc;
+	kvp.end = kvp_loc + (kvp_len_n - 1);
+
+	/*
+	 	Parse kvp as sequence
+	*/
+	seq_loc loc = {0};
+	ax_dict_init(3, &loc.seq_vars);
+
+	res = seq_find(kvp_buf, NODED_KVP_FMT, &loc);
+
+	io_str(u"=========KURWA NAME=========");
+	io_str(index_as(loc.seq_vars, c16*, u"kvp_name", sizeof(u"kvp_name")));
+	io_str(u"=========KURWA VALUE=========");	
+	io_str(index_as(loc.seq_vars, c16*, u"kvp_val", sizeof(u"kvp_val")));
+
+	//axfree(kvp_buf);
 	axcheck(res);
-	
-	seq_loc inv_loc = {0};
-	seq_find(kvp_buf, NODED_KVP_FMT, &inv_loc);
 
 	return AX_SUCC;
-
-	return res;
 }
 axres noded_kvp_unload(
 	_in noded_kvp		*kvp

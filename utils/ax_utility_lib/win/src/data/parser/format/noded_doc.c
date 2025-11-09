@@ -18,17 +18,16 @@ axres noded_doc_load(
 	res = io_fo(path, IO_FILE_R, &doc->file);
 	axcheck(res, axfree(doc));
 
+	// Initialize section list of the doc
 	ax_list_init(&doc->sect_list);
 
+	// Initialize sequence list for the section capture
 	ax_list *seq_list = nullptr;
 	ax_list_init(&seq_list);
 
 	// Capture all section sequences
 	res = seq_find_all_f(doc->file, NODED_SECT_FMT, true, seq_list);
-	axcheck(res,
-		seq_list->delete(seq_list),
-		noded_doc_unload(doc) // doc core loaded by now
-	);
+	axcheck_g(res, cleanup);
 
 	seq_loc *curr = nullptr; 
 
@@ -38,10 +37,11 @@ axres noded_doc_load(
 		axcheck_b((curr == nullptr));
 
 		// Load sect into the doc
-		res = noded_sect_load(doc, *curr, nullptr);
+		res = noded_sect_load(doc, curr);
 		axcheck_b(res);
 	}
 
+cleanup:
 	// Cleanup
 	seq_list->delete(seq_list);
 	axcheck(res,
@@ -59,7 +59,6 @@ iter_code noded_doc_unload_iter(
 ){
 	noded_sect *sect = stack->node->value;
 
-	io_str(sect->name);
 	noded_sect_unload(sect);
 
 	return ITER_NONE;

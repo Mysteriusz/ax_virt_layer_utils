@@ -87,6 +87,8 @@ typedef struct _noded_sect{
 typedef struct _noded_kvp{
 	c16			*name;
 	c16			*value;
+	const c16		*beg;
+	const c16		*end;
 	noded_sect 		*sect;
 } noded_kvp;
 
@@ -129,8 +131,7 @@ axres noded_doc_unload(
 // Load section and it`s nodes
 axres noded_sect_load(
 	_in noded_doc		*doc,
-	_in seq_loc		sect_loc,
-	_in ax_dict 		*sect_vars
+	_in seq_loc		*sect_loc
 );
 axres noded_sect_unload(
 	_in noded_sect		*sect
@@ -141,8 +142,16 @@ axres noded_sect_unload(
 */
 
 // Sequence format for noded_kvp
-#define NODED_KVP_FMT		u"?[" CAPTURE_FMT_ASCII u"?]" /* Main name block sequence */ \
-				u"<" CAPTURE_FMT_NL u">$" /* New line capture group */
+#define NODED_KVP_FMT		u"?\\<" \
+				u"[n:kvp_name;s:1]" \
+				u"<" CAPTURE_FMT_ASCII u">" \
+				u"?>" \
+				"|" \
+				u"=" \
+				u"?\\<"\
+				u"[n:kvp_val;s:1]" \
+				u"<" CAPTURE_FMT_ASCII u">" \
+				u"?>"
 
 // Load kvp
 axres noded_kvp_load(

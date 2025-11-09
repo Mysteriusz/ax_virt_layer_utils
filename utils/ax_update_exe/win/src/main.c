@@ -1,6 +1,5 @@
 #include "ax_utility.h"
 #include "noded.h"
-#include "murmur.h"
 
 int main(
 	void
@@ -10,12 +9,18 @@ int main(
 	axres res = AX_SUCC;
 	unref(res);
 
-	/*noded_doc *doc = nullptr;
+	noded_doc *doc = nullptr;
 	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
-	noded_doc_unload(doc);*/
+	noded_doc_unload(doc);
 
-	ax_list *locs = nullptr;
+	/*seq_loc loc = {0};
+	ax_dict_init(3, &loc.seq_vars);
+	res = seq_find(u"node_str=", NODED_KVP_FMT, &loc);
+
+	io_str(index_as(loc.seq_vars, c16*, u"kvp_name", sizeof(u"kvp_name")));*/
+
+	/*ax_list *locs = nullptr;
 	ax_list_init(&locs);
 
 	res = seq_find_all(u"[sect_1]:=other_t[sect_21]:ext-", u"\\[[n:name;s:1]<{a-z}+{_}+{0-9}>]:", true, locs);
@@ -24,7 +29,7 @@ int main(
 	seq_loc *loc = index_as(locs, seq_loc*, 1);
 	io_str(index_as(loc->seq_vars, c16*, u"name", sizeof(u"name")));
 
-	locs->delete(locs);
+	locs->delete(locs);*/
 
 	/*io_i64(loc.seq_vars->count);
 	io_str(index_as(loc.seq_vars, c16*, u"name", sizeof(u"name")));

@@ -172,6 +172,9 @@ axres seq_read_group(
 		case u'?':
 			fmt_char++;
 			break;
+		case u'|':
+			fmt_char++;
+			break;
 		default:
 			rng = _seq_read_range(fmt, fmt_char, &rng_len);
 			axcheck_b((rng == nullptr));
@@ -186,7 +189,7 @@ axres seq_read_group(
 		}
 
 		// If AX_ERR(res) then spec->value is expected to not be allocated
-		axcheck(res, io_i64(spec.type));
+		axcheck(res);
 
 		// Set mode based on the first character of the sequnece (fmt_beg)
 		spec.mode = (_is_opt(fmt, fmt_beg) == true)
@@ -197,7 +200,6 @@ axres seq_read_group(
 			|| spec.type == spec_capture_set){
 				spec_occ++;
 			}
-
 			// Add buffer specifier
 			grp->spec_list->add(
 				grp->spec_list,
@@ -310,6 +312,72 @@ error_jump:
 	return res;
 }
 
+axres seq_optional_nodet(
+	_in const c16		*text,
+	_in u32 		curr_i,
+	_in ax_list		*spec_list,
+	_out const c16		**bound_loc
+){
+	if (text == nullptr
+	|| spec_list == nullptr){
+		return AX_INV_ARG;
+	}
+	if (bound_loc == nullptr){
+		return AX_INV_BUF;
+	}
+
+	//fmt_spec *curr = index_as(spec_list, fmt_spec*, curr_i);
+	fmt_spec *bound = nullptr;
+	u32 bound_i = curr_i + 1;
+
+	while(bound_i < spec_list->count){
+		bound = index_as(spec_list, fmt_spec*, bound_i++);
+		if (bound->mode == spec_optional
+		|| bound->type != spec_sequence){
+			continue;
+		}else{
+			break;
+		}
+	}
+
+	axres res = AX_SUCC;
+
+	const c16 *bound_char = nullptr;
+	const c16 *text_char = nullptr;
+
+	// Bound of the sequence (anything before the bound cannot exceed it)
+	res = find_substr(text, bound->value, &text_char, nullptr);
+	bound_char = text_char;
+	if (AX_ERR(res)){
+		if (bound->mode == spec_optional){
+			goto bound_ret;
+		}else{
+			axcheck(res);
+		}
+	}
+
+	curr_i++;
+
+	while(curr_i < (bound_i - 1)){
+		bound = index_as(spec_list, fmt_spec*, curr_i++);
+		if (bound->type != spec_sequence){
+			continue;
+		}
+		res = find_substr(text, bound->value, &text_char, nullptr);
+
+		if (text_char > bound_char){
+			text_char = bound_char;
+			continue;
+		}else axcheck_g(res, bound_ret);
+	}
+
+bound_ret:
+	*bound_loc = (text_char != nullptr)
+		? text_char
+		: text + _c16len(text);
+
+	return AX_SUCC;
+}
 axres seq_locate_nodet(
 	_in const c16		*text,
 	_in u32 		curr_i,
@@ -342,15 +410,16 @@ axres seq_locate_nodet(
 		return AX_INV_MEM;
 	}
 
-	// Find next 'physical' sequence thats valid
 	u64 next_i = curr_i + 1;
 	fmt_spec *next = curr;
-	while(curr->type == spec_capture_set
-	&& next != nullptr){
-		if (next->type == spec_sequence){
+
+	// Find next 'physical' sequence thats valid
+	while(curr->type == spec_capture_set){
+		next = index_as(spec_list, fmt_spec*, next_i++);
+		if (next == nullptr
+		|| next->type == spec_sequence){
 			break;
 		}
-		next = index_as(spec_list, fmt_spec*, next_i++);
 	}
 
 	/*
@@ -388,8 +457,8 @@ axres seq_locate_nodet(
 			spec_end--;
 		}else{
 			// Find the ending position or move to next if optional
-			res = find_substr(spec_beg, next->value, &spec_end, nullptr);
-			axcheck_g(res, skip_jump);
+			res = seq_optional_nodet(spec_beg, curr_i, spec_list, &spec_end);
+			axcheck(res);
 		}
 	}else if(curr->type == spec_capture_set){
 		res = skip_while(spec_beg, curr->value, &spec_end);
@@ -628,7 +697,7 @@ axres seq_find(
 
 	// Cleanup and unload var dictionary on error
 	grp_cleanup(&grp);
-	axcheck(res, buf.seq_vars->delete(buf.seq_vars));
+	axcheck(res, ax_dict_clear(buf.seq_vars));
 
 	*loc = buf;
 

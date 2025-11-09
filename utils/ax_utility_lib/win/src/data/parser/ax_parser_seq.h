@@ -4,7 +4,7 @@
 #define AX_PARSER_SEQUENCE_INT
 
 // Charset of sequence starting identifiers
-#define CHARSET_SEQ 			u"<($^?["
+#define CHARSET_SEQ 			u"<($^?[|"
 typedef struct _fmt_group{
 	ax_list *spec_list; // List of _fmt_spec
 	ax_list *var_list; // List of _fmt_var
@@ -109,7 +109,7 @@ void var_list_on_clean(
 	_in ax_dict_node	node _prepass
 );
 
-#define CAPTURE_FMT_ASCII	u"{\x20-\x7e}"
+#define CAPTURE_FMT_ASCII	u"{\x20-\x7f}"
 
 /*
  	SEQUENCE INTERNAL UTILITIES
