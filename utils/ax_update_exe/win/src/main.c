@@ -12,7 +12,8 @@ int main(
 	noded_doc *doc = nullptr;
 	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
-	noded_doc_unload(doc);
+
+	//noded_doc_unload(doc);
 
 	/*seq_loc loc = {0};
 	ax_dict_init(3, &loc.seq_vars);

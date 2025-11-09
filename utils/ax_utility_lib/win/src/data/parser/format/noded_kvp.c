@@ -48,20 +48,47 @@ axres noded_kvp_load(
 	ax_dict_init(3, &loc.seq_vars);
 
 	res = seq_find(kvp_buf, NODED_KVP_FMT, &loc);
+	axcheck(res,
+		loc.seq_vars->delete(loc.seq_vars),
+		axfree(kvp_buf)
+	);
 
-	io_str(u"=========KURWA NAME=========");
-	io_str(index_as(loc.seq_vars, c16*, u"kvp_name", sizeof(u"kvp_name")));
-	io_str(u"=========KURWA VALUE=========");	
-	io_str(index_as(loc.seq_vars, c16*, u"kvp_val", sizeof(u"kvp_val")));
+	/*
+	 	Read values from the dictionary
+	*/
+	const c16 *name = index_as(loc.seq_vars, c16*, u"kvp_name", sizeof(u"kvp_name"));
+	const c16 *value = index_as(loc.seq_vars, c16*, u"kvp_val", sizeof(u"kvp_val"));
+	if (name == nullptr
+	|| value == nullptr){
+		axcheck(res,
+			loc.seq_vars->delete(loc.seq_vars),
+			axfree(kvp_buf)
+		);
+	}
 
-	//axfree(kvp_buf);
-	axcheck(res);
+	kvp.name = _c16dup(name);
+	kvp.value = _c16dup(value);
+
+	sect->kvp_list->add(
+		sect->kvp_list,
+		&kvp,
+		sizeof(noded_kvp)
+	);
+
+	/*
+	 	Cleanup
+	*/
+	loc.seq_vars->delete(loc.seq_vars);
+	axfree(kvp_buf);
 
 	return AX_SUCC;
 }
 axres noded_kvp_unload(
 	_in noded_kvp		*kvp
 ){
+	axfree(kvp->name);
+	axfree(kvp->value);
+
 	return AX_SUCC;
 }
 

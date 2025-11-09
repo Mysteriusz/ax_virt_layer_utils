@@ -58,7 +58,6 @@ iter_code noded_doc_unload_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
 	noded_sect *sect = stack->node->value;
-
 	noded_sect_unload(sect);
 
 	return ITER_NONE;

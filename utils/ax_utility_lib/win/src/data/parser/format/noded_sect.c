@@ -74,6 +74,7 @@ axres noded_sect_load(
 	sect.doc = doc;
 	sect.beg = rng_buf;
 	sect.end = rng_buf + rng_len;
+	ax_list_init(&sect.kvp_list);
 
 	/*
 		Process each line as kvp
@@ -85,7 +86,7 @@ axres noded_sect_load(
 		res = skip_line(rng_char, &rng_char);
 		axcheck_b(res);
 	}
-	axcheck(res);
+	axcheck(res, axfree(rng_buf));
 
 	doc->sect_list->add(
 		doc->sect_list,
@@ -105,8 +106,8 @@ error_jump:
 iter_code noded_unload_sect_iter(
 	ax_list_iter_stack 	stack _prepass
 ){
-	noded_kvp **kvp = stack->node->value;
-	noded_kvp_unload(*kvp);
+	noded_kvp *kvp = stack->node->value;
+	noded_kvp_unload(kvp);
 
 	return ITER_NONE;
 }
