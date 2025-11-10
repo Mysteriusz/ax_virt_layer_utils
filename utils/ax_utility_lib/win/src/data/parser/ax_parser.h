@@ -31,10 +31,10 @@ static inline u32 _c16len_b(
 static inline c16 *_c16dup(
 	_in const c16 		*text
 ){
-	u32 text_size = _c16len_b(text);
-	c16 *ptr = axmalloc(text_size + sizeof(c16));
-	memcpy(ptr, text, text_size);
-	ptr[text_size - 1] = L'\0';
+	u32 text_len = _c16len(text);
+	c16 *ptr = axmalloc((text_len + 1) * sizeof(c16));
+	memcpy(ptr, text, text_len * sizeof(c16));
+	ptr[text_len] = L'\0';
 	return ptr;
 }
 // Checks for L'\\' before text_char
@@ -64,7 +64,7 @@ static inline bool _is_opt(
 	return false;
 }
 
-#define end_c16(tp)		((c16*)(tp + _c16len(tp)))
+#define end_c16(tp)		((c16*)((tp) + _c16len(tp)))
 #define dif_c16(s,e)		((c16*)(e) - (c16*)(s))
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
 #define in_c16_s(tp,p,s)	(dif_c16(tp,p) < (s))

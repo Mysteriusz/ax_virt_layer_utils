@@ -270,6 +270,10 @@ axres ax_dict_clear(
 axres ax_dict_delete(
 	_in ax_dict 			*dict
 ){
+	if (dict == nullptr){
+		return AX_INV_ARG;
+	}
+
 	// Free all nodes
 	axres res = AX_SUCC;
 	res = ax_dict_clear(dict);

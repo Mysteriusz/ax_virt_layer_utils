@@ -49,6 +49,9 @@
 #define AX_INV_MEM 			((axres)0x09)
 #define AX_INV_MEM_MSG 			u"Memory corruption."
 
+#define AX_INV_PATH 			((axres)0x0a)
+#define AX_INV_PATH_MSG 		u"Invalid path."
+
 // "BUFFER" codes
 
 #define AX_BUF_TOO_SMALL 		((axres)0x10)

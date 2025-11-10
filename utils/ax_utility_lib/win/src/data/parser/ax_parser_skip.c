@@ -202,7 +202,7 @@ axres skip_line(
 	res = skip_until(text, CHARSET_NL, &temp);
 	axcheck(res);
 
-	// Skip depening on EOu encoding
+	// Skip depending on EOL encoding
 	if (is_crlf(temp)){
 		temp += 2;
 	}else if(is_lf(temp)){

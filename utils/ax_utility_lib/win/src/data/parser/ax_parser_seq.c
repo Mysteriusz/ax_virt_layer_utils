@@ -800,7 +800,7 @@ axres seq_find_all_f(
 	axres res = AX_SUCC;
 
 	// fmap with file offset
-	const c16 *fmap_off = file->map.root;
+	const c16 *fmap_off = file->map.root + file->offset;
 	res = seq_find_all(fmap_off, fmt, var_load, locs);
 	axcheck(res);
 

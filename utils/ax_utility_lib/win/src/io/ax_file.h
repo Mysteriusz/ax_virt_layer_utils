@@ -2,6 +2,7 @@
 #define AX_IO_FS_INT
 
 #include "ax_type.h"
+#include "ax_memory.h"
 #include "ax_error_code.h"
 
 #define IO_FILE_CHUNK 0x400 // (1024 UTF8) (512 UTF16) (256 UTF32)
@@ -17,7 +18,7 @@ enum io_file_acc{
 	IO_FILE_R = 0x01,
 	// Read/Write(Append)/Create
 	IO_FILE_W = 0x02,
-	// Read/Write/Create(Truncate)
+	// Read/Write/Create(If doesnt exist)
 	IO_FILE_C = 0x04,
 	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
@@ -43,7 +44,7 @@ enum io_file_enc{
 	UTF32 = 41,
 	UTF32BE = 42,
 };
-// Bytes size of the file encoding
+// Byte size of the file encoding
 static inline u32 _enc_size(
 	_in io_file_enc 		enc
 ){
@@ -66,6 +67,48 @@ static inline u32 _enc_size(
 		return 0;
 	}
 }
+// Byte count of the bom
+static inline u32 _bom_size(
+	_in io_file_enc 		bom
+){
+	switch(bom){
+	case UTF8LE:
+	case UTF8:
+	case UTF8BE:
+		return 3;
+	case UTF16LE:
+	case UTF16:
+	case UTF16BE:
+		return 2;
+	case UTF32LE:
+	case UTF32:
+	case UTF32BE:
+		return 4;
+	default:
+		return 0;
+	}
+}
+
+#if defined(AX_WIN64)
+static inline const DWORD _io_file_conv_win64(
+	_in io_file_acc 		acc	
+){
+	switch(acc){
+	case IO_FILE_R:
+		return FILE_READ_DATA;
+	case IO_FILE_W:
+		return FILE_APPEND_DATA;
+	case IO_FILE_C:
+		return FILE_WRITE_DATA;
+	case IO_FILE_RW:
+		return FILE_READ_DATA | FILE_APPEND_DATA;
+	case IO_FILE_RWC:
+		return FILE_READ_DATA | FILE_APPEND_DATA | FILE_WRITE_DATA;
+	default:
+		return 0;
+	}
+}
+#endif // defined(AX_WIN64)
 
 static inline const c16 *_io_file_conv(
 	_in io_file_acc 		acc	
@@ -78,9 +121,9 @@ static inline const c16 *_io_file_conv(
 	case IO_FILE_C:
 		return u"wb";
 	case IO_FILE_RW:
-		return u"ab+";
+		return u"a+b";
 	case IO_FILE_RWC:
-		return u"wb+";
+		return u"w+b";
 	default:
 		return nullptr;
 	}
@@ -101,7 +144,7 @@ typedef struct _io_fmap{
 typedef struct _io_file{
 	c16 *path;
 #if defined(AX_UM)
-	FILE *hdl;
+	void *hdl;
 #elif defined(AX_KM)
 
 #if defined(AX_WIN64)
@@ -114,7 +157,7 @@ typedef struct _io_file{
 	io_fmap	map; // Memory mapped file
 	io_file_acc acc; // File access
 	io_file_enc enc; // Optional field (default = UTF16LE)
-	u64 offset; // (IN BYTES) Optional field (default = 0)
+	u64 offset; // (IN BYTES) Changes after each R/W (default = _bom_size(enc))
 } io_file;
 
 // Invalidate file and check encoding (exp_enc = 0 if no encoding check)
@@ -146,30 +189,31 @@ axres io_fo(
 	_in io_file_acc		acc,
 	_out io_file		**buf
 );
-// Close file 
-axres io_fc(
+// Force close file 
+void io_fc(
 	_in io_file		*file
 );
 // Read file
 axres io_fr(
 	_in io_file		*file,
-	_in u64			size,
+	_in u32			size,
 	_in_out void 		*buf,
-	_out_opt u64		*read // Bytes read
+	_out_opt u32		*read // Bytes read
 );
 // Write file
 axres io_fw(
 	_in io_file		*file,
-	_in u64			size,
+	_in u32			size,
 	_in void 		*buf,
-	_out_opt u64		*writ // Bytes written
+	_out_opt u32		*writ // Bytes written
 );
 
 axres io_fmmap(
 	_in void 		*hdl,
+	_in bool 		term,
 	_in_out io_fmap		*map
 );
-axres io_funmap(
+void io_funmap(
 	_in_out io_fmap		*map
 );
 

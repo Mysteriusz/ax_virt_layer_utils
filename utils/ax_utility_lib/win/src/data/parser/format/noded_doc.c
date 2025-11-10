@@ -50,7 +50,6 @@ cleanup:
 
 	// Document write-back
 	*buf = doc;
-
 	return AX_SUCC;
 }
 

@@ -24,6 +24,9 @@ _free c16 *_noded_sect_resolve(
 		return axmalloc(1);
 	}
 
+	/*
+	 	Read range of the section
+	*/
 	u32 rng_len_n = 0;
 	c16 *rng_buf = nullptr;
 	res = read_range(
@@ -33,7 +36,9 @@ _free c16 *_noded_sect_resolve(
 		&rng_len_n, rng_buf
 	);
 	axcheck_r(res, nullptr);
+
 	rng_buf = axmalloc(rng_len_n * sizeof(c16));
+
 	res = read_range(
 		sect_char,
 		0, 
@@ -86,7 +91,7 @@ axres noded_sect_load(
 		res = skip_line(rng_char, &rng_char);
 		axcheck_b(res);
 	}
-	axcheck(res, axfree(rng_buf));
+	axcheck(res, sect.kvp_list->delete(sect.kvp_list), axfree(rng_buf));
 
 	doc->sect_list->add(
 		doc->sect_list,

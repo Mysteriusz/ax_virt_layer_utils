@@ -38,30 +38,25 @@
 	node_name	=		1		;
 	^		^		^		^
 	|		|		|		|
-	Key		Delimiter	Value		Suffix
+	Key		Delimiter	Value		Suffix (Not available)
 
 	Key_name=1; -> Key-value pair node. 
-	Node name CAN be contained in: (ANY of the following)
-		[Name]
 
 	Nodes must end with a suffix as: (ANY of the following)
-		;
-		L'\n' (new-line)
+		u'\n' (new-line)
 
 	Nodes must contain a delimiter as: (ANY of the following)
 		=
-		:=
-		::
 
 	As sections node CAN contain white spaces but CAN`T be multi-lined.
 
 	Examples:
 		[section a]:
-		node 1=1;
-		[node2] := 2;
+		node 1=1
+		node2=some_value
 		node 3=5
-		node 4 = 5
-		[node 5] :: 5
+		node 4= 5
+		node 5=some_value
 
 */
 
@@ -142,16 +137,11 @@ axres noded_sect_unload(
 */
 
 // Sequence format for noded_kvp
-#define NODED_KVP_FMT		u"?\\<" \
-				u"[n:kvp_name;s:1]" \
+#define NODED_KVP_FMT		u"[n:kvp_name;s:1]" \
 				u"<" CAPTURE_FMT_ASCII u">" \
-				u"?>" \
-				"|" \
 				u"=" \
-				u"?\\<"\
 				u"[n:kvp_val;s:1]" \
-				u"<" CAPTURE_FMT_ASCII u">" \
-				u"?>"
+				u"<" CAPTURE_FMT_ASCII u">"
 
 // Load kvp
 axres noded_kvp_load(

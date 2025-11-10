@@ -125,9 +125,11 @@ bool data_handle_inv(
 		return true;
 	}
 
-	// Validate hdl->con
-	// con.data CAN be nullptr ONuY 
-	// when con.id is CON_DIR since it doesnt store any data other than con.path 
+	/*
+	 	Validate hdl->con
+		con.data CAN be nullptr ONLY 
+		when con.id is CON_DIR since it doesnt store any data other than con.path 
+	*/
 	bool con_data_v = (hdl->con.id == CON_DIR)
 		? (hdl->con.data == nullptr)
 		: (hdl->con.data != nullptr);
