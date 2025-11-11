@@ -20,56 +20,56 @@ Following base types are defined:
 ```c
 typedef signed char i8;
 ```
-Base type: signed char
+Base type: signed char</br>
 Size: 8 bits
 
 ### i16
 ```c
 typedef signed char i16;
 ```
-Base type: signed short
+Base type: signed short</br>
 Size: 16 bits
 
 ### i32
 ```c
 typedef signed int i32;
 ```
-Base type: signed int
+Base type: signed int</br>
 Size: 32 bits
 
 ### i64
 ```c
 typedef signed long long i64;
 ```
-Base type: signed long long
+Base type: signed long long</br>
 Size: 64 bits
 
 ### u8
 ```c
 typedef signed char u8;
 ```
-Base type: unsigned char
+Base type: unsigned char</br>
 Size: 8 bits
 
 ### u16
 ```c
 typedef unsigned char u16;
 ```
-Base type: unsigned short
+Base type: unsigned short</br>
 Size: 16 bits
 
 ### u32
 ```c
 typedef unsigned int u32;
 ```
-Base type: unsigned int
+Base type: unsigned int</br>
 Size: 32 bits
 
 ### u64
 ```c
 typedef unsigned long long u64;
 ```
-Base type: unsigned long long
+Base type: unsigned long long</br>
 Size: 64 bits
 
 <a name="iu64"></a>
@@ -89,8 +89,8 @@ typedef union{
 	u8 unsig_8;
 } iu64;
 ```
-Base type: u64 (unsigned long long)
-Size: 64 bits
+Base type: u64 (unsigned long long)</br>
+Size: 64 bits</br>
 This type acts as a universal number.
 
 ---
@@ -99,14 +99,14 @@ This type acts as a universal number.
 ```c
 typedef unsigned char c8; // ansi
 ```
-Base type: unsigned char (ansi character)
+Base type: unsigned char (ansi character)</br>
 Size: 8 bits
 
 ### c16
 ```c
 typedef unsigned short c16; // utf-16
 ```
-Base type: unsigned short (utf-16 character)
+Base type: unsigned short (utf-16 character)</br>
 Size: 16 bits
 
 ---
@@ -116,7 +116,7 @@ Size: 16 bits
 ```c
 typedef u64 axres;
 ```
-Base type: u64 (unsigned long long)
+Base type: u64 (unsigned long long)</br>
 This type is the default result code holder.
 
 ## Structs
@@ -135,7 +135,7 @@ typedef struct _axres_s{
 	u32 reserved1 : 32;
 } axres_s;
 ```
-Base type: [axres](#axres)
+Base type: [axres](#axres)</br>
 This type is a breakdown of the axres result code.
 
 #### Field breakdown
