@@ -1,5 +1,15 @@
 #include "noded.h"
 
+void noded_doc_on_clear(
+	ax_dict_node 		node _prepass
+){
+	c16 *name = node->key;
+	noded_sect *sect = node->value;
+	noded_sect_unload(sect);
+
+	axfree(name);
+	axfree(sect);
+}
 axres noded_doc_load(
 	_in const c16		*path,
 	_out noded_doc		**buf
@@ -18,9 +28,6 @@ axres noded_doc_load(
 	res = io_fo(path, IO_FILE_R, &doc->file);
 	axcheck(res, axfree(doc));
 
-	// Initialize section list of the doc
-	ax_list_init(&doc->sect_list);
-
 	// Initialize sequence list for the section capture
 	ax_list *seq_list = nullptr;
 	ax_list_init(&seq_list);
@@ -28,6 +35,10 @@ axres noded_doc_load(
 	// Capture all section sequences
 	res = seq_find_all_f(doc->file, NODED_SECT_FMT, true, seq_list);
 	axcheck_g(res, cleanup);
+
+	// Initialize section dicionary of the doc
+	ax_dict_init(seq_list->count, &doc->sect_dict);
+	doc->sect_dict->overrides.on_clear = (ax_structure_override)noded_doc_on_clear;
 
 	seq_loc *curr = nullptr; 
 
@@ -53,14 +64,6 @@ cleanup:
 	return AX_SUCC;
 }
 
-iter_code noded_doc_unload_iter(
-	ax_list_iter_stack 	stack _prepass
-){
-	noded_sect *sect = stack->node->value;
-	noded_sect_unload(sect);
-
-	return ITER_NONE;
-}
 axres noded_doc_unload(
 	_in noded_doc		*doc
 ){
@@ -68,17 +71,7 @@ axres noded_doc_unload(
 		return AX_INV_ARG;
 	}
 
-	if (doc->sect_list != nullptr){
-		// Cleanup noded_sect list
-		doc->sect_list->iter(
-			doc->sect_list,
-			(ax_iter_act)noded_doc_unload_iter,
-			nullptr,
-			nullptr
-		);
-		doc->sect_list->delete(doc->sect_list);
-	}
-
+	doc->sect_dict->delete(doc->sect_dict);
 	io_fc(doc->file);
 	axfree(doc);
 

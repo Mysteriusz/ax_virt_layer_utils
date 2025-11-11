@@ -88,17 +88,18 @@
 	Indicates that variable HAS to be evaluated by caller POST initial call.
 
 	Example:
-		DECL: foo(u32 *size, c16 *buf);
+		DECL: foo(u32 *size, _eval c16 *buf);
 
-		foo(&size, buffer); // Initial call
-		buffer = allocate(size); // POST evaluation may differ depending on the function specs
-		foo(&size, buffer); // Recall evaluated
+		foo(&size, buffer); Initial call
+		buffer = allocate(size); POST evaluation may differ depending on the function specs
+		foo(&size, buffer); Recall evaluated
 */
 #define _eval 
 
 /*
  	Auto pass indicator.
-	Means the value passed won`t be null and can be used whenever you want.
+	Means the variable passed won`t be null and can be used without assertions
+	AND the variable should not be freed.
 
 	Only applicable to pointer types.
 */
@@ -106,7 +107,7 @@
 
 /*
  	Internally heap allocated variable indicator (freeable).
-	Means the value is stored on the heap and freeable if internal call succeded.
+	Means the variable is stored on the heap and is freeable if internal call succeded.
 
 	Only applicable to pointer types.
 */
@@ -134,7 +135,7 @@
 #define chkf(v,f)	(((v) & (f)) != 0) 
 // Cast value (v) to type (t)
 #define astp(t,v)	*((t*)((void*)&(v))) 
-// Count digit count in an intiger (i)
+// Count digit count in an intger (i)
 #define cntd(i)		((u32)log_b((i), 10) + 1)
 // Set (n)-th bit to 1
 #define bit(n)		(1 << (n))
@@ -150,7 +151,9 @@
 #include <stdio.h>
 #endif
 
-// Numerical 
+/*
+ 	Numerical
+*/ 
 
 typedef signed char i8;
 typedef signed short i16;
@@ -162,6 +165,7 @@ typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 
+// Universal number
 typedef union{
 	i64 sig_64;
 	u64 unsig_64;
@@ -176,24 +180,22 @@ typedef union{
 	u8 unsig_8;
 } iu64;
 
-// Characters
+/*
+ 	Characters
+*/
 
-#if defined(AX_WIN64)
 typedef unsigned char c8; // ansi
 typedef unsigned short c16; // utf-16
-#elif defined(AX_LINUX) 
-typedef signed char c8; // ansi
-typedef signed short c16; // utf-16
-#endif
 
+// Default result code type
 typedef u64 axres;
 
 // axres breakdown structure
 typedef struct _axres_s{ 
 	// 32-bit block
 
-	u16 err : 12; // MAX 4095 (0xFFF)
-	u16 meta : 4; // Flag per bit
+	u16 err : 12; // max 4095 (0xfff)
+	u16 meta : 4; // flag per bit
 	u16 reseverd0;
 
 	// 32-bit block

@@ -22,6 +22,7 @@ typedef struct _ax_dict{
 	u32 count;
 	u32 chain_count; // Count of chain entries from root
 	struct { AX_STRUCTURE_CMD_ASC };
+	struct { AX_STRUCTURE_OVR } overrides;
 } ax_dict;
 
 axres ax_dict_init(

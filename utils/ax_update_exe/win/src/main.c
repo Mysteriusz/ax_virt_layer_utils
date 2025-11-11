@@ -13,6 +13,8 @@ int main(
 	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
 
+	noded_doc_unload(doc);
+
 	/*res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));*/
 	//noded_doc_unload(doc);

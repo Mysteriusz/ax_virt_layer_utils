@@ -9,7 +9,7 @@ bool noded_doc_inv(
 	if (io_finv(doc->file, UTF16)){
 		return true;
 	}
-	if (doc->sect_list == nullptr){
+	if (doc->sect_dict == nullptr){
 		return true;
 	}
 

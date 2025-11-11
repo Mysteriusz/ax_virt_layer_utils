@@ -253,8 +253,12 @@ axres ax_dict_clear(
 		*/
 		while(node != nullptr){
 			next = node->next;
-			axfree(node->key);
-			axfree(node->value);
+			if (dict->overrides.on_clear != nullptr){
+				dict->overrides.on_clear((const u8*)node);
+			}else{
+				axfree(node->key);
+				axfree(node->value);
+			}
 			axfree(node);
 			node = next;
 		}

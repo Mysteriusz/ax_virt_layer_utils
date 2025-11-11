@@ -68,7 +68,7 @@ typedef struct _noded_kvp noded_kvp;
 
 typedef struct _noded_doc{
 	io_file			*file;
-	ax_list			*sect_list; // List of noded_sect
+	ax_dict			*sect_dict; // Dictionary (name, _noded_sect)
 } noded_doc;
 
 typedef struct _noded_sect{
@@ -76,7 +76,7 @@ typedef struct _noded_sect{
 	const c16		*beg;
 	const c16		*end;
 	noded_doc 		*doc;
-	ax_list			*kvp_list; // List of noded_kvp
+	ax_dict			*kvp_dict; // Dictionary (name, _noded_kvp)
 } noded_sect;
 
 typedef struct _noded_kvp{
