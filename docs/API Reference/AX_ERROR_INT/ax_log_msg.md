@@ -2,11 +2,11 @@
 
 This function is a part of AX_ERROR_INT interface.
 
-## Description
+## • Description
 
 Debug log axres code with message.
 
-## Signature
+## • Signature
 ```c
 static void ax_log_msg(
 	    axres 			    res,
@@ -14,11 +14,11 @@ static void ax_log_msg(
 );
 ```
 
-## Arguments
+## • Arguments
 
-### res
+### • res
 Code to log
 
-### msh
+### • msg
 Message to print out
 

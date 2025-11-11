@@ -2,19 +2,19 @@
 
 This function is a part of AX_ERROR_INT interface.
 
-## Description
+## • Description
 
 Debug log axres code.
 
-## Signature
+## • Signature
 ```c
 static void ax_log(
 	    axres 	        res
 );
 ```
 
-## Arguments
+## • Arguments
 
-### res
+### • res
 Code to log
 
