@@ -45,7 +45,7 @@ Size: 64 bits
 
 ### u8
 ```c
-typedef signed char u8;
+typedef unsigned char u8;
 ```
 Base type: unsigned char</br>
 Size: 8 bits
@@ -117,6 +117,7 @@ typedef u64 axres;
 ```
 Base type: u64 (unsigned long long)</br>
 This type is the default result code holder.
+To learn more about result codes read: [AX_ERROR_CODE_INT](./AX_ERROR_CODE_INT/definition.md)
 
 ## Structs
 
@@ -219,28 +220,28 @@ Cast value (v) to type (t)
 #### cntd(i)
 Value:
 ```c
-    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+    ((u32)log_b((i), 10) + 1)
 ```
 Count digit count in an intger (i)
 
 #### bin(n)
 Value:
 ```c
-    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+    (1 << (n)) 
 ```
 Set (n)-th bit to 1
 
 #### offo(f,s)
 Value:
 ```c
-    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+    ((u32)&(((s*)nullptr)->f))
 ```
 Offset of field (f) in the structure (s)
 
 #### offo_n(f,s)
 Value:
 ```c
-    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+    ((u32)&((s)->f) - (u64)(s))
 ```
 Offset of field (f) in the structure (s)
 

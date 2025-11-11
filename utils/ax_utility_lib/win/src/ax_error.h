@@ -50,17 +50,6 @@ static void ax_log(
 	io_i64(AX_RES_S(res).err);
 }
 
-#if defined(AX_WIN64)
-
-static void ax_log_lstat(
-	axres 			stat
-){
-	ax_log(stat);
-	io_str(u"--------LSTATUS--------");
-}
-
-#endif // defined(AX_WIN64)
-
 static void ax_log_msg(
 	axres 			res,
 	const c16		*msg
