@@ -1,5 +1,4 @@
 # AX_TYPE_INT
----
 
 This interface contains all basic types, macro gates, and macros used by
 other interfaces.
@@ -122,6 +121,7 @@ This type is the default result code holder.
 ## Structs
 
 <a name="axres_s"></a>
+### _axres_s
 ```c
 typedef struct _axres_s{ 
 	// 32-bit block
@@ -149,4 +149,98 @@ This type is a breakdown of the axres result code.
 
 ## Macros
 
+### Markers
+
+|Marker name|Marker value|Marker decription|
+|-|-|-|
+|_opt| |Optional variable|
+|_in| |Input variable|
+|_in_opt| |Optional Input variable|
+|_out| |Output variable|
+|_out_opt| |Optional Output variable|
+|_in_out| |Input/Output variable|
+|_in_out_opt| |Optional Input/Output variable|
+|_eval| |Variable must be evaluated POST intial call and reused|
+|_prepass|[static 1]|Autopass (variable not null and can be used without assertions)|
+|_free| |Heap allocated variable (should be freed)|
+|_inline_force|__force_inline</br> OR</br> __attribute__((always_inline))|Value depends on the compiler|
+
+### Values
+
+#### null
+Value:
+```c
+    (0)
+```
+
+#### nullptr
+Value:
+```c
+    ((void*)0)
+```
+
+### Functions
+
+#### unref(p)
+Value:
+```c
+    ((void)p)
+```
+Dereferece unreferced variable
+
+#### addr(v)
+Value:
+```c
+    (&(long long[]){v}) 
+```
+Address of the value (v)
+
+#### asrt(expr)
+Value:
+```c
+    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+```
+Runtime assertion (expr)
+
+#### chkf(v,f)
+Value:
+```c
+    (((v) & (f)) != 0)
+```
+Check bit flag (f) in the value (v)
+
+#### astp(t,v)
+Value:
+```c
+    *((t*)((void*)&(v)))
+```
+Cast value (v) to type (t)
+
+#### cntd(i)
+Value:
+```c
+    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+```
+Count digit count in an intger (i)
+
+#### bin(n)
+Value:
+```c
+    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+```
+Set (n)-th bit to 1
+
+#### offo(f,s)
+Value:
+```c
+    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+```
+Offset of field (f) in the structure (s)
+
+#### offo_n(f,s)
+Value:
+```c
+    (((expr) == false) ? (void)__builtin_trap() : (void)null) 
+```
+Offset of field (f) in the structure (s)
 
