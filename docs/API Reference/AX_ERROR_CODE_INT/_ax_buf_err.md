@@ -16,10 +16,10 @@ static inline axres _ax_buf_err(
 
 ## • Arguments
 
-### • size
+1) ### size
 Defines expected size
 
-### • buf_size
+2) ### buf_size
 Defines checked buffer size
 
 ## • Return value

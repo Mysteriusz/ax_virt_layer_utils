@@ -16,9 +16,9 @@ static void ax_log_msg(
 
 ## • Arguments
 
-### • res
+1) ### res
 Code to log
 
-### • msg
+2) ### msg
 Message to print out
 

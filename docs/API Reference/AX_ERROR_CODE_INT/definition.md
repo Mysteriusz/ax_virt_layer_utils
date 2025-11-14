@@ -1,6 +1,6 @@
 # AX_ERROR_CODE_INT
 
-Interface providing error codes and error codes.
+Interface providing error codes and code specific error handling.
 
 ## • Functions
 
@@ -10,11 +10,11 @@ Interface providing error codes and error codes.
 
 ## • Macros
 
-All error codes are mapped as following:
-    0x01 - 0x0f -> INV[ALID] codes
-    0x10 - 0x1f -> BUF[FER] codes
-    0x20 - 0x3f -> NOT codes
-    0x40 - 0x7f -> ACC[ESS] codes
+All error codes are mapped as following:</br>
+    0x01 - 0x0f -> INV[ALID] codes</br>
+    0x10 - 0x1f -> BUF[FER] codes</br>
+    0x20 - 0x3f -> NOT codes</br>
+    0x40 - 0x7f -> ACC[ESS] codes</br>
     0x80 - 0xfff -> UNK[NOWN] codes
 
 > [!WARNING]

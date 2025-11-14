@@ -1,7 +1,7 @@
 # AX_TYPE_INT
 
-This interface contains all basic types, macro gates, and macros used by
-other interfaces.
+This interface contains all basic types, macro functions, and</br>
+macros used by other interfaces.
 
 > [!IMPORTANT]
 > To use this interface it`s required to define following macros:<br/>

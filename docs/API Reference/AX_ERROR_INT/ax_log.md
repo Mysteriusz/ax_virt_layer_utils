@@ -15,6 +15,6 @@ static void ax_log(
 
 ## • Arguments
 
-### • res
+1) ### res
 Code to log
 

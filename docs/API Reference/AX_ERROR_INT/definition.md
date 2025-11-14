@@ -13,7 +13,7 @@ Interface providing error handling.
 
 ### • Values
 
-#### AX_LOG_HEAD
+#### • AX_LOG_HEAD
 Value:
 ```c
 u"--------AX_LOG--------"
