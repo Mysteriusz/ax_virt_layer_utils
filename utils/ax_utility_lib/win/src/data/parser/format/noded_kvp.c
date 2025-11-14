@@ -69,8 +69,10 @@ axres noded_kvp_load(
 	kvp.name = _c16dup(name);
 	kvp.value = _c16dup(value);
 
-	sect->kvp_list->add(
-		sect->kvp_list,
+	sect->kvp_dict->add(
+		sect->kvp_dict,
+		kvp.name,
+		_c16len_b(kvp.name) + sizeof(c16),
 		&kvp,
 		sizeof(noded_kvp)
 	);

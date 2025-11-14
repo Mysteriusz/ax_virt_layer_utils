@@ -46,6 +46,14 @@ axres read_data_dir(
 	_in_out u32		*size,
 	_in_out _eval void	*buf
 ){
+	if (data_handle_inv(hdl)){
+		return AX_INV_DATA;
+	}
+	if (size == nullptr
+	|| buf == nullptr){
+		return AX_INV_BUF;
+	}
+	
 	bool ret_size = false;
 	axres res = read_data_inv(hdl, size, buf, &ret_size);
 	axcheck(res);
@@ -81,6 +89,13 @@ axres write_data_dir(
 	_in u32			size,
 	_in void		*buf
 ){
+	if (data_handle_inv(hdl)){
+		return AX_INV_DATA;
+	}
+	if (buf == nullptr){
+		return AX_INV_BUF;
+	}
+
 	axres res = write_data_inv(hdl, size, buf);
 	axcheck(res);
 

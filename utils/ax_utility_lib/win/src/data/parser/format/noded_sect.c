@@ -1,5 +1,16 @@
 #include "noded.h"
 
+void noded_sect_on_clear(
+	ax_dict_node 		node _prepass
+){
+	c16 *name = node->key;
+	noded_kvp *kvp = node->value;
+	noded_kvp_unload(kvp);
+
+	axfree(name);
+	axfree(kvp);
+}
+
 // Resolve (read) range of the section
 _free c16 *_noded_sect_resolve(
 	_in noded_doc		*doc,
@@ -79,7 +90,12 @@ axres noded_sect_load(
 	sect.doc = doc;
 	sect.beg = rng_buf;
 	sect.end = rng_buf + rng_len;
-	ax_list_init(&sect.kvp_list);
+
+	// Initialize kvp dicionary of the section
+	u32 kvp_dict_max = 0; // Maximum count of nodes (if each line is a valid kvp node)
+	line_count(rng_buf, &kvp_dict_max);
+	ax_dict_init(kvp_dict_max, &sect.kvp_dict);
+	sect.kvp_dict->overrides.on_clear = (ax_structure_override)noded_sect_on_clear;
 
 	/*
 		Process each line as kvp
@@ -91,10 +107,12 @@ axres noded_sect_load(
 		res = skip_line(rng_char, &rng_char);
 		axcheck_b(res);
 	}
-	axcheck(res, sect.kvp_list->delete(sect.kvp_list), axfree(rng_buf));
+	axcheck(res, sect.kvp_dict->delete(sect.kvp_dict), axfree(rng_buf));
 
-	doc->sect_list->add(
-		doc->sect_list,
+	doc->sect_dict->add(
+		doc->sect_dict,
+		(void*)name,
+		_c16len_b(name) + sizeof(c16),
 		&sect,
 		sizeof(noded_sect)
 	);
@@ -108,14 +126,6 @@ error_jump:
 	return res;
 }
 
-iter_code noded_unload_sect_iter(
-	ax_list_iter_stack 	stack _prepass
-){
-	noded_kvp *kvp = stack->node->value;
-	noded_kvp_unload(kvp);
-
-	return ITER_NONE;
-}
 axres noded_sect_unload(
 	_in noded_sect 		*sect
 ){
@@ -123,15 +133,7 @@ axres noded_sect_unload(
 		return AX_INV_ARG;
 	}
 
-	if (sect->kvp_list != nullptr){
-		sect->kvp_list->iter(
-			sect->kvp_list,
-			(ax_iter_act)noded_unload_sect_iter,
-			nullptr,
-			nullptr
-		);
-		sect->kvp_list->delete(sect->kvp_list);
-	}
+	sect->kvp_dict->delete(sect->kvp_dict);
 	axfree(sect->name);
 
 	return AX_SUCC;

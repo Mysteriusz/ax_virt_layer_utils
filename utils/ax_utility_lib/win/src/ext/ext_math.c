@@ -12,3 +12,4 @@ unsigned int log_b(
 
 	return count;
 }
+

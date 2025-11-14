@@ -1,7 +1,7 @@
 #include "ax_parser_seq.h"
 
 // fmt_spec list cleanup override
-void fmt_spec_on_clean(
+void fmt_spec_on_clear(
 	ax_list_node		node _prepass
 ){
 	fmt_spec *spec = (fmt_spec*)node->value;
@@ -9,7 +9,7 @@ void fmt_spec_on_clean(
 	axfree(spec);
 }
 // fmt_cond list cleanup override
-void fmt_cond_on_clean(
+void fmt_cond_on_clear(
 	ax_list_node		node _prepass
 ){
 	fmt_cond *cond = (fmt_cond*)node->value;
@@ -18,7 +18,7 @@ void fmt_cond_on_clean(
 	axfree(cond);
 }
 // fmt_var list cleanup override
-void fmt_var_on_clean(
+void fmt_var_on_clear(
 	ax_list_node		node _prepass
 ){
 	fmt_var *var = (fmt_var*)node->value;
@@ -213,7 +213,7 @@ axres seq_read_group(
 	return AX_SUCC;
 }
 
-void seq_list_on_clean(
+void seq_list_on_clear(
 	_in ax_list_node	node _prepass
 ){
 	seq_loc *loc = (seq_loc*)node->value;
@@ -295,9 +295,9 @@ axres seq_split_fmt(
 	axcheck_g(res, error_jump);
 
 	// Set cleanup overrides
-	grp.spec_list->overrides.on_clear = (ax_structure_override)fmt_spec_on_clean;
-	grp.cond_list->overrides.on_clear = (ax_structure_override)fmt_cond_on_clean;
-	grp.var_list->overrides.on_clear = (ax_structure_override)fmt_var_on_clean;
+	grp.spec_list->overrides.on_clear = (ax_structure_override)fmt_spec_on_clear;
+	grp.cond_list->overrides.on_clear = (ax_structure_override)fmt_cond_on_clear;
+	grp.var_list->overrides.on_clear = (ax_structure_override)fmt_var_on_clear;
 
 	// Parse group
 	res = seq_read_group(fmt, &grp);
@@ -747,7 +747,7 @@ axres seq_find_all(
 	}
 
 	// Override to cleanup all the variable dictionaries
-	locs->overrides.on_clear = (ax_structure_override)seq_list_on_clean;
+	locs->overrides.on_clear = (ax_structure_override)seq_list_on_clear;
 
 	grp_cleanup(&grp);
 	axcheck(res, locs->clear(locs));
