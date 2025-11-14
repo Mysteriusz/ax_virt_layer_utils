@@ -101,7 +101,7 @@ The map can be created using [io_fmmap](./io_fmmap.md).
 |-|-|
 |root|Pointer to the beggining of the memory map|
 |**(AX_WIN64)** hdl|Windows handle of the map|
-|size|Size in bytes of the file map|
+|size|Size in bytes of the memory map|
 
 <a name="io_file"></a>
 ### ```_io_file```
@@ -162,5 +162,5 @@ Value:
 #define UTF8LE_BOM	0xBFBBEF
 #define UTF8BE_BOM	0xEFBBBF
 ```
-All bom`s in little-endian 
+All bom`s in little and big endian
 

@@ -23,8 +23,8 @@ Access mask to convert as [io_file_acc](./definition.md#io_file_acc).
 Access return value map:</br>
 IO_FILE_R -> r</br>
 IO_FILE_W -> a</br>
-IO_FILE_C -> w</br>
+IO_FILE_C -> w
 
-In case of an invalid argument the value is **nullptr**.
+In case of an invalid argument the value is **nullptr**.</br>
 The returned mode will always be a **b** (binary) mode.
 
