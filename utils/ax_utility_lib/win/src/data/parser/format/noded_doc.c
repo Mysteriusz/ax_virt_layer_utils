@@ -59,6 +59,9 @@ cleanup:
 		noded_doc_unload(doc) // doc core loaded by now
 	);
 
+	// Reset doc->file pointer
+	io_foff(doc->file, _enc_size(doc->file->enc));
+
 	// Document write-back
 	*buf = doc;
 	return AX_SUCC;
@@ -74,6 +77,16 @@ axres noded_doc_unload(
 	doc->sect_dict->delete(doc->sect_dict);
 	io_fc(doc->file);
 	axfree(doc);
+
+	return AX_SUCC;
+}
+
+axres noded_doc_save(
+	_in noded_doc		*doc
+){
+	if (noded_doc_inv(doc)){
+		return AX_INV_ARG;
+	}
 
 	return AX_SUCC;
 }

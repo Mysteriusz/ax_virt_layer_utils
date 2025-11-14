@@ -25,7 +25,23 @@ bool noded_sect_inv(
 	|| sect->name == nullptr){
 		return true;
 	}
+	if (sect->kvp_dict == nullptr){
+		return true;
+	}
 	if (noded_doc_inv(sect->doc)){
+		return true;
+	}
+
+	return false;
+}
+bool noded_kvp_inv(
+	_in noded_kvp 		*kvp
+){
+	if (kvp->value == nullptr
+	|| kvp->name == nullptr){
+		return true;
+	}
+	if (noded_sect_inv(kvp->sect)){
 		return true;
 	}
 

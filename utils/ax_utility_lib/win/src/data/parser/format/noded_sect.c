@@ -88,10 +88,10 @@ axres noded_sect_load(
 	*/
 	sect.name = _c16dup(name);
 	sect.doc = doc;
-	sect.beg = rng_buf;
-	sect.end = rng_buf + rng_len;
 
-	// Initialize kvp dicionary of the section
+	/*
+		Initialize kvp dicionary of the section
+	*/
 	u32 kvp_dict_max = 0; // Maximum count of nodes (if each line is a valid kvp node)
 	line_count(rng_buf, &kvp_dict_max);
 	ax_dict_init(kvp_dict_max, &sect.kvp_dict);
@@ -133,9 +133,40 @@ axres noded_sect_unload(
 		return AX_INV_ARG;
 	}
 
-	sect->kvp_dict->delete(sect->kvp_dict);
+	if (sect->kvp_dict != nullptr){
+		sect->kvp_dict->delete(sect->kvp_dict);
+	}
 	axfree(sect->name);
 
+	return AX_SUCC;
+}
+axres noded_sect_c16(
+	_in noded_sect			*sect,
+	_in const struct noded_kvp_temp	*temp,
+	_in_out u32			*size,
+	_in_out _eval c16		*buf // Evaluate by using (size * sizeof(c16))
+){
+	if (noded_sect_inv(sect)){
+		return AX_INV_DATA;
+	}
+
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	// Count length of the section
+	u32 buf_len_n = _c16len(u"[") 
+		+ _c16len(sect->name)
+		+ _c16len(u"]:\n");
+	
+	if (ret_size){
+		*size = buf_len_n;
+		return AX_SUCC;
+	}
 	return AX_SUCC;
 }
 

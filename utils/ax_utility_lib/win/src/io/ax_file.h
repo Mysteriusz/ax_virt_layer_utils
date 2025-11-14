@@ -166,6 +166,12 @@ bool io_finv(
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 );
 
+// Set file offset
+bool io_foff(
+	_in io_file 		*file,
+	_in u32 		offset
+);
+
 // Get file byte order mark (Encoding)
 axres io_fbom(
 	_in const c16		*path,

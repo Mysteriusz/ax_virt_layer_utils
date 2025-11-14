@@ -34,12 +34,8 @@ axres noded_kvp_load(
 	res = read_line(kvp_loc, &kvp_len_n, kvp_buf);
 	axcheck(res, axfree(kvp_buf));
 
-	/*
-	 	Load initial metadata
-	*/
+	// Load initial metadata
 	kvp.sect = sect;
-	kvp.beg = kvp_loc;
-	kvp.end = kvp_loc + (kvp_len_n - 1);
 
 	/*
 	 	Parse kvp as sequence
@@ -69,6 +65,7 @@ axres noded_kvp_load(
 	kvp.name = _c16dup(name);
 	kvp.value = _c16dup(value);
 
+	// Save node into parent section
 	sect->kvp_dict->add(
 		sect->kvp_dict,
 		kvp.name,
@@ -94,4 +91,61 @@ axres noded_kvp_unload(
 	return AX_SUCC;
 }
 
+axres noded_kvp_c16(
+	_in noded_kvp			*kvp,
+	_in const struct noded_kvp_temp	*temp,
+	_in_out u32			*size,
+	_in_out _eval c16		*buf
+){
+	if (noded_kvp_inv(kvp)){
+		return AX_INV_DATA;
+	}
+	if (temp == nullptr){
+		return AX_INV_FMT;
+	}
+
+	bool ret_size = ((size != nullptr) && (buf == nullptr));
+	if (!ret_size){
+		if (size == nullptr
+		|| buf == nullptr){
+			return AX_INV_BUF;
+		}
+	}
+
+	axres res = AX_SUCC;
+
+	// Count buffer size based on the noded_kvp_temp flow chart
+	u32 buf_len_n = _c16len(temp->key_lc)
+		+ _c16len(kvp->name)
+		+ _c16len(temp->key_rc)
+		+ _c16len(temp->div)
+		+ _c16len(temp->val_lc)
+		+ _c16len(kvp->value)
+		+ _c16len(temp->val_rc)
+		+ _c16len(temp->suff) + 1;
+
+	if (ret_size){
+		*size = buf_len_n;
+		return AX_SUCC;
+	}
+
+	axcheck(_ax_buf_err(*size, buf_len_n));
+
+	/*
+	 	Copy all values to buffer
+	*/
+	res = join_with(buf, &buf_len_n, 8, 
+		temp->key_lc,
+		kvp->name,
+		temp->key_rc,
+		temp->div,
+		temp->val_lc,
+		kvp->value,
+		temp->val_rc,
+		temp->suff
+	);
+	axcheck(res);
+
+	return AX_SUCC;
+}
 
