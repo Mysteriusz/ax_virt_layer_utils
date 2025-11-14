@@ -47,17 +47,5 @@ static i8 _sfmemcmp(
 	return 0;
 }
 
-static i8 _sfmemcat(
-	_in const u8 a _prepass,
-	_in const u8 b _prepass,
-	_in u32 a_n,
-	_in u32 b_n
-){
-	asrt(a != nullptr);
-	asrt(b != nullptr);
-
-	return 0;
-}
-
 #endif // !defined(AX_IO_MEMORY)
 

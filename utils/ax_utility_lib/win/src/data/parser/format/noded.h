@@ -48,7 +48,7 @@
 	Nodes must contain a delimiter as: (ANY of the following)
 		=
 
-	As sections node CAN contain white spaces but CAN`T be multi-lined.
+	Same as sections node`s CAN contain white spaces but CAN`T be multi-lined.
 
 	Examples:
 		[section a]:
@@ -73,8 +73,6 @@ typedef struct _noded_doc{
 
 typedef struct _noded_sect{
 	c16			*name;
-	const c16		*beg;
-	const c16		*end;
 	noded_doc 		*doc;
 	ax_dict			*kvp_dict; // Dictionary (name, _noded_kvp)
 } noded_sect;
@@ -82,10 +80,30 @@ typedef struct _noded_sect{
 typedef struct _noded_kvp{
 	c16			*name;
 	c16			*value;
-	const c16		*beg;
-	const c16		*end;
 	noded_sect 		*sect;
 } noded_kvp;
+
+/*
+	This structure allows for template for noded_kvp string representation.
+	Serializer follows this flow:
+		- key_lc -> kvp->name -> key_rc -> div -> val_lc -> key->value -> val_rc -> suff
+*/
+struct noded_kvp_temp{
+	const c16 		*suff; // Suffix for the kvp line (string at the EOL)
+	const c16 		*div; // key - value divider (string in between)
+	const c16 		*key_lc; // Left key container string
+	const c16 		*key_rc; // Right key container string
+	const c16 		*val_lc; // Left value container string
+	const c16 		*val_rc; // Right value container string
+};
+
+// Default KVP node template
+static const struct noded_kvp_temp NODED_KVP_DEF = {
+	.suff = u"",
+	.div = u"=",
+	.key_lc = u"", .key_rc = u"",
+	.val_lc = u"", .val_rc = u"",
+};
 
 /*
  	noded global
@@ -95,6 +113,9 @@ bool noded_doc_inv(
 );
 bool noded_sect_inv(
 	_in noded_sect 		*sect
+);
+bool noded_kvp_inv(
+	_in noded_kvp 		*kvp
 );
 
 /*
@@ -108,6 +129,11 @@ axres noded_doc_load(
 );
 // Call only after noded_load_doc to uninitialize all symbols
 axres noded_doc_unload(
+	_in noded_doc		*doc
+);
+
+// Save file into it`s io_file
+axres noded_doc_save(
 	_in noded_doc		*doc
 );
 
@@ -132,6 +158,14 @@ axres noded_sect_unload(
 	_in noded_sect		*sect
 );
 
+// Convert section and it`s noded_kvp nodes to c16* string
+axres noded_sect_c16(
+	_in noded_sect			*sect,
+	_in const struct noded_kvp_temp	*temp,
+	_in_out u32			*size,
+	_in_out _eval c16		*buf // Evaluate by using (size * sizeof(c16))
+);
+
 /*
  	noded_kvp related
 */
@@ -150,6 +184,14 @@ axres noded_kvp_load(
 );
 axres noded_kvp_unload(
 	_in noded_kvp		*kvp
+);
+
+// Convert section and it`s noded_kvp nodes to c16* string
+axres noded_kvp_c16(
+	_in noded_kvp			*kvp,
+	_in const struct noded_kvp_temp	*temp,
+	_in_out u32			*size,
+	_in_out _eval c16		*buf
 );
 
 #endif // !defined(AX_PARSER_NODED_INT)

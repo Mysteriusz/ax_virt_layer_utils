@@ -78,7 +78,6 @@ axres read_data_reg(
 	);
 
 	if (stat != ERROR_SUCCESS){
-		ax_log_lstat(stat);
 		return AX_INV_DATA;
 	}
 #endif // defined(AX_UM)
@@ -120,7 +119,6 @@ axres write_data_reg(
 	}
 
 	if (lstat != ERROR_SUCCESS){
-		ax_log_lstat(lstat);
 		return AX_INV_DATA;
 	}
 #endif // defined(AX_UM)

@@ -31,12 +31,12 @@ Empty pointer to receive the file heap.
 
 ## • Return value
 
-**AX_SUCC** if file open successfull.
+**AX_SUCC** if file opening was successfull.
 
 Error code if failed to open. 
 
 ## • Remarks
 
-If **acc** argument has **IO_FILE_R** bit on</br>
+If **acc** argument has **IO_FILE_C** bit on</br>
 the file will be created.
 

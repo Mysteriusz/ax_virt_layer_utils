@@ -98,7 +98,6 @@ void *res_path(
 		}
 
 		if (stat != ERROR_SUCCESS){
-			ax_log_lstat(stat);
 			return null;
 		}
 	}

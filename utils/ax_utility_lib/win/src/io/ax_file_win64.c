@@ -31,19 +31,32 @@ bool io_finv(
 		return true;
 	}
 
-	/*
-	 	Reset pointer to offset
-	*/
+	return false;
+}
+
+bool io_foff(
+	_in io_file 		*file,
+	_in u32 		offset
+){
+	if (io_finv(file, file->enc)){
+		return false;
+	}
+
+	if (offset >= file->map.size){
+		return false;
+	}
+	
 	if (!SetFilePointerEx(
 		file->hdl,
-		(LARGE_INTEGER){.QuadPart = file->offset},
+		(LARGE_INTEGER){.QuadPart = offset},
 		nullptr,
 		0)
 	){
-		return true;
+		return false;
 	}
+	file->offset = offset;
 
-	return false;
+	return true;
 }
 
 axres io_fbom(
@@ -273,9 +286,12 @@ axres io_fr(
 	_in_out void 		*buf,
 	_out_opt u32		*read // Bytes read
 ){
-	if (io_finv(file, file->enc)){
+	// Invalidate and set the offset
+	if (io_finv(file, file->enc)
+	|| !io_foff(file, file->offset)){
 		return AX_INV_FILE;
 	}
+
 	if (buf == nullptr){
 		return AX_INV_BUF;
 	}
@@ -317,9 +333,12 @@ axres io_fw(
 	_in void 		*buf,
 	_out_opt u32		*writ // Bytes written
 ){
-	if (io_finv(file, file->enc)){
+	// Invalidate and set the offset
+	if (io_finv(file, file->enc)
+	|| !io_foff(file, file->offset)){
 		return AX_INV_FILE;
 	}
+
 	if (buf == nullptr){
 		return AX_INV_BUF;
 	}

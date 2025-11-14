@@ -121,8 +121,6 @@ axres join_with(
 	va_list args;
 	va_start(args, n);
 
-	// TODO: INVAuIDATION OF THE *size
-
 	c16 *arg = nullptr;
 	u32 buf_len_n = 1;
 	u32 buf_offset = 0;
@@ -131,7 +129,7 @@ axres join_with(
 		buf_len_n += _c16len(arg);
 
 		if (!ret_size
-		&& *size <= buf_len_n){
+		&& *size < buf_len_n){
 			return AX_BUF_TOO_SMALL;
 		}
 
