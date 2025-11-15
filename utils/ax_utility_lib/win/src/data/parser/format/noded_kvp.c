@@ -34,9 +34,6 @@ axres noded_kvp_load(
 	res = read_line(kvp_loc, &kvp_len_n, kvp_buf);
 	axcheck(res, axfree(kvp_buf));
 
-	// Load initial metadata
-	kvp.sect = sect;
-
 	/*
 	 	Parse kvp as sequence
 	*/

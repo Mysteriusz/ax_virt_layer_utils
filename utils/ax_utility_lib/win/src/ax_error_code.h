@@ -71,7 +71,11 @@
 
 // "UNKNOWN" codes
 
-#define AX_UNK_ERR 			((axres)0x80)
+#define AX_UNK_ERR 			((axres)0x50)
+
+// "USER" codes
+
+#define AX_USR_ERR			((axres)0x60)
 
 static inline axres _ax_buf_err(
 	u64 		size,

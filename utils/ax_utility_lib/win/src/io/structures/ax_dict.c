@@ -20,6 +20,7 @@ axres ax_dict_init(
 	dict->remove = (ax_structures_remove_kv)ax_dict_remove;
 	dict->at = (ax_structures_at_k)ax_dict_at;
 	dict->query_at = (ax_structures_query_at_k)ax_dict_query_at;
+	dict->iter = (ax_structures_iter)ax_dict_iter;
 	dict->clear = (ax_structures_clear)ax_dict_clear;
 	dict->delete = (ax_structures_delete)ax_dict_delete;
 
@@ -231,6 +232,69 @@ const void *ax_dict_query_at(
 		: nullptr;
 }
 
+axres ax_dict_iter(
+	_in ax_dict 			*dict,
+	_in ax_iter_act			action,
+	_in_opt void 			*data,
+	_out_opt const ax_dict_node	**buf
+){
+	if (dict == nullptr
+	|| action == nullptr){
+		return AX_INV_ARG;
+	}
+
+	iter_code code = ITER_NONE;
+	ax_dict_iter_stack stack = {0};
+
+	u32 chain_i = dict->chain_count;
+	u32 node_i = dict->count;
+	ax_dict_chain *chain = dict->root;
+	ax_dict_node *node = chain->head;
+
+	// Iterate over each chain until iterated over all
+	while(chain_i > 0 
+	&& node_i > 0){
+		// Iterate over each node from current chain
+		while(node != nullptr
+		&& node_i > 0){
+redo_code:
+			stack = (ax_dict_iter_stack){
+				.node = node,
+				.chain = chain,
+				.data = data,
+				.dict = dict
+			};
+			code = action((const u8*)&stack);
+
+			switch(code){
+			case ITER_NONE:
+				break;
+			case ITER_REDO:
+				goto redo_code;
+			case ITER_STOP:
+				goto stop_code;
+			case ITER_FAIL:
+				return AX_USR_ERR;
+			default:
+				return AX_INV_CODE;
+			}
+
+			node = node->next;
+			node_i--;
+		}
+
+		chain++;
+		chain_i--;
+		node = chain->head;
+	}
+
+stop_code:
+	if (buf != nullptr){
+		*buf = node;
+	}
+
+	return AX_SUCC;
+}
 axres ax_dict_clear(
 	_in ax_dict 			*dict
 ){

@@ -14,8 +14,9 @@ All error codes are mapped as following:</br>
     0x01 - 0x0f -> INV[ALID] codes</br>
     0x10 - 0x1f -> BUF[FER] codes</br>
     0x20 - 0x3f -> NOT codes</br>
-    0x40 - 0x7f -> ACC[ESS] codes</br>
-    0x80 - 0xfff -> UNK[NOWN] codes
+    0x40 - 0x4f -> ACC[ESS] codes</br>
+    0x50 - 0x5f -> UNK[NOWN] codes
+    0x60 - 0xfff -> USR codes
 
 > [!WARNING]
 > Code mappings may change so it`s only safe to use provided code macros.
@@ -137,7 +138,14 @@ Access denied
 #### ```AX_UNK_ERR```
 Value:
 ```c
-    ((axres)0x80)
+    ((axres)0x50)
 ```
 Unknown error
+
+#### ```AX_USR_ERR```
+Value:
+```c
+    ((axres)0x60)
+```
+User defined error/break
 

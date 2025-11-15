@@ -57,6 +57,19 @@ const void *ax_dict_query_at(
 	_in void 			*key,
 	_in u64 			key_size
 );
+
+typedef struct _ax_dict_iter_stack{
+	const ax_dict 			*dict;
+	const ax_dict_chain		*chain;
+	const ax_dict_node		*node;
+	void 				*data;
+} ax_dict_iter_stack;
+axres ax_dict_iter(
+	_in ax_dict 			*dict,
+	_in ax_iter_act			action,
+	_in_opt void 			*data,
+	_out_opt const ax_dict_node	**node
+);
 axres ax_dict_clear(
 	_in ax_dict 			*dict
 );

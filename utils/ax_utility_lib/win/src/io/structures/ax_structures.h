@@ -71,16 +71,17 @@ typedef enum _iter_code{
 	ITER_NONE = 0x00, // Continue as normal
 	ITER_STOP = 0x01, // Stop iterator
 	ITER_REDO = 0x02, // Redo action
+	ITER_FAIL = 0x03, // Fail action (Stop and return failure code)
 } iter_code;
 typedef iter_code (*ax_iter_act)(
 	// Stack is structure dependant but it always contains field for user-defined data
-	const u8 			stack _prepass
+	const u8 			structure_stack _prepass
 );
-typedef iter_code (*ax_structures_iter)(
+typedef axres (*ax_structures_iter)(
 	_in void 			*structure,
 	_in ax_iter_act			action,
-	_in_opt void 			*data,
-	_out const void			**structure_node
+	_in_opt void 			*data, // User defined data to be passed (shared across each iteration)
+	_out_opt const void		**structure_node
 );
 
 // Command set for linear (sequential) data structures
@@ -137,7 +138,8 @@ typedef const void *(*ax_structures_query_at_k)(
 	ax_structures_at_k at; \
 	ax_structures_query_at_k query_at; \
 	ax_structures_clear clear; \
-	ax_structures_delete delete;
+	ax_structures_delete delete; \
+	ax_structures_iter iter;
 
 #endif
 
