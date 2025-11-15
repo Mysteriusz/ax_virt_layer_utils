@@ -147,7 +147,6 @@ axres noded_sect_unload(
 	noded_sect into string.
 */
 struct noded_sect_c16_iter_data{
-	_in noded_sect 			*sect;
 	_in const struct noded_kvp_temp	*temp;
 	_out u32 			buf_len_n;
 	_out _free c16 			*buf;
@@ -245,7 +244,6 @@ axres noded_sect_c16(
 	struct noded_sect_c16_iter_data data = (struct noded_sect_c16_iter_data){
 		.buf_len_n = 0,
 		.buf = nullptr,
-		.sect = sect,
 		.temp = temp
 	};
 	res = sect->kvp_dict->iter(

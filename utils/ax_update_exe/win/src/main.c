@@ -13,19 +13,10 @@ int main(
 	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
 	axcheck(res, ax_log(res));
 
-	noded_sect *sect = index_as(doc->sect_dict, noded_sect*, u"secta", sizeof(u"secta"));
-
-	u32 s = 0;
-	c16 *b = nullptr;
-	res = noded_sect_c16(sect, &NODED_KVP_DEF, &s, b);
+	res = noded_doc_save(doc);
 	axcheck(res, ax_log(res));
-	b = axmalloc(s * sizeof(c16));
-	res = noded_sect_c16(sect, &NODED_KVP_DEF, &s, b);
-	axcheck(res, ax_log(res));
-	io_str(u"===================START===================");
-	io_str(b);
-	io_str(u"===================END===================");
 
+	while(1);
 	noded_doc_unload(doc);
 
 	/*res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);

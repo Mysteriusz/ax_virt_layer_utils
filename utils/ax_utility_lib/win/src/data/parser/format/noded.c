@@ -6,7 +6,7 @@ bool noded_doc_inv(
 	if (doc == nullptr){
 		return true;
 	}
-	if (io_finv(doc->file, UTF16)){
+	if (io_finv(doc->file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return true;
 	}
 	if (doc->sect_dict == nullptr){

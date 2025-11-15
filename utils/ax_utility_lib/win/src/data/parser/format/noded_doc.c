@@ -25,7 +25,7 @@ axres noded_doc_load(
 
 	// Initialize document
 	noded_doc *doc = axmalloc(sizeof(noded_doc));
-	res = io_fo(path, IO_FILE_R, &doc->file);
+	res = io_fo(path, IO_FILE_R, IO_FILE_ENC | IO_FILE_MAP, &doc->file);
 	axcheck(res, axfree(doc));
 
 	// Initialize sequence list for the section capture
@@ -81,12 +81,59 @@ axres noded_doc_unload(
 	return AX_SUCC;
 }
 
+iter_code noded_doc_save_iter(
+	_in ax_dict_iter_stack 		stack _prepass
+){
+	noded_sect *sect = (noded_sect*)stack->node->value;
+	io_file *file = (io_file*)stack->data;
+	if (file == nullptr){
+		return ITER_FAIL;
+	}
+
+	axres res = AX_SUCC;
+
+	c16 *sect_buf = nullptr;
+	u32 sect_len_n = 0;
+	res = noded_sect_c16(sect, &NODED_KVP_DEF, &sect_len_n, sect_buf);
+	axcheck_r(res, ITER_FAIL);
+
+	sect_buf = axmalloc(sect_len_n * sizeof(c16));
+
+	res = noded_sect_c16(sect, &NODED_KVP_DEF, &sect_len_n, sect_buf);
+	axcheck_r(res, ITER_FAIL, axfree(sect_buf));
+
+	res = io_fw(file, (sect_len_n - 1) * sizeof(c16), sect_buf, nullptr);
+	axfree(sect_buf);
+	axcheck_r(res, ITER_FAIL);
+
+	return ITER_NONE;
+}
 axres noded_doc_save(
 	_in noded_doc		*doc
 ){
 	if (noded_doc_inv(doc)){
-		return AX_INV_ARG;
+		return AX_INV_DATA;
 	}
+
+	axres res = AX_SUCC;
+
+	/*
+	 	Create a temp file as a buffer
+	*/
+	io_file *temp = nullptr;
+	res = io_fo_tmp(&temp);
+	axcheck(res);
+
+	res = doc->sect_dict->iter(
+		doc->sect_dict,
+		(ax_iter_act)noded_doc_save_iter,
+		temp,
+		nullptr
+	);
+	io_str(temp->path);
+	io_fc(temp);
+
+	axcheck(res);
 
 	return AX_SUCC;
 }
