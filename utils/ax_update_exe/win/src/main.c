@@ -9,24 +9,16 @@ int main(
 	axres res = AX_SUCC;
 	unref(res);
 
-	/*noded_doc *doc = nullptr;
+	noded_doc *doc = nullptr;
 	res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
-	axcheck(res, ax_log(res));*/
-
-	noded_kvp kvp = {
-		.name = u"my_key",
-		.value = u"my_value"
-	};
-
-	u32 size = 0;
-	c16 *buf = nullptr;
-	res = noded_kvp_c16(&kvp, &NODED_KVP_DEF, &size, buf);
-	buf = axmalloc(size * sizeof(c16));
-	res = noded_kvp_c16(&kvp, &NODED_KVP_DEF, &size, buf);
 	axcheck(res, ax_log(res));
-	io_str(buf);
 
-	//noded_doc_unload(doc);
+	noded_sect *sect = index_as(doc->sect_dict, noded_sect*, u"secta", sizeof(u"secta"));
+
+	u32 s = 0;
+	c16 *b = nullptr;
+	res = noded_sect_c16(sect, &NODED_KVP_DEF, &s, b);
+	axcheck(res, ax_log(res));
 
 	noded_doc_unload(doc);
 

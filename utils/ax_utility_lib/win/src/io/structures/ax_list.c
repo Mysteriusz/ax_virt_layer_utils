@@ -212,6 +212,8 @@ redo_code:
 			goto redo_code;
 		case ITER_STOP:
 			goto stop_code;
+		case ITER_FAIL:
+			return AX_USR_ERR;
 		default:
 			return AX_INV_CODE;
 		}

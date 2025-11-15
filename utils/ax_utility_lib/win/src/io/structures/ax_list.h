@@ -54,7 +54,7 @@ typedef struct _ax_list_iter_stack{
 axres ax_list_iter(
 	_in ax_list 			*list,
 	_in ax_iter_act			action,
-	_in void 			*data,
+	_in_opt void 			*data,
 	_out_opt const ax_list_node	**buf
 );
 axres ax_list_clear(
