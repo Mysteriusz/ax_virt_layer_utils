@@ -160,10 +160,12 @@ axres line_count(
 		return AX_INV_BUF;
 	}
 
+	u32 text_len = _c16len(text);
 	const c16 *text_char = text;
 	u32 occ = 0;
 
-	while(skip_line(text_char, &text_char) == AX_SUCC){
+	while(in_c16_s(text, text_char, text_len)
+	&& skip_line(text_char, &text_char) == AX_SUCC){
 		occ++;
 	}
 

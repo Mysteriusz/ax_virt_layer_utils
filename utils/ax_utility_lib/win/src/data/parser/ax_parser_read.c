@@ -92,15 +92,15 @@ axres read_line(
 	_in const c16 		*text,
 	_in_out u32		*size,
 	_in_out _eval c16	*buf
-){
-	return read_until(text, CHARSET_NL, size, buf);
+){	
+	return read_until(text, CHARSET_NL UTF16_EOT_STR, size, buf);
 }
 axres read_word(
 	_in const c16 		*text,
 	_in_out u32		*size,
 	_in_out _eval c16	*buf
-){
-	return read_until(text, CHARSET_WS, size, buf);
+){	
+	return read_until(text, CHARSET_WS UTF16_EOT_STR, size, buf);
 }
 
 #include <stdarg.h>
