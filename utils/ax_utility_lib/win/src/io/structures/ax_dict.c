@@ -5,6 +5,9 @@ axres ax_dict_init(
 	_in u32				exp_max, // Maximum expected count of values
 	_out ax_dict			**buf
 ){
+	if (exp_max == 0){
+		return AX_INV_ARG;
+	}
 	if (buf == nullptr){
 		return AX_INV_BUF;
 	}
@@ -53,9 +56,11 @@ axres ax_dict_add(
 	*/
 	ax_dict_node *prev = nullptr;
 	ax_dict_node *node = chain->head;
+	bool uniq = true;
 	while(node != nullptr){
 		// Break when the dictionary already contains the key (Value is overwritten)
 		if(_sfmemcmp(node->key, key, node->key_size, key_size) == 0){
+			uniq = false;
 			break;
 		}
 
@@ -82,7 +87,10 @@ axres ax_dict_add(
 	}else{
 		prev->next = node;
 	}
-	dict->count++;
+
+	if (uniq){
+		dict->count++;
+	}
 
 	return AX_SUCC;
 }

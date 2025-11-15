@@ -19,6 +19,12 @@ int main(
 	c16 *b = nullptr;
 	res = noded_sect_c16(sect, &NODED_KVP_DEF, &s, b);
 	axcheck(res, ax_log(res));
+	b = axmalloc(s * sizeof(c16));
+	res = noded_sect_c16(sect, &NODED_KVP_DEF, &s, b);
+	axcheck(res, ax_log(res));
+	io_str(u"===================START===================");
+	io_str(b);
+	io_str(u"===================END===================");
 
 	noded_doc_unload(doc);
 

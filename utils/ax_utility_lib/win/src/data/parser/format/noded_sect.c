@@ -93,7 +93,9 @@ axres noded_sect_load(
 	*/
 	u32 kvp_dict_max = 0; // Maximum count of nodes (if each line is a valid kvp node)
 	line_count(rng_buf, &kvp_dict_max);
-	ax_dict_init(kvp_dict_max, &sect.kvp_dict);
+	res = ax_dict_init(kvp_dict_max + 1, &sect.kvp_dict);
+	axcheck(res);
+
 	sect.kvp_dict->overrides.on_clear = (ax_structure_override)noded_sect_on_clear;
 
 	/*
@@ -182,7 +184,6 @@ iter_code noded_sect_c16_iter(
 	if (prov->buf == nullptr){
 		res_buf = kvp_buf;
 		res_len_n = kvp_len_n;
-		io_str(res_buf);
 	}else{
 		/*
 		 	Concat if provided data buffer is allocated
@@ -234,7 +235,7 @@ axres noded_sect_c16(
 	axres res = AX_SUCC;
 
 	// Count length of the section
-	u32 buf_len_n = _c16len(u"[") 
+	u32 sect_len_n = _c16len(u"[") 
 		+ _c16len(sect->name)
 		+ _c16len(u"]:\n") + 1;
 	
@@ -255,13 +256,35 @@ axres noded_sect_c16(
 	);
 	axcheck_r(res, AX_INV_DATA);
 
-	buf_len_n += data.buf_len_n - 1;
+	// Increment the buffer length by the count of characters gathered
+	sect_len_n += data.buf_len_n - 1;
 	if (ret_size){
+		// Free since we do not want the data on size return
 		axfree(data.buf);
 
-		*size = buf_len_n;
+		*size = sect_len_n;
 		return AX_SUCC;
 	}
+
+	axcheck(_ax_buf_err(*size, sect_len_n));
+
+	/*
+	 	Create a section section label line
+	*/
+	c16 *sect_buf = axmalloc(sect_len_n);
+	u32 t = sect_len_n - data.buf_len_n + 1; // Length of the label line (null-terminated)
+
+	res = join_with(sect_buf, &t, 3, u"[", sect->name, u"]:\n");
+	axcheck(res, axfree(sect_buf), axfree(data.buf));
+
+	// Copy data gathered from the iter into the buffer
+	memcpy(buf, sect_buf, (t - 1) * sizeof(c16));
+	memcpy(buf + (t - 1), data.buf, (data.buf_len_n - 1) * sizeof(c16));
+
+	// Cleanup
+	axfree(sect_buf);
+	axfree(data.buf);
+
 	return AX_SUCC;
 }
 

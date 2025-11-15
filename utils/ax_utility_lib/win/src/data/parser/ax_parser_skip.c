@@ -199,7 +199,7 @@ axres skip_line(
 	axres res = AX_SUCC;
 	const c16 *temp = nullptr;
 
-	res = skip_until(text, CHARSET_NL, &temp);
+	res = skip_until(text, CHARSET_NL UTF16_EOT_STR, &temp);
 	axcheck(res);
 
 	// Skip depending on EOL encoding

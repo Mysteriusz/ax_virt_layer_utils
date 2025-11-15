@@ -51,6 +51,21 @@ axres noded_kvp_load(
 	*/
 	const c16 *name = index_as(loc.seq_vars, c16*, u"kvp_name", sizeof(u"kvp_name"));
 	const c16 *value = index_as(loc.seq_vars, c16*, u"kvp_val", sizeof(u"kvp_val"));
+
+	/*
+	 	Case where the key is a duplicate for the section
+		Example:
+			[secta]:
+			cfg="D:\path\to\something"
+			cfg="D:\path\to\something" < this kvp line is processed
+	*/
+	if (sect->kvp_dict->contains_key(sect->kvp_dict, (void*)name, _c16len_b(name) + sizeof(c16)) == AX_SUCC){
+		axcheck(AX_INV_FMT,
+			loc.seq_vars->delete(loc.seq_vars),
+			axfree(kvp_buf)
+		);
+	}
+
 	if (name == nullptr
 	|| value == nullptr){
 		axcheck(res,
