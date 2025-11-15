@@ -60,7 +60,7 @@ axres read_data_dir(
 
 	io_file	*file = nullptr;	
 
-	res = io_fo(hdl->con.user_data, IO_FILE_R, &file);
+	res = io_fo(hdl->con.user_data, IO_FILE_R, IO_FILE_MAP, &file);
 	axcheck(res);
 
 	u64 fsize = 0;
@@ -101,7 +101,7 @@ axres write_data_dir(
 
 	io_file *file = nullptr;
 
-	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), &file);
+	res = io_fo(hdl->con.user_data, rule_to_io(hdl->con.rule), IO_FILE_MAP, &file);
 	axcheck(res);
 
 	res = io_fw(file, size, buf, nullptr);

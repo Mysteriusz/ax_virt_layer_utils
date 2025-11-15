@@ -23,7 +23,7 @@ axres find_substr_f(
 	_in io_file		*file,
 	_in const c16 		*substr
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (substr == nullptr){
@@ -49,7 +49,7 @@ axres skip_while_f(
 	_in io_file		*file,
 	_in const c16		*charset
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (charset == nullptr){
@@ -74,7 +74,7 @@ axres skip_until_f(
 	_in io_file		*file,
 	_in const c16		*charset
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (charset == nullptr){
@@ -99,7 +99,7 @@ axres skip_until_f(
 axres skip_line_f(
 	_in io_file		*file
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 
@@ -117,7 +117,7 @@ axres skip_line_f(
 axres skip_word_f(
 	_in io_file		*file
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 
@@ -137,7 +137,7 @@ axres read_line_f(
 	_in_out u32		*size, // _in for buffer size safety
 	_in_out _eval c16	*buf // Evaluate by using (size * sizeof(c16))
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	

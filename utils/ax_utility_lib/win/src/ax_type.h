@@ -56,6 +56,7 @@
 #include <winreg.h>
 #include <winerror.h>
 #include <memoryapi.h>
+#include <errhandlingapi.h>
 #elif defined(AX_KM)
 #include <wdm.h>
 
@@ -131,8 +132,8 @@
 #define addr(v)		(&(long long[]){v})
 // Runtime assertion (expr)
 #define asrt(expr)	(((expr) == false) ? (void)__builtin_trap() : (void)null)
-// Check bit flag (f) in the value (v)
-#define chkf(v,f)	(((v) & (f)) != 0) 
+// Check bit mask (m) in the value (v)
+#define chkf(v,m)	(((v) & (m)) != 0) 
 // Cast value (v) to type (t)
 #define astp(t,v)	*((t*)((void*)&(v))) 
 // Count digit count in an intger (i)

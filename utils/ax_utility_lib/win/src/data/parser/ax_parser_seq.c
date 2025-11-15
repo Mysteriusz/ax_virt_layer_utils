@@ -759,7 +759,7 @@ axres seq_find_f(
 	_in const c16 		*fmt,
 	_out seq_loc 		*loc
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (fmt == nullptr){
@@ -787,7 +787,7 @@ axres seq_find_all_f(
 	_in bool 		var_load,
 	_in_out ax_list		*locs
 ){
-	if (io_finv(file, UTF16)){
+	if (io_finv(file, IO_FILE_MAP | IO_FILE_ENC, UTF16)){
 		return AX_INV_FILE;
 	}
 	if (fmt == nullptr){

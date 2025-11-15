@@ -3,12 +3,11 @@
 #include "ax_file.h"
 #include "ax_parser.h"
 
-#include <errhandlingapi.h>
-
 #if defined(AX_UM)
 
 bool io_finv(
 	_in io_file 		*file,
+	_in_opt io_file_inf 	exp_inf, // Pass expected file resources
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 ){
 	if (file == nullptr){
@@ -19,9 +18,26 @@ bool io_finv(
 		return true;
 	}
 
-	/*
-	 	Read and invalidate encoding
+	/* 
+	 	Check file info against expected
+		If file->inf and exp_inf are both 0 continue
 	*/
+	if (!(file->inf == 0 && exp_inf == 0)
+	&& !chkf(file->inf, exp_inf)){
+		return true;
+	}
+
+	/*
+	 	Read and invalidate encoding if set in file->inf
+	*/
+	if (!chkf(file->inf, IO_FILE_ENC)){
+		// Expecting encoding but IO_FILE_ENC resource not set
+		if (exp_enc != 0){
+			return true;
+		}
+		goto skip_enc;
+	}
+
 	io_file_enc file_enc = 0;
 	if (io_fbom(file->path, &file_enc) != AX_SUCC){
 		return true;
@@ -31,6 +47,17 @@ bool io_finv(
 		return true;
 	}
 
+skip_enc:
+
+	/*
+	 	TODO
+		map invalidation
+	*/
+	if (!chkf(file->inf, IO_FILE_MAP)){
+		goto skip_map;
+	}
+
+skip_map:
 	return false;
 }
 
@@ -38,11 +65,12 @@ bool io_foff(
 	_in io_file 		*file,
 	_in u32 		offset
 ){
-	if (io_finv(file, file->enc)){
+	if (io_finv(file, file->inf, file->enc)){
 		return false;
 	}
 
-	if (offset >= file->map.size){
+	if (chkf(file->inf, IO_FILE_MAP)
+	&& offset >= file->map.size){
 		return false;
 	}
 	
@@ -86,7 +114,6 @@ axres io_fbom(
 		nullptr
 	);
 	if (hdl == INVALID_HANDLE_VALUE){
-		io_i64(GetLastError());
 		res = AX_INV_PATH;
 		goto error_jump;
 	}
@@ -195,6 +222,7 @@ axres io_fsize(
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
+	_in io_file_inf		inf,
 	_out io_file		**buf
 ){
 	if (path == nullptr){
@@ -236,24 +264,29 @@ axres io_fo(
 	/*
 		Read the encoding
 	*/
-	res = io_fbom(path, &file->enc);
-	axcheck_g(res, error_jump);
+	if (chkf(inf, IO_FILE_ENC)){
+		res = io_fbom(path, &file->enc);
+		axcheck_g(res, error_jump);
+	}
 
 	/*
 	 	Allocate the virtual map
 	*/
-	res = io_fmmap(hdl, true, &file->map);
-	axcheck_g(res, error_jump);
+	if (chkf(inf, IO_FILE_MAP)){
+		res = io_fmmap(hdl, true, &file->map);
+		axcheck_g(res, error_jump);
+	}
 
 	/*
 		Write-back non-gathered data
 	*/
 	file->offset += _bom_size(file->enc);
 	file->acc = acc;
+	file->inf = inf;
 	file->hdl = hdl;
 	file->path = _c16dup(path);
 
-	if (io_finv(file, file->enc)){
+	if (io_finv(file, file->inf, file->enc)){
 		io_fc(file);
 		return AX_INV_FILE;
 	}
@@ -270,7 +303,38 @@ error_jump:
 
 	return res;
 }
+axres io_fo_tmp(
+	_out io_file		**buf
+){
+	if (buf == nullptr){
+		return AX_INV_BUF;
+	}
 
+	axres res = AX_SUCC;
+
+	/*
+	 	Get file path to create
+	*/
+	c16 *temp_buf = axmalloc(MAX_PATH * sizeof(c16));
+	u32 temp_len_n = GetTempPath2W(MAX_PATH, temp_buf);
+	if (temp_len_n == 0){
+		axfree(temp_buf);
+		return AX_UNK_ERR;
+	}
+
+	if (GetTempFileNameW(temp_buf, u"", 0, temp_buf) == 0){
+		axfree(temp_buf);
+		return AX_UNK_ERR;
+	}
+
+	//io_str(temp_buf);
+	res = io_fo(temp_buf, IO_FILE_RWC, 0, buf);
+
+	axfree(temp_buf);
+	axcheck(res);
+
+	return AX_SUCC;
+}
 void io_fc(
 	_in io_file		*file
 ){
@@ -287,7 +351,7 @@ axres io_fr(
 	_out_opt u32		*read // Bytes read
 ){
 	// Invalidate and set the offset
-	if (io_finv(file, file->enc)
+	if (io_finv(file, file->inf, file->enc)
 	|| !io_foff(file, file->offset)){
 		return AX_INV_FILE;
 	}
@@ -334,7 +398,7 @@ axres io_fw(
 	_out_opt u32		*writ // Bytes written
 ){
 	// Invalidate and set the offset
-	if (io_finv(file, file->enc)
+	if (io_finv(file, file->inf, file->enc)
 	|| !io_foff(file, file->offset)){
 		return AX_INV_FILE;
 	}

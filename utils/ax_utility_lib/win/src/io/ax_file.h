@@ -7,6 +7,7 @@
 
 #define IO_FILE_CHUNK 0x400 // (1024 UTF8) (512 UTF16) (256 UTF32)
 
+// File access bit mask
 typedef u16 io_file_acc;
 /*
  	IMPORTANT!
@@ -22,6 +23,13 @@ enum io_file_acc{
 	IO_FILE_C = 0x04,
 	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
+};
+
+// File information bit mask
+typedef u16 io_file_inf;
+enum io_file_inf{
+	IO_FILE_MAP = 0x01,
+	IO_FILE_ENC = 0x02,
 };
 
 #define UTF16LE_BOM 	0xFEFF
@@ -154,15 +162,17 @@ typedef struct _io_file{
 #endif
 
 #endif
+	io_file_acc acc; // File access bit mask
+	io_file_inf inf; // File info bit mask
 	io_fmap	map; // Memory mapped file
-	io_file_acc acc; // File access
 	io_file_enc enc; // Optional field (default = UTF16LE)
 	u64 offset; // (IN BYTES) Changes after each R/W (default = _bom_size(enc))
 } io_file;
 
-// Invalidate file and check encoding (exp_enc = 0 if no encoding check)
+// Invalidate file
 bool io_finv(
 	_in io_file 		*file,
+	_in_opt io_file_inf 	exp_inf, // Pass expected file resources
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 );
 
@@ -189,10 +199,15 @@ axres io_fsize(
 	_out u64		*size
 );
 
-// Open BOM encoded file
+// Create/Open BOM encoded file
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
+	_in io_file_inf		inf,
+	_out io_file		**buf
+);
+// Create/Open TEMP file
+axres io_fo_tmp(
 	_out io_file		**buf
 );
 // Force close file 
