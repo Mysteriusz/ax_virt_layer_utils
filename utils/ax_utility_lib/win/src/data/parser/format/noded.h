@@ -73,14 +73,12 @@ typedef struct _noded_doc{
 
 typedef struct _noded_sect{
 	c16			*name;
-	noded_doc 		*doc;
 	ax_dict			*kvp_dict; // Dictionary (name, _noded_kvp)
 } noded_sect;
 
 typedef struct _noded_kvp{
 	c16			*name;
 	c16			*value;
-	noded_sect 		*sect;
 } noded_kvp;
 
 /*
@@ -102,7 +100,7 @@ static const struct noded_kvp_temp NODED_KVP_DEF = {
 	.suff = u"",
 	.div = u"=",
 	.key_lc = u"", .key_rc = u"",
-	.val_lc = u"", .val_rc = u"",
+	.val_lc = u"", .val_rc = u"\n",
 };
 
 /*

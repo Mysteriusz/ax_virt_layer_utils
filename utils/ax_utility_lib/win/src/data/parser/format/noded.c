@@ -21,14 +21,10 @@ bool noded_sect_inv(
 	if (sect == nullptr){
 		return true;
 	}
-	if (sect->doc == nullptr
-	|| sect->name == nullptr){
+	if (sect->name == nullptr){
 		return true;
 	}
 	if (sect->kvp_dict == nullptr){
-		return true;
-	}
-	if (noded_doc_inv(sect->doc)){
 		return true;
 	}
 
@@ -41,10 +37,7 @@ bool noded_kvp_inv(
 	|| kvp->name == nullptr){
 		return true;
 	}
-	if (noded_sect_inv(kvp->sect)){
-		return true;
-	}
-
+	
 	return false;
 }
 

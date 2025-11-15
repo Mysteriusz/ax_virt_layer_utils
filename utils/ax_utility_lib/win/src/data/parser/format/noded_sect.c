@@ -87,10 +87,9 @@ axres noded_sect_load(
 	 	Write to buffer before processing lines 
 	*/
 	sect.name = _c16dup(name);
-	sect.doc = doc;
 
 	/*
-		Initialize kvp dicionary of the section
+		Initialize kvp dictionary of the section
 	*/
 	u32 kvp_dict_max = 0; // Maximum count of nodes (if each line is a valid kvp node)
 	line_count(rng_buf, &kvp_dict_max);
@@ -140,6 +139,80 @@ axres noded_sect_unload(
 
 	return AX_SUCC;
 }
+
+/*
+ 	Iterator data structure passed when creating converting
+	noded_sect into string.
+*/
+struct noded_sect_c16_iter_data{
+	_in noded_sect 			*sect;
+	_in const struct noded_kvp_temp	*temp;
+	_out u32 			buf_len_n;
+	_out _free c16 			*buf;
+};
+iter_code noded_sect_c16_iter(
+	_in ax_dict_iter_stack		stack _prepass
+){
+	noded_kvp *kvp = (noded_kvp*)stack->node->value;
+	struct noded_sect_c16_iter_data *prov = (struct noded_sect_c16_iter_data*)stack->data;
+	if (prov == nullptr){
+		return ITER_FAIL;
+	}
+
+	axres res = AX_SUCC;
+	c16 *res_buf = nullptr;
+	u32 res_len_n = 0;
+
+	/*
+	 	Convert node value to kvp line
+	*/
+	c16 *kvp_buf = nullptr;
+	u32 kvp_len_n = 0;
+	res = noded_kvp_c16(kvp, prov->temp, &kvp_len_n, kvp_buf);
+	axcheck_g(res, cleanup);
+
+	kvp_buf = axmalloc(kvp_len_n * sizeof(c16));
+
+	res = noded_kvp_c16(kvp, prov->temp, &kvp_len_n, kvp_buf);
+	axcheck_g(res, cleanup);
+
+	/*
+	 	Set buffer into the provided data
+	*/
+	if (prov->buf == nullptr){
+		res_buf = kvp_buf;
+		res_len_n = kvp_len_n;
+		io_str(res_buf);
+	}else{
+		/*
+		 	Concat if provided data buffer is allocated
+		*/
+		res = c16_cat(prov->buf, kvp_buf, &res_len_n, res_buf);
+		axcheck_g(res, cleanup);
+
+		res_buf = axmalloc(res_len_n * sizeof(c16));
+
+		res = c16_cat(prov->buf, kvp_buf, &res_len_n, res_buf);
+		axcheck_g(res, cleanup);
+	}
+
+cleanup:
+	// If res_buf is not the kvp line (prov->buf == nullptr)
+	if (res_buf != kvp_buf){
+		axfree(kvp_buf);
+	}
+
+	axfree(prov->buf);
+	prov->buf_len_n = 0;
+	if (res_buf == nullptr){
+		return ITER_FAIL;
+	}
+
+	prov->buf = res_buf;
+	prov->buf_len_n = res_len_n;
+
+	return ITER_NONE;
+}
 axres noded_sect_c16(
 	_in noded_sect			*sect,
 	_in const struct noded_kvp_temp	*temp,
@@ -158,12 +231,34 @@ axres noded_sect_c16(
 		}
 	}
 
+	axres res = AX_SUCC;
+
 	// Count length of the section
 	u32 buf_len_n = _c16len(u"[") 
 		+ _c16len(sect->name)
-		+ _c16len(u"]:\n");
+		+ _c16len(u"]:\n") + 1;
 	
+	/*
+	 	Iterate over the KVP dictionary and load all lines into buffer.
+	*/
+	struct noded_sect_c16_iter_data data = (struct noded_sect_c16_iter_data){
+		.buf_len_n = 0,
+		.buf = nullptr,
+		.sect = sect,
+		.temp = temp
+	};
+	res = sect->kvp_dict->iter(
+		sect->kvp_dict,
+		(ax_iter_act)noded_sect_c16_iter,
+		&data,
+		nullptr
+	);
+	axcheck_r(res, AX_INV_DATA);
+
+	buf_len_n += data.buf_len_n - 1;
 	if (ret_size){
+		axfree(data.buf);
+
 		*size = buf_len_n;
 		return AX_SUCC;
 	}
