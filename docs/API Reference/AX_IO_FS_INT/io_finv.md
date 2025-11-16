@@ -10,6 +10,7 @@ Invalidate file structure and check the expected encoding.
 ```c
 bool io_finv(
 	_in io_file 		*file,
+	_in_opt io_file_inf 	exp_inf, // Pass expected file resources
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 );
 ```
@@ -18,6 +19,10 @@ bool io_finv(
 
 ### ```file```
 File structure to invalidate.
+
+### ```exp_inf```
+Expected file information.</br>
+(to skip the information check the value should be **0**)
 
 ### ```exp_enc```
 Expected encoding.</br>

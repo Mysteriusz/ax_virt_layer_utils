@@ -14,6 +14,7 @@ Open a file with Byte Order Mark.
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
+	_in io_file_inf		inf,
 	_out io_file		**buf
 );
 ```
@@ -26,6 +27,9 @@ Path to the file.
 ### ```acc```
 File access mask.
 
+### ```inf```
+File information mask.
+
 ### ```buf```
 Empty pointer to receive the file heap.
 
@@ -37,6 +41,9 @@ Error code if failed to open.
 
 ## • Remarks
 
+> [!NOTE]
+> Files over [IO_FILE_MAX](./definition.md#IO_FILE_MAX) will fail with IO_FILE_MAX.
+
 If **acc** argument has **IO_FILE_C** bit on</br>
-the file will be created.
+the file will be created if doesn`t already exist.
 

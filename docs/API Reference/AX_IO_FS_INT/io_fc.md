@@ -8,7 +8,7 @@ Close a file.
 
 ## • Signature
 ```c
-axres io_fc(
+void io_fc(
 	_in io_file		*file
 );
 ```
@@ -17,10 +17,4 @@ axres io_fc(
 
 ### ```file```
 File structure to close previously opened with [io_fo](./io_fo.md).
-
-## • Return value
-
-**AX_SUCC** if file closed successfull.
-
-Error code if failed to close. 
 
