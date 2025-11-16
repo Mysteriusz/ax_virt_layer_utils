@@ -25,7 +25,7 @@ axres noded_doc_load(
 
 	// Initialize document
 	noded_doc *doc = axmalloc(sizeof(noded_doc));
-	res = io_fo(path, IO_FILE_R, IO_FILE_ENC | IO_FILE_MAP, &doc->file);
+	res = io_fo(path, IO_FILE_RW, IO_FILE_ENC | IO_FILE_MAP, &doc->file);
 	axcheck(res, axfree(doc));
 
 	// Initialize sequence list for the section capture
@@ -73,6 +73,9 @@ axres noded_doc_unload(
 	if(doc == nullptr){
 		return AX_INV_ARG;
 	}
+	if (doc->sect_dict == nullptr){
+		return AX_INV_DATA;
+	}
 
 	doc->sect_dict->delete(doc->sect_dict);
 	io_fc(doc->file);
@@ -92,6 +95,9 @@ iter_code noded_doc_save_iter(
 
 	axres res = AX_SUCC;
 
+	/*
+		Convert section to string
+	*/
 	c16 *sect_buf = nullptr;
 	u32 sect_len_n = 0;
 	res = noded_sect_c16(sect, &NODED_KVP_DEF, &sect_len_n, sect_buf);
@@ -102,6 +108,9 @@ iter_code noded_doc_save_iter(
 	res = noded_sect_c16(sect, &NODED_KVP_DEF, &sect_len_n, sect_buf);
 	axcheck_r(res, ITER_FAIL, axfree(sect_buf));
 
+	/*
+		Write to file the section
+	*/
 	res = io_fw(file, (sect_len_n - 1) * sizeof(c16), sect_buf, nullptr);
 	axfree(sect_buf);
 	axcheck_r(res, ITER_FAIL);
@@ -124,15 +133,26 @@ axres noded_doc_save(
 	res = io_fo_tmp(&temp);
 	axcheck(res);
 
+	/*
+	 	Iterate and write to temp file
+	*/
 	res = doc->sect_dict->iter(
 		doc->sect_dict,
 		(ax_iter_act)noded_doc_save_iter,
 		temp,
 		nullptr
 	);
-	io_str(temp->path);
-	io_fc(temp);
+	axcheck(res, io_fc(temp));
 
+	// Truncate desired file before writing to bom size
+	res = io_fres(doc->file, _bom_size(doc->file->enc));
+	axcheck(res, io_fc(temp));
+
+	// Reset temp pointer
+	temp->offset = 0;
+	res = io_ftrans(temp, doc->file, 0, nullptr);
+
+	io_fc(temp);
 	axcheck(res);
 
 	return AX_SUCC;

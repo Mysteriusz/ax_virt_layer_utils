@@ -16,7 +16,6 @@ int main(
 	res = noded_doc_save(doc);
 	axcheck(res, ax_log(res));
 
-	while(1);
 	noded_doc_unload(doc);
 
 	/*res = noded_doc_load(u"D:\\share\\ax_info.noded", &doc);
