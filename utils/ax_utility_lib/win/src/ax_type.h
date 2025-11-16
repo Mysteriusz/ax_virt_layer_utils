@@ -144,6 +144,8 @@
 #define offo(f,s)	((u32)&(((s*)nullptr)->f))
 // Offset of field (f) in the structure (s) computed directly
 #define offo_n(f,s)	((u32)&((s)->f) - (u64)(s))
+// Value as (n) Gigibytes
+#define GB(n)		((u64)(1 << 30) * (n))
 
 #include <stdbool.h>
 #include "ext_math.h"

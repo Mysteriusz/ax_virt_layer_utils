@@ -14,7 +14,10 @@ bool io_finv(
 		return true;
 	}
 
-	if (file->path == nullptr){
+	// Check file size
+	u64 fsize = 0;
+	if (io_fsize(file->path, &fsize) != AX_SUCC
+	|| fsize > IO_FILE_MAX){
 		return true;
 	}
 
@@ -58,6 +61,7 @@ skip_enc:
 	}
 
 skip_map:
+
 	return false;
 }
 
@@ -65,6 +69,9 @@ bool io_foff(
 	_in io_file 		*file,
 	_in u32 		offset
 ){
+	if (file == nullptr){
+		return false;
+	}
 	if (io_finv(file, file->inf, file->enc)){
 		return false;
 	}
@@ -107,7 +114,7 @@ axres io_fbom(
 	HANDLE hdl = CreateFileW(
 		path,
 		GENERIC_READ,
-		FILE_SHARE_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE ,
 		nullptr,
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL,
@@ -169,7 +176,7 @@ axres io_fex(
 	HANDLE hdl = CreateFileW(
 		path,
 		FILE_READ_DATA,
-		FILE_SHARE_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		nullptr,
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL,
@@ -197,13 +204,14 @@ axres io_fsize(
 	HANDLE hdl = CreateFileW(
 		path,
 		FILE_READ_DATA,
-		FILE_SHARE_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		nullptr,
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL,
 		nullptr
 	);
 	if (hdl == INVALID_HANDLE_VALUE){
+		io_str(path);
 		return AX_INV_PATH;
 	}
 
@@ -250,7 +258,7 @@ axres io_fo(
 	HANDLE hdl = CreateFileW(
 		path,
 		rights,
-		FILE_SHARE_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		nullptr,
 		disp,
 		FILE_ATTRIBUTE_NORMAL,
@@ -327,7 +335,7 @@ axres io_fo_tmp(
 		return AX_UNK_ERR;
 	}
 
-	//io_str(temp_buf);
+	// Open file as temp
 	res = io_fo(temp_buf, IO_FILE_RWC, 0, buf);
 
 	axfree(temp_buf);
@@ -338,6 +346,9 @@ axres io_fo_tmp(
 void io_fc(
 	_in io_file		*file
 ){
+	if (file == nullptr){
+		return;
+	}
 	io_funmap(&file->map);
 	CloseHandle(file->hdl);
 	axfree(file->path);
@@ -350,6 +361,9 @@ axres io_fr(
 	_in_out void 		*buf,
 	_out_opt u32		*read // Bytes read
 ){
+	if (file == nullptr){
+		return AX_INV_ARG;
+	}
 	// Invalidate and set the offset
 	if (io_finv(file, file->inf, file->enc)
 	|| !io_foff(file, file->offset)){
@@ -397,6 +411,9 @@ axres io_fw(
 	_in void 		*buf,
 	_out_opt u32		*writ // Bytes written
 ){
+	if (file == nullptr){
+		return AX_INV_ARG;
+	}
 	// Invalidate and set the offset
 	if (io_finv(file, file->inf, file->enc)
 	|| !io_foff(file, file->offset)){
@@ -422,6 +439,96 @@ axres io_fw(
 	file->offset += writ_count;
 	if (writ != nullptr){
 		*writ = writ_count;
+	}
+
+	return AX_SUCC;
+}
+
+axres io_ftrans(
+	_in io_file		*from,
+	_in io_file		*to,
+	_in u32			size,
+	_out_opt u32		*trans // Bytes transfered
+){
+	if (from == nullptr
+	|| to == nullptr){
+		return AX_INV_ARG;
+	}
+	// Invalidate both files
+	if (io_finv(from, from->inf, from->enc)
+	|| io_finv(to, to->inf, to->enc)){
+		return AX_INV_FILE;
+	}
+	if (!io_foff(from, from->offset)
+	|| !io_foff(to, to->offset)){
+		return AX_UNK_ERR;
+	}
+
+	// Check file access flag
+	if (!chkf(from->acc, IO_FILE_R)
+	|| !chkf(to->acc, IO_FILE_W)){
+		return AX_ACC_DEN;
+	}
+
+	/*
+	 	Get file size
+	*/
+	u64 fsize = 0;
+	if (size == 0){
+		io_fsize(from->path, &fsize);
+		size = fsize;
+	}
+
+	u8 buf[IO_FILE_CHUNK];
+	memset(buf, 0, IO_FILE_CHUNK);
+
+	DWORD read = 0;
+	u32 left = size;
+	while(left > 0){
+		if (!ReadFile(from->hdl, buf, IO_FILE_CHUNK, &read, nullptr)){
+			// TODO: Abort and restore backup
+			break;
+		}
+		if (read == 0){
+			break;
+		}
+		if (!WriteFile(to->hdl, buf, read, nullptr, nullptr)){
+			// TODO: Abort and restore backup
+			break;
+		}
+		left -= read;
+	}
+	memset(buf, 0, IO_FILE_CHUNK);
+
+	if (trans != nullptr){
+		*trans = size - left;
+	}
+
+	return AX_SUCC;
+}
+
+axres io_fres(
+	_in io_file		*file,
+	_in u32			size
+){
+	if (file == nullptr){
+		return AX_INV_ARG;
+	}
+
+	if(io_finv(file, file->inf, file->enc)){
+		return AX_INV_FILE;
+	}
+
+	u32 pre_offset = file->offset;
+	// Set file pointer to desired size
+	if (!io_foff(file, size)){
+		return AX_INV_FILE;
+	}
+
+	// Truncate file to pointer
+	if (!SetEndOfFile(file->hdl)){
+		io_foff(file, pre_offset);
+		return AX_INV_FILE;
 	}
 
 	return AX_SUCC;

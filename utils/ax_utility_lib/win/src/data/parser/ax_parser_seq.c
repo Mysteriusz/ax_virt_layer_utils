@@ -714,6 +714,9 @@ axres seq_find_all(
 	|| locs == nullptr){
 		return AX_INV_ARG;
 	}
+	if (locs->count != 0){
+		return AX_INV_BUF;
+	}
 
 	axres res = AX_SUCC;
 
@@ -751,6 +754,11 @@ axres seq_find_all(
 
 	grp_cleanup(&grp);
 	axcheck(res, locs->clear(locs));
+
+	// None found
+	if (locs->count == 0){
+		return AX_NOT_FND;
+	}
 
 	return AX_SUCC;
 }

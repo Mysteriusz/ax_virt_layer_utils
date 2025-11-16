@@ -5,6 +5,12 @@
 #include "ax_memory.h"
 #include "ax_error_code.h"
 
+/*
+	All file operations with exception of path queried ones,
+	are currently limited to 0x80000000 (2 gigibytes) size.
+*/
+#define IO_FILE_MAX GB(2) // Maximum file size
+
 #define IO_FILE_CHUNK 0x400 // (1024 UTF8) (512 UTF16) (256 UTF32)
 
 // File access bit mask
@@ -105,13 +111,13 @@ static inline const DWORD _io_file_conv_win64(
 	case IO_FILE_R:
 		return FILE_READ_DATA;
 	case IO_FILE_W:
-		return FILE_APPEND_DATA;
-	case IO_FILE_C:
 		return FILE_WRITE_DATA;
+	case IO_FILE_C:
+		return FILE_ADD_FILE;
 	case IO_FILE_RW:
-		return FILE_READ_DATA | FILE_APPEND_DATA;
+		return FILE_READ_DATA | FILE_WRITE_DATA;
 	case IO_FILE_RWC:
-		return FILE_READ_DATA | FILE_APPEND_DATA | FILE_WRITE_DATA;
+		return FILE_READ_DATA | FILE_WRITE_DATA | FILE_ADD_FILE;
 	default:
 		return 0;
 	}
@@ -229,6 +235,26 @@ axres io_fw(
 	_out_opt u32		*writ // Bytes written
 );
 
+/*
+	Transfer file content between files
+	CAUTION:
+		Data will be overwritten if pointers are not set to EOF
+	
+	size == 0 will transfer entire file
+*/
+axres io_ftrans(
+	_in io_file		*from,
+	_in io_file		*to,
+	_in u32			size,
+	_out_opt u32		*trans // Bytes transfered
+);
+// Resize file
+axres io_fres(
+	_in io_file		*file,
+	_in u32			size
+);
+
+// Map file to memory
 axres io_fmmap(
 	_in void 		*hdl,
 	_in bool 		term,
