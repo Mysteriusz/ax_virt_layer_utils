@@ -1,3 +1,4 @@
-utils/ax_update_exe/win/build/
-utils/ax_utility_lib/win/build/
+utils/ax_update_exe/build/
+utils/ax_utility_lib/build/
+crt/build/
 
