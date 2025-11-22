@@ -15,12 +15,15 @@ type doc struct{
 	path string
 }
 
-type ser_err int32
+var DOC_MAX_SIZE uint32 = (1 << 21) // 1 MB
+
+type crt_err int32
 const (
-	SER_SUCC = iota
-	SER_NOT_FND
-	SER_INV_DOC
-	SER_INV_SYN
-	SER_READ_ERR
+	CRT_SUCC = iota
+	CRT_NOT_FND
+	CRT_INV_DOC
+	CRT_INV_SYN
+	CRT_READ_ERR
+	CRT_TOO_BIG
 )
 

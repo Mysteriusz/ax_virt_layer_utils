@@ -1,14 +1,13 @@
 package main
 
 import (
-	"crt/serializer"
+	"crt/parser"
 	"fmt"
 )
 
 func main(){
 	doc,_ := loader.FindAtDefault()
-	_,err := loader.SymParse(doc)
+	_,err := loader.FrameLoad(doc)
 	fmt.Println(err)
-	//fmt.Println(doc)
 }
 
