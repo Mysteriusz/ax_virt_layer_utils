@@ -9,9 +9,8 @@ import(
 type frame_type uint32
 const(
 	F_ROOT = 0x00
-	F_STATIC = 0x01
-	F_ARRAY = 0x02
-	F_VALUE = 0x03
+	F_ARRAY = 0x01
+	F_VALUE = 0x02
 )
 
 type frame struct{
@@ -36,12 +35,15 @@ var CONTROL_CHARS = []byte{
 	'\r',
 }
 
-func FrameTypeDecide(a_frame *frame) (r_type frame_type, r_err crt_err){
+func FrameTypeDecide(a_frame *frame, a_char byte) (r_type frame_type, r_err crt_err){
 	switch(a_frame.f_type){
+	case F_ARRAY:
 	case F_ROOT:
-		r_type = F_STATIC
-	case F_STATIC:
-		r_type = F_ARRAY
+		if a_char == '{'{
+			r_type = F_ARRAY
+		}else{
+			r_type = F_VALUE
+		}
 	default:
 		return 0,CRT_INV_SYN
 	}
@@ -54,10 +56,7 @@ func FrameSearch(
 	a_frame *frame,
 	a_off int,
 ) (r_frame *frame, r_off int, r_err crt_err){
-	//fmt.Println("Processing frame at: \n - "+a_frame.f_con)
-
-	var buf *frame = &frame{
-	}
+	var buf *frame = &frame{}
 	var i int = a_off	
 	var map_len int = a_reader.Len()
 	var new_con strings.Builder
@@ -72,7 +71,7 @@ func FrameSearch(
 			buf.f_sig = new_sig
 			buf.f_con = a_frame.f_con + "." + new_sig
 			fmt.Println("Processing frame at: - "+buf.f_con)
-			ft,err := FrameTypeDecide(a_frame)
+			ft,err := FrameTypeDecide(a_frame, c)
 			if err != CRT_SUCC{
 				return nil,0,CRT_INV_SYN
 			}
@@ -110,15 +109,17 @@ func FrameLoad(a_doc *doc) (r_frame *frame, r_err crt_err){
 	var prev *frame = f_root
 
 	// Iterate over all frames
-	for i < map_len && len(*f_stack) > 0{
+	for i < map_len{
 		// Find next frame
 		buf,ni,err := FrameSearch(reader, prev, i)
 		// Pop current frame (buffer is nil)
 		if buf == nil && err == CRT_SUCC{
 			buf = f_stack.Pop().(*frame)
-			if len(*f_stack) > 0{
-				prev = f_stack.Pop().(*frame)
+
+			if len(*f_stack) == 0{
+				break
 			}
+			prev = (*f_stack)[len(*f_stack)-1].(*frame)
 		}else if err != CRT_SUCC{
 			panic(2)
 		}else{
