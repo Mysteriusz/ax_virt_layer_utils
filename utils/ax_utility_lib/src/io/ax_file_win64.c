@@ -531,6 +531,9 @@ axres io_fres(
 		return AX_INV_FILE;
 	}
 
+	// Reset file pointer
+	io_foff(file, pre_offset);
+
 	return AX_SUCC;
 }
 

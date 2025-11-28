@@ -15,7 +15,7 @@ All error codes are mapped as following:</br>
     0x10 - 0x1f -> BUF[FER] codes</br>
     0x20 - 0x3f -> NOT codes</br>
     0x40 - 0x4f -> ACC[ESS] codes</br>
-    0x50 - 0x5f -> UNK[NOWN] codes
+    0x50 - 0x5f -> UNK[NOWN] codes</br>
     0x60 - 0xfff -> USR codes
 
 > [!WARNING]

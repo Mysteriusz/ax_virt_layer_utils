@@ -1,4 +1,5 @@
-utils/ax_update_exe/build/
-utils/ax_utility_lib/build/
-crt/build/
+utils/**/build/
+utils/**/build/
+
+*.pch
 

@@ -193,11 +193,11 @@ axres trim(
 #if !defined(AX_PARSER_SKIP_INT)
 #define AX_PARSER_SKIP_INT
 
-#define UTF16_EOT		u'\u0003'
-#define UTF16_EOT_STR		u"\u0003"
+#define UTF16_EOT		u'\x0003'
+#define UTF16_EOT_STR		u"\x0003"
 
-#define UTF16_ANY		u'\uFFFD'
-#define UTF16_ANY_STR		u"\uFFFD"
+#define UTF16_ANY		u'\xFFFD'
+#define UTF16_ANY_STR		u"\xFFFD"
 
 #define CHARSET_NL 		u"\x0a\x0d"
 #define CHARSET_WS 		u"\x20\t"

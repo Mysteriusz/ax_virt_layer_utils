@@ -23,9 +23,9 @@ typedef u16 io_file_acc;
 enum io_file_acc{
 	// Read
 	IO_FILE_R = 0x01,
-	// Read/Write(Append)/Create
+	// Write
 	IO_FILE_W = 0x02,
-	// Read/Write/Create(If doesnt exist)
+	// Create(If doesnt exist)
 	IO_FILE_C = 0x04,
 	IO_FILE_RW = IO_FILE_R | IO_FILE_W,
 	IO_FILE_RWC = IO_FILE_R | IO_FILE_W | IO_FILE_C,
@@ -240,7 +240,7 @@ axres io_fw(
 	CAUTION:
 		Data will be overwritten if pointers are not set to EOF
 	
-	size == 0 will transfer entire file
+	size == 0 will transfer the entire file contents
 */
 axres io_ftrans(
 	_in io_file		*from,
