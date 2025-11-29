@@ -17,18 +17,18 @@
 #ifndef AX_STRICT_BUF_SIZE
 #define AX_STRICT_BUF_SIZE 
 
-#define AX_MODE KM
+#define AX_MODE AXKM
 
-#endif
+#endif // AX_STRICT_BUF_SIZE
 #elif defined(AX_UM)
 
-#define AX_MODE UM
+#define AX_MODE AXUM
 
 #endif // defined(AX_KM)
 
 #if defined(AX_WIN64)
 
-#define AX_PLATFORM WIN64
+#define AX_PLATFORM AXWIN64
 
 /*
  	Windows specific architecture macros
@@ -67,7 +67,7 @@
 
 #elif defined(AX_LINUX)
 
-#define AX_PLATFORM LINUX
+#define AX_PLATFORM AXLINUX
 
 #endif // defined(AX_WIN64)
 
@@ -119,7 +119,7 @@
 #define __builtin_trap() __debugbreak()
 #define _inline_force __forceinline
 // GCC/Clang compiler
-#elif
+#elif defined(__clang__)
 #define _inline_force __attribute__((always_inline))
 #endif
 

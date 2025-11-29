@@ -1,5 +1,4 @@
 #include "ax_parser.h"
-#include "winreg.h"
 
 axres find_char(
 	_in const c16 		*text,

@@ -3,7 +3,7 @@
 
 #if defined(AX_UM)
 
-static void *axmalloc_WIN64_UM(
+static void *axmalloc_AXWIN64_AXUM(
 	_in u64 size,
 	_in u32 line,
 	_in const c8* func
@@ -26,7 +26,7 @@ static void *axmalloc_WIN64_UM(
 	_MEM_USED += size;
 	return ptr;
 }
-static void axfree_WIN64_UM(
+static void axfree_AXWIN64_AXUM(
 	_in void *ptr,
 	_in u32 line,
 	_in const c8* func
@@ -53,7 +53,22 @@ static void axfree_WIN64_UM(
 
 #elif defined(AX_KM)
 
-#error "TODO"
+#define MEM_TAG 0x6d6b7861 // Big endian "axkm"
+
+static void *axmalloc_AXWIN64_AXKM(
+	_in u64 size,
+	_in u32 line,
+	_in const c8* func
+){
+	return nullptr;
+}
+static void axfree_AXWIN64_AXKM(
+	_in void *ptr,
+	_in u32 line,
+	_in const c8* func
+){
+	return;
+}
 
 #endif // defined(AX_UM)
 

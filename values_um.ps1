@@ -16,7 +16,9 @@ $GLOB_DEF = @(
 	"AX_UM",
 	"AX_${PMIN}64"
 )
+$GLOB_INC = @(
+)
 $GLOB_FLAG = @(
-	"-target=x86_64-pc-${PFULL}-${CC}"
+	"-target=x86_64-pc-${PFULL}-gcc"
 )
 

@@ -5,9 +5,9 @@
 #include "ax_type.h"
 #include "ax_error.h"
 
-#if !defined(AX_KM)
 #include "ax_io.h"
 
+#if !defined(AX_KM)
 // Data management headers
 #include "ax_parser.h"
 #include "ax_data.h"

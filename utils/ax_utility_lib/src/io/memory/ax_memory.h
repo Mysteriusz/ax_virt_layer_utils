@@ -17,8 +17,10 @@
 
 #endif // defined(AX_WIN64)
 
-#define axmalloc(size) CAT(CAT(axmalloc_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
-#define axfree(size) CAT(CAT(axfree_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
+#define axmalloc(size) \
+	CAT(CAT(axmalloc_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
+#define axfree(size) \
+	CAT(CAT(axfree_,AX_PLATFORM),CAT(_,AX_MODE))(size, __LINE__, (c8*)__FUNCTION__)
 
 static i8 _sfmemcmp(
 	_in const u8 a _prepass,

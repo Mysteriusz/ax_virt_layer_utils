@@ -104,7 +104,7 @@ static inline u32 _bom_size(
 }
 
 #if defined(AX_WIN64)
-static inline const DWORD _io_file_conv_win64(
+static inline const ULONG _io_file_conv_win64(
 	_in io_file_acc 		acc	
 ){
 	switch(acc){

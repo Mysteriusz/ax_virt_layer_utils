@@ -141,7 +141,7 @@ axres seq_read_group(
 		*/
 		switch(*fmt_char){
 		case u'^': // seq_loc start indicator
-		case u'$': // seq_loc end indicator
+		case u'$':{ // seq_loc end indicator
 			c16 *buf = axmalloc(sizeof(c16));
 			*buf = *fmt_char;
 
@@ -154,6 +154,7 @@ axres seq_read_group(
 
 			spec_add = true;
 			break;
+		}
 		case u'<': // Capture set
 			res = seq_group_cap(fmt, fmt_char, &fmt_char, &spec);
 			axcheck_b(res);

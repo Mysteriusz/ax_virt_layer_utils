@@ -1,4 +1,7 @@
-$timer = [Diagnostics.Stopwatch]::StartNew()
+# Kernel mode build not supported
+if ($km){
+	return
+}
 
 $files_c = $(gci "$PSScriptRoot\src" -file -r -filter "*.c")
 $files_h = $(gci "$PSScriptRoot\src" -file -r -filter "*.h")
@@ -11,7 +14,7 @@ $files_o = @()
 
 foreach ($src in $files_c){
 	$out = $build_path+$($src.Name -replace "\.[^.]+$")+".o"
-	MSG -msg "Compiling file: $($src.FullName)" -color Yellow
+	MSG -msg "Compiling file: $($src.FullName)" -color Yellow -opt
 
 	& $CC `
 		$PREF_SRC $src.FullName `
@@ -28,7 +31,7 @@ foreach ($src in $files_c){
 
 	$files_o += $out
 
-	MSG -msg "Successfully compiled to: $out" -color Green
+	MSG -msg "Successfully compiled to: $out" -color Green -opt
 
 }
 
@@ -44,10 +47,7 @@ if ($lastexitcode -ne 0){
 	MSG -msg "Linkage failed with code: $lastexitcode" -color Red
 	return -1
 }
-MSG -msg "Executable created in: ${output_exe}"
+MSG -msg "Executable created in: ${output_exe}" -color Blue
 
 $files_h | foreach {cp $_ $headers_path}
-
-$timer.stop()
-MSG -msg "Build completed in: $($timer.Elapsed)"
 
