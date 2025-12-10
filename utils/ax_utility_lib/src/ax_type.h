@@ -33,7 +33,7 @@
 /*
  	Windows specific architecture macros
 */
-#if defined(__x86_64__) && !defined(__aarch64__)
+#if (defined(__x86_64__) || defined(_WIN64)) && !defined(__aarch64__)
 
 #ifndef _AMD64_ 
 #define _AMD64_
@@ -104,7 +104,11 @@
 
 	Only applicable to pointer types.
 */
+#if defined(_MSC_VER)
+#define _prepass [1]
+#else
 #define _prepass [static 1]
+#endif
 
 /*
  	Internally heap allocated variable indicator (freeable).
@@ -147,11 +151,25 @@
 // Value as (n) Gigibytes
 #define GB(n)		((u64)(1 << 30) * (n))
 
+#define AX_BIG_ENDIAN 		1
+#define AX_LIT_ENDIAN 		2
+
+#define AX_UNK_ENDIAN 		\
+	((addr(0x01ULL << 56)[0] == 0) \
+	 ? AX_BIG_ENDIAN \
+	 : AX_LIT_ENDIAN)
+
+#define value_in_range(v, bw, e) \
+	(((e) == AX_BIG_ENDIAN) \
+		? ((v) << ((bw) - 1)) /* AX_BIG_ENDIAN */ \
+		: ((v) >> ((bw) - 1))) /* AX_LIT_ENDIAN */ \
+
 #include <stdbool.h>
 #include "ext_math.h"
 
 #if defined(AX_UM)
 #include <stdio.h>
+#include <stdlib.h>
 #endif
 
 /*

@@ -324,7 +324,7 @@ axres io_fo_tmp(
 	 	Get file path to create
 	*/
 	c16 *temp_buf = axmalloc(MAX_PATH * sizeof(c16));
-	u32 temp_len_n = GetTempPath2W(MAX_PATH, temp_buf);
+	u32 temp_len_n = GetTempPathW(MAX_PATH, temp_buf);
 	if (temp_len_n == 0){
 		axfree(temp_buf);
 		return AX_UNK_ERR;
@@ -632,6 +632,7 @@ void io_funmap(
 }
 
 #elif defined(AX_KM)
+
 #endif // defined(AX_UM) 
 
 #endif
