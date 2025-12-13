@@ -57,7 +57,8 @@ i32 check_arg(
 	i32 		val_i,
 	i32 		argc,
 	struct argval	map[],
-	i32 		*skips
+	i32 		*skips,
+	struct op_desc 	*desc
 ){
 	if (argv == nullptr
 	|| arg_i >= argc
@@ -92,7 +93,8 @@ i32 check_arg(
 					val_i + *skips,
 					argc,
 					map[i].sub_args,
-					skips) == -1){
+					skips,
+					desc) == -1){
 					return -1;
 				}
 			}
@@ -104,15 +106,18 @@ i32 check_arg(
 }
 
 i32 check_argv(
-	c16		**argv,
-	i32 		argc
+	_in c16			**argv,
+	_in i32 		argc,
+	_in ax_list 		*op_list
 ){
-	if (argv == nullptr){
+	if (argv == nullptr
+	|| op_list == nullptr){
 		return -1;
 	}
 
 	i32 i = 1;
 	i32 skips = 0;
+	struct op_desc desc = {0};
 	while (i < argc){
 		if (check_arg(
 			argv,
@@ -120,7 +125,8 @@ i32 check_argv(
 			i + 1,
 			argc,
 			ARG_MAP,
-			&skips) == -1){
+			&skips,
+			&desc) == -1){
 			return -1;	
 		}
 

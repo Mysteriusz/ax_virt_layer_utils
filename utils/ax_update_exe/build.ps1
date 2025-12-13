@@ -5,15 +5,12 @@ if ($km){
 
 $files_c = $(gci "$PSScriptRoot\src" -file -r -filter "*.c")
 $files_h = $(gci "$PSScriptRoot\src" -file -r -filter "*.h")
-
-$build_path = "$PSScriptRoot\build\${DIR_BUILD}\"
-$headers_path = "$PSScriptRoot\build\${DIR_BUILD}\headers"
-$output_exe = "$PSScriptRoot\build\${DIR_BUILD}\ax_update.exe"
-
 $files_o = @()
 
+$output_exe = "$PSScriptRoot\build\${DIR_BUILD}\ax_update.exe"
+
 foreach ($src in $files_c){
-	$out = $build_path+$($src.Name -replace "\.[^.]+$")+".o"
+	$out = "$LIB_BUILD"+$($src.Name -replace "\.[^.]+$")+".o"
 	MSG -msg "Compiling file: $($src.FullName)" -color Yellow -opt
 
 	& $CC `
@@ -49,5 +46,5 @@ if ($lastexitcode -ne 0){
 }
 MSG -msg "Executable created in: ${output_exe}" -color Blue
 
-$files_h | foreach {cp $_ $headers_path}
+$files_h | foreach {cp $_ $LIB_HEADERS}
 

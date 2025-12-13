@@ -1,4 +1,5 @@
-#include <ax_utility.h>
+#include "ax_utility.h"
+#include "resolver.h"
 
 enum val_type : u32{
 	val_switch = 0, // bool (no value just the argument)
@@ -11,19 +12,26 @@ struct argval{
 	c16 *arg;
 	u16 bit_width;
 	enum val_type type;
-	struct argval *sub_args;
 	u32 sub_args_c;
+	struct argval *sub_args;
+	struct op_desc op_desc;
 };
 
 static struct argval ARG_MAP[] = {
 	{  // Installation command
-		u"-install",
-		8,
-		val_digit,
+		u"--install",
+		0,
+		val_switch,
+		1,
 		(struct argval[]){
-			(struct argval){u"-force", 0, val_switch, nullptr, 0},
+			// Installation configuration file path
+			(struct argval){u"-config", 0, val_string, 0, nullptr, {0}},
 		},
-		1
+		(struct op_desc){
+			.type = OP_INSTALL,
+			.call = op_install_call,
+			.meta = (struct op_meta){0},
+		}
 	},
 };
 #define map_len (sizeof(ARG_MAP) / sizeof(struct argval))
@@ -33,16 +41,18 @@ i32 check_val(
 	struct argval	info
 );
 i32 check_arg(
-	c16 		**argv,
-	i32 		arg_i,
-	i32 		val_i,
-	i32 		argc,
-	struct argval	map[],
-	i32 		*skips
+	_in c16 		**argv,
+	_in i32 		arg_i,
+	_in i32 		val_i,
+	_in i32 		argc,
+	_in struct argval	map[],
+	_out i32 		*skips,
+	_out struct op_desc 	*info
 );
 
 i32 check_argv(
-	c16 		**argv,
-	i32 		argc
+	_in c16			**argv,
+	_in i32 		argc,
+	_in ax_list 		*op_list // Access by index_as(ops, op_desc, index);
 );
 
