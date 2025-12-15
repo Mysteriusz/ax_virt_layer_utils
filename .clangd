@@ -6,10 +6,13 @@ CompileFlags:
     - -Wno-pragma-pack
     - -Wno-unused-function
     - -Wno-unknown-pragmas
+    - -mno-red-zone
+    - -nostdlib
     - -std=c23
-    - --target=x86_64-pc-windows-gcc
+    - --target=x86_64-pc-windows-msvc
 
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_update_exe/src"
+    - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_update_exe/src/op"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src/data"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src/data/parser"
@@ -18,11 +21,10 @@ CompileFlags:
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src/io"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src/io/memory"
     - "-ID:/ax_project/ax_virt_layer_utils/utils/ax_utility_lib/src/io/structures"
-    - "-IC:/msys64/ucrt64/include"
+    - "-IC:/Program Files (x86)/Windows Kits/10/Include/10.0.26100.0/km"
 
     - "-DAX_WIN64"
-    - "-DAX_UM"
+    - "-DAX_KM"
 Diagnostics:
   Suppress:
     - "unused-includes"
-    - "invalid_token_after_toplevel_declarator"

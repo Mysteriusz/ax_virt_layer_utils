@@ -104,6 +104,17 @@ static inline u32 _bom_size(
 }
 
 #if defined(AX_WIN64)
+
+#define template
+
+#if defined(AX_UM)
+	#define io_close_hdl(hdl) CloseHandle((hdl))
+	#define io_unmap_root(hdl) UnmapViewOfFile((hdl))
+#elif defined(AX_KM)
+	#define io_close_hdl(hdl) ZwClose((hdl))
+	#define io_unmap_root(hdl) 
+#endif
+
 static inline const ULONG _io_file_conv_win64(
 	_in io_file_acc 		acc	
 ){
@@ -121,6 +132,22 @@ static inline const ULONG _io_file_conv_win64(
 	default:
 		return 0;
 	}
+}
+static _inline_force const ULONG _io_file_disp_win64(
+	_in io_file_acc			acc
+){
+#if defined(AX_UM)
+	if (chkf(acc, IO_FILE_C) == true){
+		return OPEN_ALWAYS;
+	}
+	return OPEN_EXISTING;
+#elif defined(AX_KM)
+	if (chkf(acc, IO_FILE_C) == true){
+		return FILE_OPEN_IF;
+	}
+	return FILE_OPEN;
+#endif
+
 }
 #endif // defined(AX_WIN64)
 
@@ -205,14 +232,15 @@ axres io_fsize(
 	_out u64		*size
 );
 
-// Create/Open BOM encoded file
+// Create/Open file
+_ntstatus_axres
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
 	_in io_file_inf		inf,
 	_out io_file		**buf
 );
-// Create/Open TEMP file
+// Create/Open temporary file
 axres io_fo_tmp(
 	_out io_file		**buf
 );
@@ -221,6 +249,7 @@ void io_fc(
 	_in io_file		*file
 );
 // Read file
+_ntstatus_axres
 axres io_fr(
 	_in io_file		*file,
 	_in u32			size,

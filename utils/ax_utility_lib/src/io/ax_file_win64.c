@@ -3,13 +3,12 @@
 #include "ax_file.h"
 #include "ax_parser.h"
 
-#if defined(AX_UM)
-
 bool io_finv(
 	_in io_file 		*file,
 	_in_opt io_file_inf 	exp_inf, // Pass expected file resources
 	_in_opt io_file_enc 	exp_enc // Pass expected encoding
 ){
+
 	if (file == nullptr){
 		return true;
 	}
@@ -80,7 +79,8 @@ bool io_foff(
 	&& offset >= file->map.size){
 		return false;
 	}
-	
+
+#if defined(AX_UM)
 	if (!SetFilePointerEx(
 		file->hdl,
 		(LARGE_INTEGER){.QuadPart = offset},
@@ -89,6 +89,23 @@ bool io_foff(
 	){
 		return false;
 	}
+#elif defined(AX_KM)
+	IO_STATUS_BLOCK stat_b = {0};
+	FILE_POSITION_INFORMATION np = 
+		{.CurrentByteOffset = (LARGE_INTEGER){.QuadPart = offset}};
+
+	NTSTATUS stat = ZwSetInformationFile(
+		file->hdl,
+		&stat_b,
+		&np,
+		sizeof(FILE_POSITION_INFORMATION),
+		FilePositionInformation);
+
+	if (NT_ERROR(stat)
+	|| NT_ERROR(stat_b.Status)){
+		return false;
+	}
+#endif
 	file->offset = offset;
 
 	return true;
@@ -110,8 +127,12 @@ axres io_fbom(
 	// Allocate buffer and read leading 4 bytes
 	u32 *bom = axmalloc(4);
 
-	// Open file
-	HANDLE hdl = CreateFileW(
+	HANDLE hdl = 0;
+	/*
+	 	Open file
+	*/
+#if defined(AX_UM)
+	hdl = CreateFileW(
 		path,
 		GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE ,
@@ -129,10 +150,66 @@ axres io_fbom(
 		res = AX_INV_BUF;
 		goto error_jump;
 	}
+#elif defined(AX_KM)
+	axres_s *res_s = (axres_s*)&res;
+
+	UNICODE_STRING file_name = {0};
+	RtlInitUnicodeString(&file_name, path);
+
+	OBJECT_ATTRIBUTES file_attr = {0};
+	InitializeObjectAttributes(
+		&file_attr,
+		&file_name,
+		OBJ_FORCE_ACCESS_CHECK,
+		nullptr,
+		nullptr);
+
+	IO_STATUS_BLOCK stat_b = {0};
+	NTSTATUS stat = ZwCreateFile(
+		&hdl,
+		GENERIC_READ,
+		&file_attr,
+		&stat_b,
+		nullptr,
+		FILE_ATTRIBUTE_NORMAL,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		FILE_OPEN,
+		FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_ALERT,
+		nullptr,
+		0);
+	res_s->meta_err = stat_b.Status;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		goto error_jump;
+	}
+	res_s->meta_err = stat;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		goto error_jump;
+	}
+
+	stat = ZwReadFile(
+		hdl,
+		nullptr,
+		nullptr,
+		nullptr,
+		&stat_b,
+		bom,
+		4,
+		nullptr,
+		nullptr);
+
+	res_s->meta_err = stat_b.Status;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		goto error_jump;
+	}
+	res_s->meta_err = stat;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		goto error_jump;
+	}
+#endif
 
 	io_file_enc enc = 0;
 
-	// Read size CAN be UTF32
+	// Read size CAN be UTF33
 	if(memcmp(bom, addr(UTF32LE_BOM), 4) == 0){
 		enc = UTF32LE;
 	}else if(memcmp(bom, addr(UTF32BE_BOM), 4) == 0){
@@ -155,13 +232,13 @@ axres io_fbom(
 	*buf = enc;
 
 	axfree(bom);
-	CloseHandle(hdl);
+	io_close_hdl(hdl);
 	return AX_SUCC;
 
 error_jump:
 
 	axfree(bom);
-	CloseHandle(hdl);
+	io_close_hdl(hdl);
 
 	return res;
 }
@@ -172,8 +249,12 @@ axres io_fex(
 		return AX_INV_ARG;
 	}
 
-	// Open file
-	HANDLE hdl = CreateFileW(
+	HANDLE hdl = 0;
+	/*
+	 	Open file
+	*/
+#if defined(AX_UM)
+	hdl = CreateFileW(
 		path,
 		FILE_READ_DATA,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -185,7 +266,9 @@ axres io_fex(
 	if (hdl == INVALID_HANDLE_VALUE){
 		return AX_INV_PATH;
 	}
-	CloseHandle(hdl);
+#elif defined(AX_KM)
+#endif
+	io_close_hdl(hdl);
 
 	return AX_SUCC;
 }
@@ -200,8 +283,12 @@ axres io_fsize(
 		return AX_INV_BUF;
 	}
 
-	// Open file
-	HANDLE hdl = CreateFileW(
+	//HANDLE hdl = 0;
+	/*
+	 	Open file
+	*/
+#if defined(AX_UM)
+	CreateFileW(
 		path,
 		FILE_READ_DATA,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -218,15 +305,20 @@ axres io_fsize(
 	// Read size
 	LARGE_INTEGER buf = {0};
 	if (!GetFileSizeEx(hdl, &buf)){
-		CloseHandle(hdl);
+		io_close_hdl(hdl);
 		return AX_INV_ARG;
 	}
-	
-	CloseHandle(hdl);
+
+	io_close_hdl(hdl);
 	*size = buf.QuadPart;
+#elif defined(AX_KM)
+	
+#endif
 
 	return AX_SUCC;
 }
+
+_ntstatus_axres
 axres io_fo(
 	_in const c16		*path,
 	_in io_file_acc		acc,
@@ -246,16 +338,16 @@ axres io_fo(
 	 	Convert access to rights and disposal convention
 	*/
 	u32 rights = _io_file_conv_win64(acc);
-	u32 disp = (chkf(rights, FILE_WRITE_DATA) == true) 
-		? OPEN_ALWAYS
-		: OPEN_EXISTING;
+	u32 disp = _io_file_disp_win64(acc);
 
+	HANDLE hdl = 0;
 	io_file *file = axmalloc(sizeof(io_file));
 
 	/*
 		Open file
 	*/
-	HANDLE hdl = CreateFileW(
+#if defined(AX_UM)
+	hdl = CreateFileW(
 		path,
 		rights,
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -268,6 +360,42 @@ axres io_fo(
 		res = AX_INV_DATA;
 		goto error_jump;
 	}
+#elif defined(AX_KM)
+	axres_s *res_s = (axres_s*)&res;
+
+	UNICODE_STRING file_name = {0};
+	RtlInitUnicodeString(&file_name, path);
+
+	OBJECT_ATTRIBUTES file_attr = {0};
+	InitializeObjectAttributes(
+		&file_attr,
+		&file_name,
+		OBJ_FORCE_ACCESS_CHECK,
+		nullptr,
+		nullptr);
+
+	IO_STATUS_BLOCK stat_b = {0};
+	NTSTATUS stat = ZwCreateFile(
+		&hdl,
+		rights,
+		&file_attr,
+		&stat_b,
+		nullptr,
+		FILE_ATTRIBUTE_NORMAL,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		disp,
+		FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_ALERT,
+		nullptr,
+		0);
+	res_s->meta_err = stat;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		return res;
+	}
+	res_s->meta_err = stat_b.Status;
+	if(AX_ERR(res | AX_META_NTSTATUS)){
+		return res;
+	}
+#endif
 
 	/*
 		Read the encoding
@@ -305,8 +433,8 @@ axres io_fo(
 
 error_jump:
 
+	io_close_hdl(hdl);
 	io_funmap(&file->map);
-	CloseHandle(hdl);
 	axfree(file);
 
 	return res;
@@ -319,12 +447,16 @@ axres io_fo_tmp(
 	}
 
 	axres res = AX_SUCC;
+	
+	c16 *temp_buf = nullptr;
+	u32 temp_len_n = 0;
 
+#if defined(AX_UM)
+	temp_buf = axmalloc(MAX_PATH * sizeof(c16));
+	temp_len_n = GetTempPathW(MAX_PATH, temp_buf);
 	/*
 	 	Get file path to create
 	*/
-	c16 *temp_buf = axmalloc(MAX_PATH * sizeof(c16));
-	u32 temp_len_n = GetTempPathW(MAX_PATH, temp_buf);
 	if (temp_len_n == 0){
 		axfree(temp_buf);
 		return AX_UNK_ERR;
@@ -334,6 +466,9 @@ axres io_fo_tmp(
 		axfree(temp_buf);
 		return AX_UNK_ERR;
 	}
+#elif defined(AX_KM)
+	unref(temp_len_n);
+#endif
 
 	// Open file as temp
 	res = io_fo(temp_buf, IO_FILE_RWC, 0, buf);
@@ -350,11 +485,12 @@ void io_fc(
 		return;
 	}
 	io_funmap(&file->map);
-	CloseHandle(file->hdl);
+	io_close_hdl(file->hdl);
 	axfree(file->path);
 	axfree(file);
 }
 
+_ntstatus_axres
 axres io_fr(
 	_in io_file		*file,
 	_in u32			size,
@@ -385,7 +521,7 @@ axres io_fr(
 	io_fsize(file->path, &file_size);
 
 	if (size > file_size - file->offset){
-		return AX_BUF_TOO_BIG;
+		//return AX_BUF_TOO_BIG;
 	}
 #endif
 	
@@ -393,6 +529,7 @@ axres io_fr(
 	 	Read file with provided buffer info
 		Read can only fail due to invalid buf since file is invalidated
 	*/
+#if defined(AX_UM)
 	DWORD read_count = 0;
 	if (!ReadFile(file->hdl, buf, size, &read_count, nullptr)){
 		return AX_INV_BUF;
@@ -402,6 +539,30 @@ axres io_fr(
 	if (read != nullptr){
 		*read = read_count;
 	}
+#elif defined(AX_KM)
+	axres res = AX_SUCC;
+	axres_s *res_s = (axres_s*)&res;
+
+	IO_STATUS_BLOCK stat_b = {0};
+	NTSTATUS stat = ZwReadFile(
+		file->hdl,
+		nullptr,
+		nullptr,
+		nullptr,
+		&stat_b,
+		buf,
+		size,
+		nullptr,
+		nullptr);
+	res_s->meta_err = stat;
+	if (AX_ERR(res | AX_META_NTSTATUS)){
+		return res;
+	}
+	res_s->meta_err = stat_b.Status;
+	if (AX_ERR(res | AX_META_NTSTATUS)){
+		return res;
+	}
+#endif
 
 	return AX_SUCC;
 }
@@ -431,10 +592,13 @@ axres io_fw(
 	 	Read file with provided buffer info
 		Read can only fail due to invalid buf since file is invalidated
 	*/
-	DWORD writ_count = 0;
+	u32 writ_count = 0;
+#if defined(AX_UM)
 	if (!WriteFile(file->hdl, buf, size, &writ_count, nullptr)){
 		return AX_INV_BUF;
 	}
+#elif defined(AX_KM)
+#endif
 
 	file->offset += writ_count;
 	if (writ != nullptr){
@@ -482,8 +646,9 @@ axres io_ftrans(
 	u8 buf[IO_FILE_CHUNK];
 	memset(buf, 0, IO_FILE_CHUNK);
 
-	DWORD read = 0;
+	u32 read = 0;
 	u32 left = size;
+#if defined(AX_UM)
 	while(left > 0){
 		if (!ReadFile(from->hdl, buf, IO_FILE_CHUNK, &read, nullptr)){
 			// TODO: Abort and restore backup
@@ -498,6 +663,9 @@ axres io_ftrans(
 		}
 		left -= read;
 	}
+#elif defined(AX_KM)
+	unref(read);
+#endif
 	memset(buf, 0, IO_FILE_CHUNK);
 
 	if (trans != nullptr){
@@ -525,11 +693,14 @@ axres io_fres(
 		return AX_INV_FILE;
 	}
 
+#if defined(AX_UM)
 	// Truncate file to pointer
 	if (!SetEndOfFile(file->hdl)){
 		io_foff(file, pre_offset);
 		return AX_INV_FILE;
 	}
+#elif defined(AX_KM)
+#endif
 
 	// Reset file pointer
 	io_foff(file, pre_offset);
@@ -553,8 +724,9 @@ axres io_fmmap(
 
 	LARGE_INTEGER map_size = {0};
 	void *map_root = nullptr;
-	HANDLE map_hdl = INVALID_HANDLE_VALUE;
+	HANDLE map_hdl = 0;
 
+#if defined(AX_UM)
 	// Get file size
 	if (!GetFileSizeEx(file_hdl, &map_size)){
 		return AX_INV_DATA;
@@ -573,8 +745,9 @@ axres io_fmmap(
 		nullptr
 	);
 	if (map_hdl == INVALID_HANDLE_VALUE){
-		res = AX_INV_MEM;
-		goto error_jump;
+		io_close_hdl(map_hdl);
+		io_unmap_root(map_root);
+		return AX_INV_MEM;
 	}
  	map_size.QuadPart -= ((term == false) ? sizeof(u64) : 0);
 
@@ -589,8 +762,9 @@ axres io_fmmap(
 		map_size.QuadPart
 	);
 	if (map_root == nullptr){
-		res = AX_INV_MEM;
-		goto error_jump;
+		io_close_hdl(map_hdl);
+		io_unmap_root(map_root);
+		return AX_INV_MEM;
 	}
 
 	/*
@@ -603,21 +777,19 @@ axres io_fmmap(
 		nullptr,
 		nullptr)
 	){
-		res = AX_INV_FILE;
-		goto error_jump;
+		io_close_hdl(map_hdl);
+		io_unmap_root(map_root);
+		return AX_INV_FILE;
 	}
+#elif defined(AX_KM)
+	unref(res);
+#endif
 
 	map->hdl = map_hdl;
 	map->root = map_root;
 	map->size = map_size.QuadPart;
 
 	return AX_SUCC;
-
-error_jump:
-	UnmapViewOfFile(map_root);
-	CloseHandle(map_hdl);
-
-	return res;
 }
 void io_funmap(
 	_in_out io_fmap		*map
@@ -626,14 +798,10 @@ void io_funmap(
 		return;
 	}
 
-	CloseHandle(map->hdl);
-	UnmapViewOfFile(map->root);
+	io_close_hdl(map->hdl);
+	io_unmap_root(map->root);
 	map->size = 0;
 }
 
-#elif defined(AX_KM)
-
-#endif // defined(AX_UM) 
-
-#endif
+#endif // defined(AX_WIN64)
 

@@ -60,9 +60,9 @@ const void *ax_dict_query_at(
 
 typedef struct _ax_dict_iter_stack{
 	const ax_dict 			*dict;
-	const ax_dict_chain		*chain;
+	const ax_dict_chain		*chain; // Currently referenced chain indexed by computing hash
 	const ax_dict_node		*node;
-	void 				*data;
+	void 				*data; // Passed when calling list.iter() as (void*)data
 } ax_dict_iter_stack;
 axres ax_dict_iter(
 	_in ax_dict 			*dict,

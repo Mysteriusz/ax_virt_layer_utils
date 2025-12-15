@@ -8,7 +8,25 @@
 #define AX_RES_S(r) 			(*(axres_s*)((axres*)addr(r)))
 
 // Error code check
-#define AX_ERR(r) 			((AX_RES_S(r).err) != AX_SUCC)
+inline bool AX_ERR(axres res){
+	axres_s res_s = AX_RES_S(res);
+
+	if (res_s.err != (axres_s){AX_SUCC}.err){
+		DbgPrint("AXRES ERROR CODE: %llu\n", res_s.err);
+		return true;
+	}
+
+#if defined(AX_WIN64) && defined(AX_KM)
+	// NTSTATUS type error code (WIN64 KM specific)
+	if(res_s.meta.ntstatus == true
+	&& NT_ERROR(res_s.meta_err)){
+		DbgPrint("NTSTATUS ERROR CODE: %llu\n", res_s.meta_err);
+		return true;	
+	}
+#endif
+
+	return false;
+};
 
 /*
  	Inline return AX_ERR(r) alias
@@ -18,14 +36,14 @@
 } while(0)
 
 /*
- 	Inline custom return AX_ERR(r) alias
+ 	Inline custom value return AX_ERR(r) alias
 */
 #define axcheck_r(r, fr,...)		do { \
 	if(AX_ERR(r)){__VA_ARGS__; return (fr);} \
 } while(0)
 
 /*
- 	Inline custom goto AX_ERR(r) alias
+ 	Inline goto AX_ERR(r) alias
 */
 #define axcheck_g(r, gt, ...)		do { \
 	if(AX_ERR(r)){__VA_ARGS__; goto gt;} \

@@ -58,7 +58,12 @@
 #include <memoryapi.h>
 #include <errhandlingapi.h>
 #elif defined(AX_KM)
-#include <wdm.h>
+#include <ntifs.h>
+
+/*
+	Function may or may not return NTSTATUS meta code
+*/
+#define _ntstatus_axres
 
 #pragma warning(disable:4820)
 #pragma warning(disable:4711)
@@ -120,11 +125,17 @@
 
 // MSVC compiler
 #if defined(_MSC_VER)
+
 #define __builtin_trap() __debugbreak()
 #define _inline_force __forceinline
+#define _inline_avert __declspec(noinline)
+
 // GCC/Clang compiler
 #elif defined(__clang__)
+
 #define _inline_force __attribute__((always_inline))
+#define _inline_avert __attribute__((noinline))
+
 #endif
 
 #define null 		(0)
@@ -139,7 +150,7 @@
 // Check bit mask (m) in the value (v)
 #define chkf(v,m)	(((v) & (m)) != 0) 
 // Cast value (v) to type (t)
-#define astp(t,v)	*((t*)((void*)&(v))) 
+#define astp(t,v)	(*((t*)((void*)&(v))))
 // Count digit count in an intger (i)
 #define cntd(i)		((u32)log_b((i), 10) + 1)
 // Set (n)-th bit to 1
@@ -216,12 +227,21 @@ typedef struct _axres_s{
 	// 32-bit block
 
 	u16 err : 12; // max 4095 (0xfff)
-	u16 meta : 4; // flag per bit
-	u16 reseverd0;
+	u16 reserved0 : 4;
+
+	struct {
+		u16 reserved1 : 15;
+		u16 ntstatus : 1;
+	} meta;
 
 	// 32-bit block
 
-	u32 reserved1 : 32;
+	/*
+		Meta code may or may not be null,
+		and to ensure it`s checked the program should set appropriate checks
+		in the meta struct
+	*/
+	u32 meta_err : 32;
 } axres_s;
 
 #endif //!defined(AX_TYPE_INT)

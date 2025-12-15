@@ -55,7 +55,7 @@ axres write_data_inv(
 
 typedef struct _data_con{
 	u8 			id; // Context identifier
-	 c16		*path; // Duplicated path of the initial URI
+	c16			*path; // Duplicated path of the initial URI
 	i64			rule; // Rules of the handle
 	bool 			is_open; // Is handle active
 	/*
@@ -66,7 +66,7 @@ typedef struct _data_con{
 		FOR id == CON_FILE
 			data = io_file* 
 	*/
-	 void		*data;  // System defined context data
+	void			*data;  // System defined context data
 	void			*user_data; // User defined context data
 } data_con;
 
@@ -110,9 +110,9 @@ bool data_handle_inv(
 	_in data_handle		*hdl
 );
 
-#define URI_REG 		u"reg://"
-#define URI_DIR 		u"dir://"
-#define URI_FILE 		u"file://"
+#define URI_REG 		u"reg:\\"
+#define URI_DIR 		u"dir:\\"
+#define URI_FILE 		u"file:\\"
 
 #define URI_RULE_ADM		0x0001 // Request full access (KEY_ALL_ACCESS for the (HKEY)hdl->con.data)
 

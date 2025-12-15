@@ -6,8 +6,7 @@ axres io_str(
 #if defined(AX_UM)
 	printf("%ls\n", val);
 #elif defined(AX_KM)
-	io_mpkm_log(val);
-	unref(val);
+	DbgPrint("%ws\n", val);
 #endif
 	return AX_SUCC;
 }
@@ -18,14 +17,18 @@ axres io_str_b(
 	for (u32 i = 0; i < wcslen(val); i++){
 		u8 *val_b = (u8*)&val[i];
 		for (u32 j = 0; j < sizeof(c16); j++){
-			printf("%02X", val_b[j]);
+			printf("%02X ", val_b[j]);
 		}
-		printf(" ");
 	}
 	printf("\n");
 #elif defined(AX_KM)
-	io_mpkm_log(val);
-	unref(val);
+	for (u32 i = 0; i < wcslen(val); i++){
+		u8 *val_b = (u8*)&val[i];
+		for (u32 j = 0; j < sizeof(c16); j++){
+			DbgPrint("%02X ", val_b[j]);
+		}
+	}
+	DbgPrint("\n");
 #endif
 	return AX_SUCC;
 }
@@ -48,8 +51,7 @@ axres io_i64(
 #if defined(AX_UM)
 	printf("%lld\n", val);
 #elif defined(AX_KM)
-	io_mpkm_log(val);
-	unref(val);
+	DbgPrint("%llu\n", val);
 #endif
 	return AX_SUCC;
 }

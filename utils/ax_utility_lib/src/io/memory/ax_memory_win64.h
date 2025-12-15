@@ -60,13 +60,18 @@ static void *axmalloc_AXWIN64_AXKM(
 	_in u32 line,
 	_in const c8* func
 ){
-	return nullptr;
+	void *ptr = ExAllocatePool2(
+		POOL_FLAG_PAGED | POOL_FLAG_CACHE_ALIGNED,
+		size,
+		MEM_TAG);
+	return ptr;
 }
 static void axfree_AXWIN64_AXKM(
 	_in void *ptr,
 	_in u32 line,
 	_in const c8* func
 ){
+	ExFreePool(ptr);
 	return;
 }
 

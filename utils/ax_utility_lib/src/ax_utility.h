@@ -7,11 +7,12 @@
 
 #include "ax_io.h"
 
-#if !defined(AX_KM)
 // Data management headers
+
+#if !defined(AX_KM) // For safety they are restricted (To bypass include them separetly)
 #include "ax_parser.h"
 #include "ax_data.h"
-#endif // !defined(AX_KM)
+#endif
 
 #endif // !defined(AX_UTILITY_INT)
 

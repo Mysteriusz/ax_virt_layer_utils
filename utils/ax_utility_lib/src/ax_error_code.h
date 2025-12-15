@@ -6,7 +6,9 @@
    	Code mapping:
 
    	axres bit 0-11 		: Error code
-   	axres bit 12-15		: Error metadata
+   	axres bit 12-15		: Reserved
+   	axres bit 16-31		: Meta error bits
+   	axres bit 32-63		: Meta error
 
 	Further bit fields may be added
    	
@@ -17,65 +19,67 @@
 
 #include "ax_type.h"
 
+#define AX_META_NTSTATUS	(astp(axres, (axres_s){.meta.ntstatus = true}))
+
 // ERROR CODES CANNOT BE BIGGER THAN 0xFFF (12 bits) 
-#define AX_SUCC 			((axres)0x00)
+#define AX_SUCC 		(astp(axres, ((axres_s){.err = 0x00, .meta = {0}})))
 
 // "INVALID" codes
 
-#define AX_INV_ARG 			((axres)0x01)
-#define AX_INV_ARG_MSG 			u"Invalid argument passed."
+#define AX_INV_ARG 		(astp(axres, ((axres_s){.err = 0x01, .meta = {0}})))
+#define AX_INV_ARG_MSG 		u"Invalid argument passed."
 
-#define AX_INV_DATA 			((axres)0x02)
-#define AX_INV_DATA_MSG 		u"Invalid data passed."
+#define AX_INV_DATA 		(astp(axres, ((axres_s){.err = 0x02, .meta = {0}})))
+#define AX_INV_DATA_MSG 	u"Invalid data passed."
 
-#define AX_INV_BUF 			((axres)0x03)
-#define AX_INV_BUF_MSG 			u"Invalid buffer passed."
+#define AX_INV_BUF 		(astp(axres, ((axres_s){.err = 0x03, .meta = {0}})))
+#define AX_INV_BUF_MSG 		u"Invalid buffer passed."
 
-#define AX_INV_CODE 			((axres)0x04)
-#define AX_INV_CODE_MSG 		u"Invalid code received."
+#define AX_INV_CODE 		(astp(axres, ((axres_s){.err = 0x04, .meta = {0}})))
+#define AX_INV_CODE_MSG 	u"Invalid code received."
 
-#define AX_INV_FILE 			((axres)0x05) // EXCLUSIVE TO _io_file STRUCTURE ERRORS
-#define AX_INV_FILE_MSG 		u"Invalid file structure."
+#define AX_INV_FILE 		(astp(axres, ((axres_s){.err = 0x05, .meta = {0}}))) // EXCLUSIVE TO _io_file STRUCTURE ERRORS
+#define AX_INV_FILE_MSG 	u"Invalid file structure."
 
-#define AX_INV_ENC 			((axres)0x06) // EXCLUSIVE TO _io_file_enc TYPE ERRORS
-#define AX_INV_ENC_MSG 			u"Invalid file encoding."
+#define AX_INV_ENC 		(astp(axres, ((axres_s){.err = 0x06, .meta = {0}}))) // EXCLUSIVE TO _io_file_enc TYPE ERRORS
+#define AX_INV_ENC_MSG 		u"Invalid file encoding."
 
-#define AX_INV_FMT 			((axres)0x07)
-#define AX_INV_FMT_MSG 			u"Invalid value format."
+#define AX_INV_FMT 		(astp(axres, ((axres_s){.err = 0x07, .meta = {0}})))
+#define AX_INV_FMT_MSG 		u"Invalid value format."
 
-#define AX_INV_IND 			((axres)0x08)
-#define AX_INV_IND_MSG 			u"Index out of bounds."
+#define AX_INV_IND 		(astp(axres, ((axres_s){.err = 0x08, .meta = {0}})))
+#define AX_INV_IND_MSG 		u"Index out of bounds."
 
-#define AX_INV_MEM 			((axres)0x09)
-#define AX_INV_MEM_MSG 			u"Memory corruption."
+#define AX_INV_MEM 		(astp(axres, ((axres_s){.err = 0x09, .meta = {0}})))
+#define AX_INV_MEM_MSG 		u"Memory corruption."
 
-#define AX_INV_PATH 			((axres)0x0a)
-#define AX_INV_PATH_MSG 		u"Invalid path."
+#define AX_INV_PATH 		(astp(axres, ((axres_s){.err = 0x0a, .meta = {0}})))
+#define AX_INV_PATH_MSG 	u"Invalid path."
 
 // "BUFFER" codes
 
-#define AX_BUF_TOO_SMALL 		((axres)0x10)
-#define AX_BUF_TOO_SMALL_MSG 		u"Buffer too small."
+#define AX_BUF_TOO_SMALL 	(astp(axres, ((axres_s){.err = 0x10, .meta = {0}})))
+#define AX_BUF_TOO_SMALL_MSG 	u"Buffer too small."
 
-#define AX_BUF_TOO_BIG 			((axres)0x11)
-#define AX_BUF_TOO_BIG_MSG 		u"Buffer too big."
+#define AX_BUF_TOO_BIG 		(astp(axres, ((axres_s){.err = 0x11, .meta = {0}})))
+#define AX_BUF_TOO_BIG_MSG 	u"Buffer too big."
 
 // "NOT" codes
 
-#define AX_NOT_FND 			((axres)0x20)
-#define AX_NOT_IMP 			((axres)0x21)
+#define AX_NOT_FND 		(astp(axres, ((axres_s){.err = 0x20, .meta = {0}})))
+#define AX_NOT_IMP 		(astp(axres, ((axres_s){.err = 0x21, .meta = {0}})))
 
 // "ACCESS" codes
 
-#define AX_ACC_DEN			((axres)0x40)
+#define AX_ACC_DEN		(astp(axres, ((axres_s){.err = 0x40, .meta = {0}})))
 
 // "UNKNOWN" codes
 
-#define AX_UNK_ERR 			((axres)0x50)
+#define AX_UNK_ERR 		(astp(axres, ((axres_s){.err = 0x50, .meta = {0}})))
 
 // "USER" codes
 
-#define AX_USR_ERR			((axres)0x60)
+#define AX_USR_ERR		(astp(axres, ((axres_s){.err = 0x60, .meta = {0}})))
 
 static inline axres _ax_buf_err(
 	u64 		size,

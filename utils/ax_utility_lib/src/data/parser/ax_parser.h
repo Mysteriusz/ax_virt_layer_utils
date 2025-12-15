@@ -14,7 +14,7 @@ static inline u32 _c16len(
 	}
 
 	u32 len = 0;
-	while(*text != L'\0'){
+	while(*text != u'\0'){
 		len++;
 		text++;
 	}
@@ -34,30 +34,30 @@ static inline c16 *_c16dup(
 	u32 text_len = _c16len(text);
 	c16 *ptr = axmalloc((text_len + 1) * sizeof(c16));
 	memcpy(ptr, text, text_len * sizeof(c16));
-	ptr[text_len] = L'\0';
+	ptr[text_len] = u'\0';
 	return ptr;
 }
-// Checks for L'\\' before text_char
+// Checks for u'\\' before text_char
 static inline bool _is_esc(
 	_in const c16 		*text,
 	_in const c16 		*text_char
 ){
 	const c16 *esc_char = (text_char - 1);
 	if (esc_char >= text
-	&& *esc_char == L'\\'){
+	&& *esc_char == u'\\'){
 		return true;
 	}
 
 	return false;
 }
-// Checks for L'?' before text_char
+// Checks for u'?' before text_char
 static inline bool _is_opt(
 	_in const c16 		*text,
 	_in const c16 		*text_char
 ){
 	const c16 *opt_char = (text_char - 1);
 	if (opt_char >= text
-	&& *opt_char == L'?'){
+	&& *opt_char == u'?'){
 		return true;
 	}
 
@@ -69,8 +69,8 @@ static inline bool _is_opt(
 #define in_c16(tp,p)		(dif_c16(tp,p) < _c16len(tp))
 #define in_c16_s(tp,p,s)	(dif_c16(tp,p) < (s))
 
-#define is_crlf(tp)		(*(tp) == L'\r' && *((tp) + 1) == L'\n')
-#define is_lf(tp)		(*(tp) == L'\n')
+#define is_crlf(tp)		(*(tp) == u'\r' && *((tp) + 1) == u'\n')
+#define is_lf(tp)		(*(tp) == u'\n')
 
 #define dif_b(s,e)		((u8*)(e) - (u8*)(s))
 
